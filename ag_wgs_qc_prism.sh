@@ -181,7 +181,11 @@ function get_targets() {
       samplesheet=${samplesheets_array[$j]}
       samplesheet_base=`basename $samplesheet .csv`
 
-      samplesheet_moniker=${RUN}.${SAMPLENAME}.$samplesheet_base
+      if [ $analysis_type ! ="bcl2fastq" ]; then
+         samplesheet_moniker=${RUN}.${SAMPLENAME}.$samplesheet_base
+      else
+         samplesheet_moniker=${RUN}.$samplesheet_base
+      fi
 
       for analysis_type in all bcl2fastq fastqc clean kmer_analysis blast_analysis fasta_sample fastq_sample annotation common_sequence; do
          echo $OUT_ROOT/$samplesheet_moniker.$analysis_type  >> $OUT_ROOT/${analysis_type}_targets.txt
@@ -200,7 +204,7 @@ cd $OUT_ROOT
 mkdir -p $samplesheet_base
 $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a bcl2fastq -O $OUT_ROOT/$samplesheet_base $samplesheet > $OUT_ROOT/$samplesheet_base/bcl2fastq.log  2>&1
 if [ \$? != 0 ]; then
-   echo \"warning bcl2fastq of $samplesheet returned an error code\"
+   echo \"warning bcl2fastq of $samplesheet_base returned an error code\"
       exit 1
    fi
       " > $OUT_ROOT/${samplesheet_moniker}.bcl2fastq.sh
@@ -281,7 +285,7 @@ fi
      echo "#!/bin/bash
 cd $OUT_ROOT
 rm -rf $OUT_ROOT/$samplesheet_base/$SAMPLENAME
-rm -f *.${samplesheet}.*
+rm -f *.${samplesheet_base}.*
      " >  $OUT_ROOT/${sample_moniker}.clean.sh
       chmod +x $OUT_ROOT/${sample_moniker}.clean.sh
 
@@ -302,17 +306,17 @@ rm -f *.${samplesheet}.*
 ############
      echo "#!/bin/bash
 cd $OUT_ROOT
-mkdir -p $samplesheet/$SAMPLENAME/blast
+mkdir -p $samplesheet_base/$SAMPLENAME/blast
 # configure a custom slurm batch job that will specify medium memory 
 cp $WGS_PRISM_BIN/etc/medium_mem_slurm_array_job $OUT_ROOT
 echo \"
 jobtemplatefile = \\\"$OUT_ROOT/medium_mem_slurm_array_job\\\"
 max_tasks = 60
-\" > $OUT_ROOT/$samplesheet/$SAMPLENAME/blast/tardis.toml
+\" > $OUT_ROOT/$samplesheet_base/$SAMPLENAME/blast/tardis.toml
 # run blast
-$SEQ_PRISMS_BIN/align_prism.sh -C $HPC_TYPE -m 60 -a blastn -r nt -p \"-evalue 1.0e-10  -dust \\'20 64 1\\' -max_target_seqs 1 -outfmt \\'7 qseqid sseqid pident evalue staxids sscinames scomnames sskingdoms stitle\\'\" -O $OUT_ROOT/$samplesheet/$SAMPLENAME/blast $OUT_ROOT/$samplesheet/$SAMPLENAME/fasta_small_lowdepthsample/*.fasta
+$SEQ_PRISMS_BIN/align_prism.sh -C $HPC_TYPE -m 60 -a blastn -r nt -p \"-evalue 1.0e-10  -dust \\'20 64 1\\' -max_target_seqs 1 -outfmt \\'7 qseqid sseqid pident evalue staxids sscinames scomnames sskingdoms stitle\\'\" -O $OUT_ROOT/$samplesheet_base/$SAMPLENAME/blast $OUT_ROOT/$samplesheet_base/$SAMPLENAME/fasta_small_lowdepthsample/*.fasta
 if [ \$? != 0 ]; then
-   echo \"warning , blast  of $OUT_ROOT/$samplesheet/$SAMPLENAME/fasta_small_lowdepthsample returned an error code\"
+   echo \"warning , blast  of $OUT_ROOT/$samplesheet_base/$SAMPLENAME/fasta_small_lowdepthsample returned an error code\"
    exit 1
 fi
      " >  $OUT_ROOT/${sample_moniker}.blast_analysis.sh 
@@ -323,14 +327,14 @@ fi
      echo "#!/bin/bash
 cd $OUT_ROOT
 # summarise species from blast results 
-$SEQ_PRISMS_BIN/annotation_prism.sh -C $HPC_TYPE -w tag_count -a taxonomy -O $OUT_ROOT/$samplesheet/$SAMPLENAME/blast $OUT_ROOT/$samplesheet/$SAMPLENAME/blast/*.results.gz  
+$SEQ_PRISMS_BIN/annotation_prism.sh -C $HPC_TYPE -w tag_count -a taxonomy -O $OUT_ROOT/$samplesheet_base/$SAMPLENAME/blast $OUT_ROOT/$samplesheet_base/$SAMPLENAME/blast/*.results.gz  
 return_code1=\$?
 # summarise descriptions from blast results 
-rm -f $OUT_ROOT/$samplesheet/$SAMPLENAME/blast/*.annotation_prism
-$SEQ_PRISMS_BIN/annotation_prism.sh -C $HPC_TYPE -w tag_count -a description -O $OUT_ROOT/$samplesheet/$SAMPLENAME/blast $OUT_ROOT/$samplesheet/$SAMPLENAME/blast/*.results.gz  
+rm -f $OUT_ROOT/$samplesheet_base/$SAMPLENAME/blast/*.annotation_prism
+$SEQ_PRISMS_BIN/annotation_prism.sh -C $HPC_TYPE -w tag_count -a description -O $OUT_ROOT/$samplesheet_base/$SAMPLENAME/blast $OUT_ROOT/$samplesheet_base/$SAMPLENAME/blast/*.results.gz  
 return_code2=\$?
 # provide unblinded frequency tables
-for file in  $OUT_ROOT/$samplesheet/$SAMPLENAME/blast/frequency_table.txt $OUT_ROOT/$samplesheet/$SAMPLENAME/blast/locus_freq.txt ; do
+for file in  $OUT_ROOT/$samplesheet_base/$SAMPLENAME/blast/frequency_table.txt $OUT_ROOT/$samplesheet_base/$SAMPLENAME/blast/locus_freq.txt ; do
    if [ -f \$file ]; then
       if [ ! -f \$file.blinded ]; then
          cp -p \$file \$file.blinded
@@ -339,7 +343,7 @@ for file in  $OUT_ROOT/$samplesheet/$SAMPLENAME/blast/frequency_table.txt $OUT_R
    fi
 done
 if [[ ( \$return_code1 != 0 ) || ( \$return_code2 != 0 ) ]]; then
-   echo \"warning, summary of $OUT_ROOT/$samplesheet/$SAMPLENAME/blast returned an error code\"
+   echo \"warning, summary of $OUT_ROOT/$samplesheet_base/$SAMPLENAME/blast returned an error code\"
    exit 1
 fi
      " >  $OUT_ROOT/${sample_moniker}.annotation.sh 
@@ -423,7 +427,7 @@ function html_prism() {
 
 
    # make peacock page which mashes up plots, output files etc.
-   #$GBS_PRISM_BIN/make_sample_pages.py -r $RUN -o $OUT_ROOT/html/peacock.html
+   $WGS_PRISM_BIN/make_sample_pages.py -r $RUN -o $OUT_ROOT/html/peacock.html
 
 }
 

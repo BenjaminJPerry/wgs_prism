@@ -23,16 +23,7 @@ Overview of %(run_name)s
 </head>
 <body>
 <h1> Q/C Summaries for <a href="http://agbrdf.agresearch.co.nz/cgi-bin/fetch.py?obid=%(run_name)s&context=default">%(run_name)s</a> </h1>
-<ul>
-    <li>  <a href="#overview_plots"> Overview Summaries (before demultiplexing) </a> 
-    <ul>
-        <li> <a href="#bcl2fastq"> bcl2fastq reports (clustering etc)</a>
-    </ul>
-</ul>
-</p>
-<h2 id=overview_plots> Overview Summaries </h2>
 """
-
 
 overview_section="""
 <p/>
@@ -41,7 +32,8 @@ overview_section="""
 <td> bcl2fastq reports  </td>
 <td> <a href=bcl2fastq/index.html> bcl2fastq reports </a>  </td>
 </tr>
-<table>
+</table>
+<hr/>
 <p/>
 """
 
@@ -75,7 +67,7 @@ def generate_run_plot(options):
     }
 
     file_group_iter = ( ("fastqc", "link"),\
-                       ("kmer summary (plots)", "image"), ("kmer summary (text file links)", "link"),\
+                       ("kmer summary (plots)", "image"), ("text kmer summary (clusters)", "link"),\
                        ("Preview common sequence", "in-line"), ("All common sequence", "link"), \
                        )
     file_iters = {
@@ -87,8 +79,8 @@ def generate_run_plot(options):
         "fastqc" : ["fastqc"],
         "Preview common sequence" : [ 'common_sequence/preview_common_sequence.txt']            ,
         "All common sequence" : [ 'common_sequence/all_common_sequence.txt']            ,        
-        "kmer summary (plots)" : [ 'kmer_analysis/kmer_entropy.k6A.jpg', 'kmer_analysis/kmer_zipfian_comparisons.k6A.jpg','kmer_analysis/zipfian_distances.k6A.jpg']            ,
-        "kmer summary (text file links)" : [ 'kmer_analysis/heatmap_sample_clusters.k6A.txt', 'kmer_analysis/zipfian_distances_fit.k6A.txt']        
+        "kmer summary (plots)" : [ 'kmer_analysis/kmer_entropy.k6A.jpg', 'kmer_analysis/kmer_entropy_plus.k6A.jpg', 'kmer_analysis/kmer_zipfian_comparisons.k6A.jpg','kmer_analysis/zipfian_distances.k6A.jpg']            ,
+        "text kmer summary (clusters)" : [ 'kmer_analysis/heatmap_sample_clusters.k6A.txt', 'kmer_analysis/heatmap_sample_clusters_plus.k6A.txt','kmer_analysis/zipfian_distances_fit.k6A.txt']        
     }
 
     
@@ -98,19 +90,30 @@ def generate_run_plot(options):
 
         print >> out_stream, overview_section
 
+        print >> out_stream, """
+Contents:
+</p>
+<ul>
+"""
+
+
+        for (file_group, file_type)  in file_group_iter:
+            print >> out_stream, "<li> <a href=#%s> %s </a>"%(file_group, file_group)
+        print >> out_stream, """
+</ul>
+<hr/>
+</p>
+"""
         #print "DEBUG : calling get_samples"
         samples = get_samples(options)
 
-        print >> out_stream, "<a id=lane_plots />\n"        
-        
-        print >> out_stream, "<a id=sample_plots />\n<a id=sample_plots />\n"
         for (file_group, file_type)  in file_group_iter:
             # output overall header for file group
-            print >> out_stream, "<h2> %s </h2>\n"%file_group
+            #print >> out_stream, "<h2> %s </h2>\n"%file_group
             # output sample column headings
-            print >> out_stream, "<table width=90%% align=center>\n", \
+            print >> out_stream, "<table width=90%% align=left id=%s>\n"%file_group, \
                                  "<tr>\n", \
-                                 "<td> <h4> Name </h4> </td>\n",\
+                                 "<td> <h4> Sample name </h4> </td>\n",\
                                  "\n".join(["<td><h4> %s </h4></td>"%sample for sample in samples]), \
                                  "\n</tr>\n"
             for file_name in file_iters[file_group]:
@@ -130,7 +133,7 @@ def generate_run_plot(options):
                         link_relpath=os.path.join(sample, file_name)
 
                         if os.path.exists(file_path):
-                            print >> out_stream, "<td width=300> <a href=%s target=%s> %s </a></td>\n"%(link_relpath, file_name, link_relpath)
+                            print >> out_stream, "<td width=300 align=left> <a href=%s target=%s> %s </a></td>\n"%(link_relpath, file_name, link_relpath)
                         else:
                             print >> out_stream, "<td width=300> %s unavailable </td>\n"%file_path
                     elif file_type == "in-line":
