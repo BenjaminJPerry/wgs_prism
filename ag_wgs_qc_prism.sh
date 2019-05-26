@@ -251,8 +251,8 @@ if [ \$? != 0 ]; then
    echo \"warning sampling of $OUT_ROOT/$samplesheet_base/bcl2fastq/$SAMPLENAME/*.fastq.gz returned an error code\"
    exit 1
 fi
-     " >  $OUT_ROOT/${sample_moniker}.fastq_sample.sh
-      chmod +x $OUT_ROOT/${sample_moniker}.fastq_sample.sh
+     " >  $OUT_ROOT/${samplesheet_moniker}.fastq_sample.sh
+      chmod +x $OUT_ROOT/${samplesheet_moniker}.fastq_sample.sh
 
      ################ fasta_sample script
      echo "#!/bin/bash
@@ -265,8 +265,8 @@ if [ \$? != 0 ]; then
    echo \"warning sampling of $OUT_ROOT/$samplesheet_base/bcl2fastq/$SAMPLENAME/*.fastq.gz returned an error code\"
    exit 1
 fi
-     " >  $OUT_ROOT/${sample_moniker}.fasta_sample.sh
-      chmod +x $OUT_ROOT/${sample_moniker}.fasta_sample.sh
+     " >  $OUT_ROOT/${samplesheet_moniker}.fasta_sample.sh
+      chmod +x $OUT_ROOT/${samplesheet_moniker}.fasta_sample.sh
 
      ################ kmer summary script
      echo "#!/bin/bash
@@ -277,8 +277,8 @@ if [ \$? != 0 ]; then
    echo \"warning, kmer analysis of $OUT_ROOT/$samplesheet_base/$SAMPLENAME/sample/*.fastq.gz  returned an error code\"
    exit 1
 fi
-     " >  $OUT_ROOT/${sample_moniker}.kmer_analysis.sh
-      chmod +x $OUT_ROOT/${sample_moniker}.kmer_analysis.sh
+     " >  $OUT_ROOT/${samplesheet_moniker}.kmer_analysis.sh
+      chmod +x $OUT_ROOT/${samplesheet_moniker}.kmer_analysis.sh
 
 
      ################ clean script
@@ -286,8 +286,8 @@ fi
 cd $OUT_ROOT
 rm -rf $OUT_ROOT/$samplesheet_base/$SAMPLENAME
 rm -f *.${samplesheet_base}.*
-     " >  $OUT_ROOT/${sample_moniker}.clean.sh
-      chmod +x $OUT_ROOT/${sample_moniker}.clean.sh
+     " >  $OUT_ROOT/${samplesheet_moniker}.clean.sh
+      chmod +x $OUT_ROOT/${samplesheet_moniker}.clean.sh
 
 
 
@@ -319,8 +319,8 @@ if [ \$? != 0 ]; then
    echo \"warning , blast  of $OUT_ROOT/$samplesheet_base/$SAMPLENAME/fasta_small_lowdepthsample returned an error code\"
    exit 1
 fi
-     " >  $OUT_ROOT/${sample_moniker}.blast_analysis.sh 
-      chmod +x $OUT_ROOT/${sample_moniker}.blast_analysis.sh
+     " >  $OUT_ROOT/${samplesheet_moniker}.blast_analysis.sh 
+      chmod +x $OUT_ROOT/${samplesheet_moniker}.blast_analysis.sh
 
 
      ################ annotation script 
@@ -339,15 +339,15 @@ for file in  $OUT_ROOT/$samplesheet_base/$SAMPLENAME/blast/frequency_table.txt $
       if [ ! -f \$file.blinded ]; then
          cp -p \$file \$file.blinded
       fi
-      cat \$file.blinded | sed -f $OUT_ROOT/${sample_moniker}.unblind.sed > \$file
+      cat \$file.blinded | sed -f $OUT_ROOT/${samplesheet_moniker}.unblind.sed > \$file
    fi
 done
 if [[ ( \$return_code1 != 0 ) || ( \$return_code2 != 0 ) ]]; then
    echo \"warning, summary of $OUT_ROOT/$samplesheet_base/$SAMPLENAME/blast returned an error code\"
    exit 1
 fi
-     " >  $OUT_ROOT/${sample_moniker}.annotation.sh 
-      chmod +x $OUT_ROOT/${sample_moniker}.annotation.sh 
+     " >  $OUT_ROOT/${samplesheet_moniker}.annotation.sh 
+      chmod +x $OUT_ROOT/${samplesheet_moniker}.annotation.sh 
 
    done
 }
