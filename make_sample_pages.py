@@ -43,13 +43,10 @@ footer1="""
 </html>
 """
 
-BASEDIR="/dataset/gseq_processing/scratch/illumina/hiseq"
-
-
-
 def get_samples(options):
     # samples  are idenitified as subfolders of the run folder 
-    html_folder=os.path.join(BASEDIR, options["run_name"] , "html")
+    #html_folder=os.path.join(BASEDIR, options["run_name"] , "html")
+    html_folder=os.path.dirname(options["output_filename"])
     #print "DEBUG : "+run_folder
 
     sample_folders=[ node for node in os.listdir(html_folder) if re.search("^tardis", node) is None and  \
@@ -120,7 +117,8 @@ Contents:
 
                 print >> out_stream , "<tr><td>%s</td>\n"%file_name
                 for sample in samples:
-                    file_path = os.path.join(BASEDIR, options["run_name"], "html", sample, file_name)
+                    #file_path = os.path.join(BASEDIR, options["run_name"], "html", sample, file_name)
+                    file_path = os.path.join(os.path.dirname(options["output_filename"]) ,sample, file_name)
 
                     if file_type == "image":
                         image_relpath=os.path.join(sample, file_name)
