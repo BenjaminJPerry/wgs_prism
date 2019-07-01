@@ -461,7 +461,7 @@ function clientreport_prism() {
 
 function clean() {
    echo "cleaning up tardis working folders..."
-   find $OUT_ROOT -name "tardis_*" -type d -exec rm -r {} \;
+   nohup find $OUT_ROOT -name "tardis_*" -type d -exec rm -r {} \; > $OUT_ROOT/clean.log 2>&1 &
 }
 
 
