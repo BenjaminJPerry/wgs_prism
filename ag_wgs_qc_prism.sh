@@ -23,7 +23,7 @@ usage :\n
 example:\n
 ./ag_wgs_qc_prism.sh -f -a bcl2fastq -O /dataset/gseq_processing/scratch/illumina/hiseq/190524_D00390_0462_ACDN6VANXX  -r 190524_D00390_0462_ACDN6VANXX -s /dataset/hiseq/active/190524_D00390_0462_ACDN6VANXX/SampleSheet.csv \n
 ./ag_wgs_qc_prism.sh -f -a fastqc -O /dataset/gseq_processing/scratch/illumina/hiseq/190524_D00390_0462_ACDN6VANXX  -r 190524_D00390_0462_ACDN6VANXX -s /dataset/hiseq/active/190524_D00390_0462_ACDN6VANXX/SampleSheet.csv  OLW_Plate1 \n
-./ag_wgs_qc_prism.sh -a html  -O /dataset/gseq_processing/scratch/illumina/hiseq/190510_D00390_0457_AHYFCVBCX2 -r 190510_D00390_0457_AHYFCVBCX2 /dataset/hiseq/active/190510_D00390_0457_AHYFCVBCX2/SampleSheet.csv\n
+./ag_wgs_qc_prism.sh -a html  -O /dataset/gseq_processing/scratch/illumina/hiseq/190510_D00390_0457_AHYFCVBCX2 -r 190510_D00390_0457_AHYFCVBCX2 -s /dataset/hiseq/active/190510_D00390_0457_AHYFCVBCX2/SampleSheet.csv \n
 "
    while getopts ":nhfO:C:r:a:s:" opt; do
    case $opt in
@@ -374,14 +374,14 @@ fi
 
 
 
-function fake_prism() {
+function fake() {
    echo "dry run ! 
 
    "
    exit 0
 }
 
-function run_prism() {
+function run() {
    cd $OUT_ROOT
 
    make -f ag_wgs_qc_prism.mk -d -k  --no-builtin-rules -j 16 `cat $OUT_ROOT/${ANALYSIS}_targets.txt` > $OUT_ROOT/${ANALYSIS}.log 2>&1
@@ -389,7 +389,7 @@ function run_prism() {
    # run summaries
 }
 
-function html_prism() {
+function html() {
    mkdir -p $OUT_ROOT/html
 
    samplesheet_base=`basename $SAMPLESHEET .csv`
@@ -473,15 +473,15 @@ function main() {
    configure_env
 
    if [ $ANALYSIS == "html" ]; then
-      html_prism
+      html
    elif [ $ANALYSIS == "clientreport" ]; then
-      clientreport_prism
+      clientreport
    else
       get_targets
       if [ $DRY_RUN != "no" ]; then
-         fake_prism
+         fake
       else
-         run_prism
+         run
          if [ $? == 0 ] ; then
             clean
             echo "* done clean *"  # mainly to yield zero exit code
