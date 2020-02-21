@@ -1,0 +1,747 @@
+#!/bin/sh
+#
+# master interactive script for processing a hiseq run through bcl2fastq and GBS analysis
+#
+
+export SEQ_PRISMS_BIN=/dataset/gseq_processing/active/bin/gbs_prism/seq_prisms 
+export GBS_PRISM_BIN=/dataset/gseq_processing/active/bin/gbs_prism
+BCL2FASTQ_NODE=invbfopp10.agresearch.co.nz   # iramohio-01
+
+gbs_version=$1
+kgd_version=$2
+
+function read_answer_with_default() {
+   read answer
+   if [ -z "$answer" ]; then
+      answer=$@
+   fi
+}
+
+function run_bcl2fastq() {
+   if [ $HOSTNAME != $BCL2FASTQ_NODE ]; then
+      echo "sorry you need to be logged on to iramohio-01 to run bcl2fastq"
+      exit 1
+   fi
+
+   echo "checking run is completed (i.e. looking for $HISEQ_ROOT/$RUN/RTAComplete.txt)"
+   if [ ! -f $HISEQ_ROOT/$RUN/RTAComplete.txt ]; then
+      echo "*** landmark file $HISEQ_ROOT/$RUN/RTAComplete.txt does not exist => this run has not completed sequencing (or uploading?) - are you SURE you want to continue !? (y/n default n)"
+      read_answer_with_default n
+      if [ $answer != "y" ]; then
+         echo "OK quitting"
+         exit 1
+      else
+         echo "OK will continue but note that output may be incomplete"
+      fi
+   fi
+
+   bcl2fastq_phrase="-R $HISEQ_ROOT/$RUN -i $HISEQ_ROOT/$RUN/Data/Intensities/BaseCalls"
+   echo "do you want to allow missing bcls ? (y/n, default=n)"
+   read_answer_with_default n
+   if [ "$answer" == "y" ]; then
+      bcl2fastq_phrase="-R $HISEQ_ROOT/$RUN -i $HISEQ_ROOT/$RUN/Data/Intensities/BaseCalls --ignore-missing-bcls"
+   fi
+
+
+   # set up for bcl2fastq run
+   mkdir -p $BCL2FASTQ_ROOT/$RUN/SampleSheet
+   if [ ! -d $BCL2FASTQ_ROOT/$RUN/SampleSheet ]; then
+      echo "could not create bcl2fastq output folder $BCL2FASTQ_ROOT/$RUN/SampleSheet , quitting"
+      exit 1
+   fi
+
+   ####### ensure sample sheet used for bcl2fastq contains header, and includes specification of adapter
+   cat $HISEQ_ROOT/$RUN/SampleSheet.csv | $GBS_PRISM_BIN/add_sample_sheet_header.py -H  $GBS_PRISM_BIN/etc/sample_sheet_header.csv  > $BCL2FASTQ_ROOT/$RUN/SampleSheet.csv
+
+   echo "about to run bcl2fastq using
+
+   $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a bcl2fastq -B \"$bcl2fastq_phrase\" -O $BCL2FASTQ_ROOT/$RUN/SampleSheet $BCL2FASTQ_ROOT/$RUN/SampleSheet.csv  > $BCL2FASTQ_ROOT/$RUN/bcl2fastq.log 2>&1
+
+   OK ? (y/n, default=y)
+   "
+   read_answer_with_default  y
+   if [ $answer != "y" ]; then
+      echo "OK quitting"
+      exit 1
+   fi
+   echo "
+   starting bcl2fastq, this should take around an hour or two...
+
+   "
+
+   echo "running $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a bcl2fastq -B \"$bcl2fastq_phrase\" -O $BCL2FASTQ_ROOT/$RUN/SampleSheet $BCL2FASTQ_ROOT/$RUN/SampleSheet.csv" > $BCL2FASTQ_ROOT/$RUN/SampleSheet/bcl2fastq.log
+
+   $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a bcl2fastq -B "$bcl2fastq_phrase" -O $BCL2FASTQ_ROOT/$RUN/SampleSheet $BCL2FASTQ_ROOT/$RUN/SampleSheet.csv >> $BCL2FASTQ_ROOT/$RUN/SampleSheet/bcl2fastq.log 2>&1
+
+   if [ $? != 0 ]; then
+      echo "
+
+      bcl2fastq has finished but received a non zero process exit code from sequencing_qc_prism - do
+      you want to continue ? (y/n, default = n)
+      "
+      read_answer_with_default n 
+      if [ $answer != "y" ]; then
+         echo "OK quitting"
+         exit 1
+      fi
+   fi
+   echo "
+
+   bcl2fastq completed ok 
+
+   finding sequence files for fastqc..."
+   mkdir -p $BCL2FASTQ_ROOT/$RUN/SampleSheet/gbs
+   find $BCL2FASTQ_ROOT/$RUN -name "*.fastq.gz" -type f -size +2000000000c  -print > $BCL2FASTQ_ROOT/$RUN/SampleSheet/gbs/sequence_files.txt
+   echo "
+   nohup $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a fastqc -O $BCL2FASTQ_ROOT/$RUN/SampleSheet/gbs \`cat $BCL2FASTQ_ROOT/$RUN/SampleSheet/gbs/sequence_files.txt\` > $BCL2FASTQ_ROOT/$RUN/SampleSheet/gbs/fastqc.log 2>&1 
+   nohup $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a kmer_analysis -s .0002 -M 10000 -O $BCL2FASTQ_ROOT/$RUN/SampleSheet/gbs \`cat $BCL2FASTQ_ROOT/$RUN/SampleSheet/gbs/sequence_files.txt\` > $BCL2FASTQ_ROOT/$RUN/SampleSheet/gbs/kmer_analysis.log 2>&1 
+   " > $BCL2FASTQ_ROOT/$RUN/SampleSheet/gbs/lane_qc.src
+   echo "
+
+   about to start fastqc and kmer_analysis in the background using 
+"
+   cat $BCL2FASTQ_ROOT/$RUN/SampleSheet/gbs/lane_qc.src 
+   echo "
+OK ? (y/n, default=y)
+   "
+   read_answer_with_default y
+   if [ $answer != "y" ]; then
+      echo "OK quitting"
+      exit 1
+   fi
+   echo "
+
+   running fastqc and kmer analysis in background, then will continue with GBS q/c...
+
+   "
+   source $BCL2FASTQ_ROOT/$RUN/SampleSheet/gbs/lane_qc.src &
+}
+
+
+function get_run_opts() {
+
+   DRY_RUN=no
+   DEBUG=no
+   HPC_TYPE=slurm
+   FILES=""
+   OUT_ROOT=""
+   SNP_ENGINE=tassel        # the only one supported at this point
+
+   HISEQ_ROOT=/dataset/hiseq/active
+   MISEQ_ROOT=/dataset/miseq/active
+
+   HISEQ_PROCESSING_ROOT=/dataset/gseq_processing/scratch/gbs
+   # there is no MISEQ version of that as processing miseq using this script not supported currently 
+  
+   HISEQ_BCL2FASTQ_ROOT=/dataset/gseq_processing/scratch/illumina/hiseq
+   # there is no MISEQ version of that as processing miseq using this script not supported currently 
+
+
+   echo "*** gbs analysis version $gbs_version (KGD version $kgd_version) (using SNP engine = $SNP_ENGINE) ***
+* note that you can paste into your terminal window by clicking your right mouse button
+* at any stage you can press CTRL-C to exit the dialogs
+* if you would prefer to run a single batch command, use ag_gbs_qc_prism.sh (-h for help) - e.g. 
+  this allows you to run the analysis on any collection of input files
+"
+
+   ####### get and check RUN
+   while [ 1 ] ; do
+      echo "
+please give the full name of gbs run you would like to process (e.g. 180403_M02412_0073_000000000-D3JC9 (miseq) 
+or 180124_D00390_0342_ACBG7VANXX (hiseq - archived) or 180718_D00390_0389_ACCRDYANXX (hiseq not (yet) archived) )
+
+"
+      read RUN
+      if [ ! -z "$RUN" ]; then 
+         if [ -d $HISEQ_ROOT/$RUN ]; then 
+            gbs_ROOT=$HISEQ_ROOT
+            PROCESSING_ROOT=$HISEQ_PROCESSING_ROOT
+            BCL2FASTQ_ROOT=$HISEQ_BCL2FASTQ_ROOT
+            break
+         elif [ -d $MISEQ_ROOT/$RUN ]; then
+            echo "
+to process miseq data, you will need to run the underlying scripts
+demultiplex_prism.sh and genotype_prism.sh , rather than this master
+script (which assumes hiseq data disposition)
+"
+            exit 1
+         else 
+            echo "sorry can't find $RUN under either $HISEQ_ROOT or $MISEQ_ROOT "
+         fi
+      fi
+
+   done
+
+   echo "will process $gbs_ROOT/$RUN"
+   ####### check whether we can find sequence data - if not confirm  bcl2fastq is needed 
+   echo "checking sequence data (looking under  $BCL2FASTQ_ROOT/$RUN)...."
+   ls -lR $BCL2FASTQ_ROOT/$RUN/SampleSheet/bcl2fastq 2>/dev/null | grep "fastq.gz"   > /dev/null 2>&1 
+   if [ $? != 0 ]; then
+      echo "could not find fastq data under $BCL2FASTQ_ROOT/$RUN so looks like bcl2fastq is needed - OK to run that ? (y/n, default=y)"
+      read_answer_with_default y 
+      if [ "$answer" != "y" ]; then
+         echo "OK continuing..."
+      else
+         run_bcl2fastq 
+      fi
+   fi
+
+   ######## continue on with GBS q/c ###########
+   # set up output folder
+   while [ 1 ]; do
+      echo "
+
+      please specify GBS q/c output base folder (or just press ENTER to use default , $PROCESSING_ROOT/$RUN)"
+      read_answer_with_default $PROCESSING_ROOT/$RUN
+      NEW_ROOT=$answer
+      if [ -d $NEW_ROOT ]; then
+         echo "warning - $NEW_ROOT already exists, use anyway ? (y/n, default=y)"
+         read_answer_with_default y
+         if [ $answer == "y" ]; then
+            OUTPUT_ROOT=$NEW_ROOT
+            break
+         fi
+      else
+         mkdir -p $NEW_ROOT
+         if [ -d $NEW_ROOT ]; then
+            OUTPUT_ROOT=$NEW_ROOT
+            break
+         fi
+      fi
+   done
+
+   PARAMETERS_FILE=$OUTPUT_ROOT/SampleProcessing.json
+   echo "will use output root folder $OUTPUT_ROOT
+
+   "
+
+   ####### generate the edited sample sheet used for database import 
+   cat $HISEQ_ROOT/$RUN/SampleSheet.csv | $GBS_PRISM_BIN/sanitiseSampleSheet.py -r $RUN --supply_missing --add_header --target database | tr -d '\r' > $OUTPUT_ROOT/SampleSheet.csv 
+
+   ####### check whether run is in database  - import it if not 
+   echo "
+
+checking if run is in the database... 
+
+"
+   in_db=`$GBS_PRISM_BIN/is_run_in_database.sh $RUN | sed 's/\s//g' -`
+   if [ $in_db == "0" ]; then
+      echo "$RUN is not in the database - will run database import first , about to execute 
+
+$GBS_PRISM_BIN/database_prism.sh -i -d $OUTPUT_ROOT -t import_new_run -r $RUN | tee -a $OUTPUT_ROOT/database_prism.log
+
+logging to $OUTPUT_ROOT/database_prism.log 
+
+OK ? (y/n, default = y)
+"
+      read_answer_with_default y
+      if [ "$answer" != "n" ]; then
+         echo "backing up GBS tables using psql -U agrbrdf -d agrbrdf -h postgres -f dump_gbs_tables.psql" > $OUTPUT_ROOT/database_prism.log
+         psql -U agrbrdf -d agrbrdf -h postgres -f $GBS_PRISM_BIN/dump_gbs_tables.psql >> $OUTPUT_ROOT/database_prism.log 2>&1
+         echo "running $GBS_PRISM_BIN/database_prism.sh -i -d $OUTPUT_ROOT -t import_new_run -r $RUN" >> $OUTPUT_ROOT/database_prism.log
+         $GBS_PRISM_BIN/database_prism.sh -i -d $OUTPUT_ROOT -t import_new_run -r $RUN | tee -a  $OUTPUT_ROOT/database_prism.log 
+         if [ $? != 0 ]; then
+            echo "
+
+sorry - quitting after received bad return code from database import -try looking at
+
+$OUTPUT_ROOT/database_prism.log
+
+"
+            exit 1
+         fi
+      else
+         echo "OK quitting - can't run GBS q/c until run has been imported to database"
+         exit 1
+      fi
+   fi
+
+
+   ####### get and check the analysis type 
+   while [ 1 ] ; do
+      echo "
+please give which q/c analysis you want (clientreport, html, trimmed_kmer_analysis, import_results, all, demultiplex, kgd, kmer_analysis, allkmer_analysis, fasta_sample, fastq_sample, annotation , bwa_mapping, unblind, historical_unblind , common_sequence, unblinded_plots ) (or just press enter to run all)  
+(notes:
+
+* entering kgd implies demultiplex will also be run (unless already done); annotation implies also kgd will be 
+run (unless already done), etc.)
+* entering html or clientreport does not rerun any analyses - it just redoes the html page
+* entering import_results does not rerun any analyses - it just (re)imports the results 
+* running just kgd does not do unblinding - you will need to then run the unblind step
+* but you don't usually need to run unblind stand-alone
+"
+      read_answer_with_default all
+      ANALYSIS=$answer
+
+      if [[ ( "$ANALYSIS" != "demultiplex" ) && ( "$ANALYSIS" != "html" ) && ( "$ANALYSIS" != "trimmed_kmer_analysis" ) && ( "$ANALYSIS" != "clientreport" ) && ( "$ANALYSIS" != "import_results" ) && ( "$ANALYSIS" != "kgd" ) && ( "$ANALYSIS" != "historical_unblind" ) && ( "$ANALYSIS" != "unblind" ) && ( "$ANALYSIS" != "kmer_analysis" ) && ( "$ANALYSIS" != "allkmer_analysis" ) && ( "$ANALYSIS" != "bwa_mapping" ) && ( "$ANALYSIS" != "fasta_sample" ) && ( "$ANALYSIS" != "annotation" ) && ( "$ANALYSIS" != "fastq_sample" ) && ( "$ANALYSIS" != "all" ) && ( "$ANALYSIS" != "common_sequence" )  && ( "$ANALYSIS" != "unblinded_plots" ) ]]; then
+         echo "analysis must be one of demultiplex, kgd, kmer_analysis, allkmer_analysis, bwa_mapping , annotation, fasta_sample , fastq_sample , common_sequence , unblinded_plots or all"
+      else
+         break
+      fi
+   done
+
+   echo "will use analysis=$ANALYSIS
+   "
+
+   if [[ ( $ANALYSIS != "html" ) && ( $ANALYSIS != "trimmed_kmer_analysis" ) && ( $ANALYSIS != "import_results" )  && ( $ANALYSIS != "clientreport" ) && ( $ANALYSIS != "unblind" ) && ( $ANALYSIS != "historical_unblind" ) ]]; then 
+      ####### get and check whether to run locally or on the cluster
+      echo "
+
+should this run be queued on the compute cluster ? (y/n, default=y. If n, will be run locally)
+"
+      read_answer_with_default y
+      if [ "$answer" != "n" ]; then 
+         HPC_TYPE=slurm
+      else
+         HPC_TYPE=local
+      fi
+   else
+      HPC_TYPE=local
+   fi
+
+
+   if [[ ( $ANALYSIS != "html" ) && ( $ANALYSIS != "trimmed_kmer_analysis" ) && ( $ANALYSIS != "import_results" )  && ( $ANALYSIS != "clientreport" ) && ( $ANALYSIS != "unblind" ) && ( $ANALYSIS != "historical_unblind" ) ]]; then 
+      ####### get and check the sample sheet and a parameters file that controls the processing 
+      ####### sample sheet:
+      SAMPLE_SHEET=""
+      if [ -f $gbs_ROOT/$RUN/SampleSheet.csv ]; then
+         echo "will use sample sheet $OUTPUT_ROOT/SampleSheet.csv , containing...(press enter for listing)..."
+         read answer 
+         more $OUTPUT_ROOT/SampleSheet.csv 
+         echo "
+
+         "
+         echo "is this OK ? (y/n, default=y)"
+         read_answer_with_default y
+         if [ "$answer" == "y" ]; then
+            SAMPLE_SHEET=$gbs_ROOT/$RUN/SampleSheet.csv 
+         fi
+      else
+         echo "warning - could not find a sample sheet in the usual place ( $gbs_ROOT/$RUN/SampleSheet.csv )"
+      fi
+      while [ -z "$SAMPLE_SHEET" ]; do
+         echo "please enter enter or paste in the full path to the sample sheet specifying lane contents and downstream processing"
+         read SAMPLE_SHEET
+         if [ ! -f "$SAMPLE_SHEET" ]; then 
+            SAMPLE_SHEET=""
+         fi
+      done
+
+      ####### processing parameters
+      # deprecated 
+      #get_processing_parameters  
+   fi 
+
+}
+
+
+function get_cohort_opts() {
+   echo "getting default GBS libraries to process. . .
+
+   "
+
+   LIBRARY_MONIKERS=`psql -U agrbrdf -d agrbrdf -h postgres -v run=\'$RUN\' -f $GBS_PRISM_BIN/get_run_samples.psql -q`
+   echo "please enter libraries to run (default = $LIBRARY_MONIKERS)"
+   read_answer_with_default $LIBRARY_MONIKERS
+   LIBRARY_MONIKERS=$answer
+
+
+   if [[ ( $ANALYSIS != "html" ) && ( $ANALYSIS != "trimmed_kmer_analysis" ) && ( $ANALYSIS != "import_results" )  && ( $ANALYSIS != "trimmed_kmer_analysis" ) && ( $ANALYSIS != "clientreport" ) && ( $ANALYSIS != "unblind" ) && ( $ANALYSIS != "historical_unblind" ) ]]; then 
+
+      # check if already run - if so prompt for reimport
+      to_do=""
+      to_import=""
+      for library_moniker in $LIBRARY_MONIKERS; do
+         # look for landmark file(s)  
+         ls $OUTPUT_ROOT/*.${library_moniker}*.demultiplex > $OUTPUT_ROOT/manifest.txt 2>&1
+         grep -q "cannot access" $OUTPUT_ROOT/manifest.txt 
+            if [ $? != 0 ]; then
+             echo "looks like $library_moniker has already been processed (found landmarks )"
+             echo "do you want to reprocess this library ? (y/n, default = y)"
+             read_answer_with_default y
+             if [ $answer != "y" ]; then
+                echo "ok skipping $library_moniker"
+                continue
+             else
+                to_do="$to_do $library_moniker"
+                echo "ok will reprocess $library_moniker "
+                if [[ ( $ANALYSIS != "import_results" ) && ( $ANALYSIS != "html" )  && ( $ANALYSIS != "clientreport" ) && ( $ANALYSIS != "unblind" ) && ( $ANALYSIS != "historical_unblind" ) ]]; then 
+                   echo "do you need the keyfile re-imported ? (y/n, default =y)"
+                   read_answer_with_default y
+                   if [ $answer != "y" ]; then
+                      echo "ok will not reimport keyfile"
+                   else
+                       to_import="$to_import $library_moniker"
+                       echo "ok will reimport keyfile"
+                   fi
+                fi
+             fi
+         else
+            to_do="$to_do $library_moniker"
+         fi
+      done
+   
+      LIBRARY_MONIKERS=$to_do
+   fi
+
+   # exit if nothing to do ; run imports if any to do
+   if [ -z "$LIBRARY_MONIKERS" ]; then
+      echo "quitting , nothing to do"
+      exit 1
+   fi
+
+   if [ ! -z "$to_import" ]; then
+      echo "about to reimport keyfiles for $to_import - ok ? (y/n, default = y)"
+      read_answer_with_default y
+      if [ $answer != "y" ]; then
+         echo "ok quitting"
+         exit 1
+      fi
+      for library in $to_import; do
+         echo "running $GBS_PRISM_BIN/database_prism.sh -i -t reimport_library -r $RUN -s $library "
+         echo "press Enter to continue. . ."
+         read answer
+         $GBS_PRISM_BIN/database_prism.sh -i -t reimport_library -r $RUN -s $library >> $OUTPUT_ROOT/reimport.log 2>&1
+         return_code=$?
+         if [ $return_code != 0 ]; then
+            echo "looks like there was a problem with the import (exit code $return_code)  - check $OUTPUT_ROOT/reimport.log - quitting"
+            exit 1
+         fi
+      done
+
+      echo "*** finished reimporting keyfiles  ***"
+
+      # DEPRECATED 
+      #echo "updating processing parameters"
+      #mv $OUTPUT_ROOT/SampleProcessing.json $OUTPUT_ROOT/SampleProcessing.json.old
+      #get_processing_parameters
+
+   fi
+
+
+   echo "getting default GBS cohorts to process. . .
+
+   "
+   gbs_cohorts=""
+   for library_moniker in $LIBRARY_MONIKERS; do
+       echo "from $library_moniker . . ."
+       flowcell=`$GBS_PRISM_BIN/get_flowcellid_from_database.sh $RUN  $library_moniker  | sed 's/\s//g' - `
+       library_cohorts=`psql -U agrbrdf -d agrbrdf -h postgres -v flowcell="'$flowcell'" -v run_name="'$RUN'" -v sample_name="'$library_moniker'" -f get_flowcell_cohorts.psql -q`
+       for library_cohort in $library_cohorts; do
+          gbs_cohorts="$gbs_cohorts ${library_moniker}.${library_cohort} "
+       done
+   done
+   echo "please enter gbs cohorts to process (default=$gbs_cohorts)"
+   read_answer_with_default $gbs_cohorts
+   GBS_COHORTS=$answer
+
+
+   # optionally clean up  (unless doing summaries etc)
+   if [[ ( $ANALYSIS != "html" ) && ( $ANALYSIS != "trimmed_kmer_analysis" ) && ( $ANALYSIS != "import_results" )  && ( $ANALYSIS != "clientreport" ) && ( $ANALYSIS != "unblind" ) && ( $ANALYSIS != "historical_unblind" )  ]]; then 
+      for cohort in $GBS_COHORTS; do
+         if [ -d $OUTPUT_ROOT/$cohort ]; then
+            echo "found existing results for $cohort in $OUTPUT_ROOT/$cohort - do you want to reset this cohort ? (y/n, default = y)"
+            read_answer_with_default y
+            if [ $answer != "y" ]; then
+               echo "ok not cleaning - note , rerun may be incomplete"
+            else
+               set -x
+               $GBS_PRISM_BIN/ag_gbs_qc_prism.sh -f -C local -a clean -O $OUTPUT_ROOT -r $RUN $cohort  
+               set +x
+            fi
+         fi
+      done
+   fi
+}
+
+
+function run_qc() {
+
+   echo "
+
+   Ready to run q/c , with the following: 
+
+   $GBS_PRISM_BIN/ag_gbs_qc_prism.sh -f -C $HPC_TYPE -a $ANALYSIS -O $OUTPUT_ROOT -r $RUN $GBS_COHORTS 
+
+   "
+   echo "OK to continue ? (y/n - default = y)"
+   read_answer_with_default y
+   if [ $answer != "y" ]; then
+      echo "OK quitting"
+      exit 1
+   else 
+      echo "
+      running gbs_prism version $gbs_version , KGD version $kgd_version , using : 
+
+      $GBS_PRISM_BIN/ag_gbs_qc_prism.sh -f -C $HPC_TYPE -a $ANALYSIS -O $OUTPUT_ROOT -r $RUN $GBS_COHORTS
+      " > $OUTPUT_ROOT/run_gbs_qc.log 
+      echo "
+      export SEQ_PRISMS_BIN=$SEQ_PRISMS_BIN
+      export GBS_PRISM_BIN=$GBS_PRISM_BIN 
+      $GBS_PRISM_BIN/ag_gbs_qc_prism.sh -C $HPC_TYPE -a $ANALYSIS -O $OUTPUT_ROOT -r $RUN $GBS_COHORTS" > $OUTPUT_ROOT/restart_qc.src 
+
+      echo "
+      (if you need to kill this run, you can restart using : 
+      source $OUTPUT_ROOT/restart_qc.src
+
+      - once that completes you will also need to rerun this interactive script to generate the html 
+      summary page, and again to generate client reports , and again to import the results (if applicable) 
+      (choose html , and then clientreport, and then import_results, when prompted for the analysis)
+
+
+      Logging output is captured in the following files: 
+
+      * $GBS_PRISM_BIN/ag_gbs_qc_prism.sh logs to $OUTPUT_ROOT/run_gbs_qc.log
+
+      "
+    
+      $GBS_PRISM_BIN/ag_gbs_qc_prism.sh -f -C $HPC_TYPE -a $ANALYSIS -O $OUTPUT_ROOT -r $RUN $GBS_COHORTS  >> $OUTPUT_ROOT/run_gbs_qc.log 2>&1
+      return_code=$?
+
+      if [ $return_code != 0 ]; then
+         echo "
+
+>>>> ( looks like there was a problem with ag_gbs_qc_prism.sh (non-zero return code $return_code ) - check $OUTPUT_ROOT/run_gbs_qc.log  ) 
+"
+      else
+          echo "** run_qc looks ok **"
+      fi
+   fi
+}
+
+function import_results() {
+   mkdir -p $OUTPUT_ROOT/html 
+
+   if [ $return_code != 0 ]; then
+      echo "
+
+looks like there may have been a problem with the q/c (non-zero exit code from ag_gbs_qc_prism.sh )  - 
+suggest you check  $OUTPUT_ROOT/run_gbs_qc.log. You can manually run the import later using : 
+  
+$GBS_PRISM_BIN/database_prism.sh -i -t import_results -r $RUN
+
+"
+      exit 1
+   else
+      echo "
+
+looks like q/c completed OK
+
+Ready to summarise and import yield stats using :
+
+$GBS_PRISM_BIN/database_prism.sh -i -t import_results -r $RUN
+
+OK to continue ? (y/n , default = y)"
+
+      read_answer_with_default y
+      if [ $answer != "y" ]; then
+         echo "OK not importing results"
+      else
+         echo "
+      running
+
+      $GBS_PRISM_BIN/database_prism.sh -i -t import_results -r $RUN > $OUTPUT_ROOT/database_results_import.log 2>&1 
+
+      " >> $OUTPUT_ROOT/run_gbs_qc.log
+         $GBS_PRISM_BIN/database_prism.sh -i -t import_results -r $RUN > $OUTPUT_ROOT/database_results_import.log 2>&1 
+         return_code=$?
+         if [ $return_code != 0 ]; then
+            echo "
+
+** looks like there was a problem with the import (non-zero return code from database_prism) - check $OUTPUT_ROOT/database_results_import.log  **
+( you can run manually using : $GBS_PRISM_BIN/database_prism.sh -i -t import_results -r $RUN )
+
+"
+            exit 1
+         else
+             echo "** database import looks ok **"
+         fi
+      fi
+   fi
+}
+
+function generate_trimmed_kmer_analysis() {
+   mkdir -p $OUTPUT_ROOT/trimmed_kmer_analysis
+
+   echo "
+
+   Ready to generate trimmed kmer analysis , with the following:
+
+   $GBS_PRISM_BIN/ag_gbs_qc_prism.sh -f -a trimmed_kmer_analysis -O $OUTPUT_ROOT -r $RUN $GBS_COHORTS
+
+   "
+   echo "OK to run that  ? (y/n , default = y)"
+   read_answer_with_default y
+   if [ $answer != "y" ]; then
+      echo "OK will not run trimmed kmer analysis"
+   else
+      echo "
+      running
+
+       $GBS_PRISM_BIN/ag_gbs_qc_prism.sh -f -a trimmed_kmer_analysis -O $OUTPUT_ROOT -r $RUN $GBS_COHORTS 
+
+      " >> $OUTPUT_ROOT/generate_trimmed_kmer_analysis.log
+      $GBS_PRISM_BIN/ag_gbs_qc_prism.sh -f -a trimmed_kmer_analysis -O $OUTPUT_ROOT -r $RUN $GBS_COHORTS  > $OUTPUT_ROOT/generate_trimmed_kmer_analysis.log 2>&1 
+      return_code=$?
+      if [ $return_code != 0 ]; then
+         echo "
+
+** looks like there was a problem with generating trimmed kmer analysis (non-zero return code ) - check $OUTPUT_ROOT/generate_trimmed_kmer_analysis.log  **
+
+"
+         exit 1
+      else
+          echo "** trimmed kmer analysis looks ok **"
+      fi
+   fi
+}
+
+function generate_unblinded_plots() {
+   echo "
+
+   Ready to attempt unblinded plots , with the following:
+
+   $GBS_PRISM_BIN/ag_gbs_qc_prism.sh -f -a unblinded_plots -O $OUTPUT_ROOT -r $RUN $GBS_COHORTS
+
+   "
+   echo "OK to run that  ? (y/n , default = y)"
+   read_answer_with_default y
+   if [ $answer != "y" ]; then
+      echo "OK will not run unblinded plots"
+   else
+      echo "
+      running
+
+       $GBS_PRISM_BIN/ag_gbs_qc_prism.sh -f -a unblinded_plots -O $OUTPUT_ROOT -r $RUN $GBS_COHORTS
+
+      " >> $OUTPUT_ROOT/generate_unblinded_plots.log
+      $GBS_PRISM_BIN/ag_gbs_qc_prism.sh -f -a unblinded_plots -O $OUTPUT_ROOT -r $RUN $GBS_COHORTS  > $OUTPUT_ROOT/generate_unblinded_plots.log 2>&1
+      return_code=$?
+      if [ $return_code != 0 ]; then
+         echo "
+
+** looks like there was a problem with generating generate_unblinded_plots (non-zero return code ) - check $OUTPUT_ROOT/generate_unblinded_plots.log  **
+
+"
+         exit 1
+      else
+          echo "** unblinded plot run looks ok **"
+      fi
+   fi
+}
+
+
+function generate_html() {
+   mkdir -p $OUTPUT_ROOT/html
+
+   echo "
+
+   Ready to generate html summaries  , with the following:
+
+   $GBS_PRISM_BIN/ag_gbs_qc_prism.sh -f -C local -a html -O $OUTPUT_ROOT -r $RUN $GBS_COHORTS 
+
+   "
+   echo "OK to continue ? (y/n , default = y)"
+   read_answer_with_default y
+   if [ $answer != "y" ]; then
+      echo "OK quitting"
+      exit 1
+   else
+      echo "
+      running
+
+      $GBS_PRISM_BIN/ag_gbs_qc_prism.sh -f -C local -a html -O $OUTPUT_ROOT -r $RUN $GBS_COHORTS
+
+      " >> $OUTPUT_ROOT/run_gbs_qc.log
+      $GBS_PRISM_BIN/ag_gbs_qc_prism.sh -f -C local -a html -O $OUTPUT_ROOT -r $RUN $GBS_COHORTS > $OUTPUT_ROOT/generate_html.log 2>&1
+      return_code=$?
+      if [ $return_code != 0 ]; then
+         echo "
+
+** looks like there was a problem with generating html (non-zero return code ) - check $OUTPUT_ROOT/generate_html.log  **
+( you can run manually using : $GBS_PRISM_BIN/ag_gbs_qc_prism.sh -f -C local -a html -O $OUTPUT_ROOT -r $RUN $GBS_COHORTS )
+
+"
+         exit 1
+      else
+          echo "** html looks ok **"
+      fi
+   fi
+
+   echo "do you want to (re)generate the slippery slope plot ?"
+   read_answer_with_default y
+   if [ $answer == "y" ]; then
+      set -x
+      $GBS_PRISM_BIN/SelfRelDepth.sh -I
+      set +x
+   fi
+
+}
+
+function generate_clientreport() {
+
+   echo "
+
+   Ready to generate clientreport summaries  , with the following:
+
+   $GBS_PRISM_BIN/ag_gbs_qc_prism.sh -f -C local -a clientreport -O $OUTPUT_ROOT -r $RUN $GBS_COHORTS
+
+   "
+   echo "OK to continue ? (y/n , default = y)"
+   read_answer_with_default y
+   if [ $answer != "y" ]; then
+      echo "OK will not generate clientreports "
+   else
+      echo "
+      running
+
+      $GBS_PRISM_BIN/ag_gbs_qc_prism.sh -f -C local -a clientreport -O $OUTPUT_ROOT -r $RUN $GBS_COHORTS
+
+      " >> $OUTPUT_ROOT/run_gbs_qc.log
+      $GBS_PRISM_BIN/ag_gbs_qc_prism.sh -f -C local -a clientreport -O $OUTPUT_ROOT -r $RUN $GBS_COHORTS > $OUTPUT_ROOT/generate_clientreport.log 2>&1
+      return_code=$?
+      if [ $return_code != 0 ]; then
+         echo "
+
+** looks like there was a problem with generating clientreports (non-zero return code ) - check $OUTPUT_ROOT/generate_clientreport.log  **
+( you can run manually using : $GBS_PRISM_BIN/ag_gbs_qc_prism.sh -f -C local -a clientreport -O $OUTPUT_ROOT -r $RUN )
+
+"
+         exit 1
+      else
+          echo "** clientreport looks ok **"
+      fi
+   fi
+}
+
+
+get_run_opts
+get_cohort_opts
+
+if [ $ANALYSIS == "trimmed_kmer_analysis" ]; then
+   generate_trimmed_kmer_analysis
+fi
+
+if [ $ANALYSIS == "unblinded_plots" ]; then
+   generate_unblinded_plots
+fi
+
+if [[ ( $ANALYSIS != "import_results" ) && ( $ANALYSIS != "html" )  && ( $ANALYSIS != "clientreport" ) && ( $ANALYSIS != "trimmed_kmer_analysis" ) && ( $ANALYSIS != "unblinded_plots" ) ]]; then 
+   run_qc
+   generate_trimmed_kmer_analysis
+   generate_unblinded_plots
+fi
+
+if [[ ( $ANALYSIS != "import_results" )  && ( $ANALYSIS != "clientreport" ) ]]; then
+   generate_html
+fi
+
+if [[ ( $ANALYSIS != "html" )  && ( $ANALYSIS != "clientreport" )  && ( $ANALYSIS != "trimmed_kmer_analysis" ) && ( $ANALYSIS != "unblinded_plots" )  ]]; then
+   return_code=0
+   import_results
+fi
+
+if [[ ( $ANALYSIS != "import_results" )  && ( $ANALYSIS != "html" ) ]]; then
+   generate_clientreport
+fi
+
