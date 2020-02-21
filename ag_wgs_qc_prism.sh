@@ -19,7 +19,7 @@ function get_opts() {
 
    help_text="
 usage :\n 
-./ag_wgs_qc_prism.sh  [-h] [-n] [-d] [-f] [-C hpctype] [-s SAMPLESHEET] [-a bcl2fastq|bcl2fastq_custom|fastqc|fasta_sample|fastq_sample|kmer_analysis|blast_analysis|all|html|common_sequence|clean] -O outdir  project1 project2 . . . \n
+./ag_wgs_qc_prism.sh  [-h] [-n] [-d] [-f] [-C hpctype] [-s SAMPLESHEET] [-a bcl2fastq|bcl2fastq_custom|fastqc|fasta_sample|fastq_sample|kmer_analysis|fastq_stats|blast_analysis|all|html|common_sequence|clean] -O outdir  project1 project2 . . . \n
 example:\n
 ./ag_wgs_qc_prism.sh -f -a bcl2fastq -O /dataset/gseq_processing/scratch/illumina/hiseq/190524_D00390_0462_ACDN6VANXX  -r 190524_D00390_0462_ACDN6VANXX -s /dataset/hiseq/active/190524_D00390_0462_ACDN6VANXX/SampleSheet.csv \n
 ./ag_wgs_qc_prism.sh -f -a fastqc -O /dataset/gseq_processing/scratch/illumina/hiseq/190524_D00390_0462_ACDN6VANXX  -r 190524_D00390_0462_ACDN6VANXX -s /dataset/hiseq/active/190524_D00390_0462_ACDN6VANXX/SampleSheet.csv  OLW_Plate1 \n
@@ -114,8 +114,8 @@ function check_opts() {
       exit 1
    fi
 
-   if [[ ( $ANALYSIS != "all" ) && ( $ANALYSIS != "bcl2fastq" ) && ( $ANALYSIS != "fastqc" ) && ( $ANALYSIS != "bcl2fastq_custom" ) && ( $ANALYSIS != "clean" ) && ( $ANALYSIS != "fasta_sample" ) && ( $ANALYSIS != "kmer_analysis" ) && ( $ANALYSIS != "blast_analysis" ) && ( $ANALYSIS != "annotation" )  && ( $ANALYSIS != "html" ) && ( $ANALYSIS != "clientreport" )  && ( $ANALYSIS != "fastq_sample" ) && ( $ANALYSIS != "common_sequence" ) ]]; then
-      echo "analysis must be one of all, demultiplex, kgd , unblind, kmer_analysis, allkmer_analysis, blast_analysis , common_sequencs, clean "
+   if [[ ( $ANALYSIS != "all" ) && ( $ANALYSIS != "bcl2fastq" ) && ( $ANALYSIS != "fastqc" ) && ( $ANALYSIS != "bcl2fastq_custom" ) && ( $ANALYSIS != "clean" ) && ( $ANALYSIS != "fasta_sample" ) && ( $ANALYSIS != "kmer_analysis" ) && ( $ANALYSIS != "fastq_stats" ) && ( $ANALYSIS != "blast_analysis" ) && ( $ANALYSIS != "annotation" )  && ( $ANALYSIS != "html" ) && ( $ANALYSIS != "clientreport" )  && ( $ANALYSIS != "fastq_sample" ) && ( $ANALYSIS != "common_sequence" ) ]]; then
+      echo "analysis must be one of all, demultiplex, kgd , unblind, kmer_analysis, fastq_stats , allkmer_analysis, blast_analysis , common_sequencs, clean "
       exit 1
    fi
 
@@ -189,7 +189,7 @@ function get_targets() {
          project_moniker=${RUN}.$samplesheet_base
       fi
 
-      for analysis_type in all bcl2fastq fastqc clean kmer_analysis blast_analysis fasta_sample fastq_sample annotation common_sequence; do
+      for analysis_type in all bcl2fastq fastqc clean fastq_stats kmer_analysis blast_analysis fasta_sample fastq_sample annotation common_sequence; do
          echo $OUT_ROOT/$project_moniker.$analysis_type  >> $OUT_ROOT/${analysis_type}_targets.txt
          script=$OUT_ROOT/${project_moniker}.${analysis_type}.sh
          if [ -f $script ]; then
@@ -200,11 +200,16 @@ function get_targets() {
          fi
       done
 
+      # assume sample sheet is in standard location
+      B_rundir=`dirname $SAMPLESHEET`
+      B_intensitydir=$B_rundir/Data/Intensities/BaseCalls
+
+
       ############### bcl2fastq script 
       echo "#!/bin/bash
 cd $OUT_ROOT
 mkdir -p $samplesheet_base
-$SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a bcl2fastq -O $OUT_ROOT/$samplesheet_base $SAMPLESHEET > $OUT_ROOT/$samplesheet_base/bcl2fastq.log  2>&1
+$SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a bcl2fastq -B \"-R $B_rundir -i $B_intensitydir\" -O $OUT_ROOT/$samplesheet_base $SAMPLESHEET > $OUT_ROOT/$samplesheet_base/bcl2fastq.log  2>&1
 if [ \$? != 0 ]; then
    echo \"warning bcl2fastq of $samplesheet_base returned an error code\"
       exit 1
@@ -217,7 +222,7 @@ if [ \$? != 0 ]; then
       echo "#!/bin/bash
 cd $OUT_ROOT
 mkdir -p $samplesheet_base
-$SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a bcl2fastq -B \"--ignore-missing-bcls\"  -O $OUT_ROOT/$samplesheet_base $SAMPLESHEET > $OUT_ROOT/$samplesheet_base/bcl2fastq.log  2>&1
+$SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a bcl2fastq -B \"-R $B_rundir -i $B_intensitydir --ignore-missing-bcls\"  -O $OUT_ROOT/$samplesheet_base $SAMPLESHEET > $OUT_ROOT/$samplesheet_base/bcl2fastq.log  2>&1
 if [ \$? != 0 ]; then
    echo \"warning custom bcl2fastq of $samplesheet_base returned an error code\"
       exit 1
@@ -271,6 +276,19 @@ if [ \$? != 0 ]; then
 fi
      " >  $OUT_ROOT/${project_moniker}.fastq_sample.sh
       chmod +x $OUT_ROOT/${project_moniker}.fastq_sample.sh
+
+     ################ fastq stats script
+     echo "#!/bin/bash
+cd $OUT_ROOT
+mkdir -p $samplesheet_base/$projectname
+find $OUT_ROOT/$samplesheet_base/bcl2fastq/$projectname -name \"*.fastq.gz\"  | grep -v \".005\" > $OUT_ROOT/$samplesheet_base/$projectname/seq_stats.list
+$SEQ_PRISMS_BIN/sequencing_qc_prism.sh -C $HPC_TYPE  -a seq_stats -O $OUT_ROOT/$samplesheet_base/$projectname \`cat $OUT_ROOT/$samplesheet_base/$projectname/seq_stats.list\` 
+if [ \$? != 0 ]; then
+   echo \"warning, seq_stats of $OUT_ROOT/$samplesheet_base/$projectname/seq_stats.list  returned an error code\"
+   exit 1
+fi
+     " >  $OUT_ROOT/${project_moniker}.fastq_stats.sh
+      chmod +x $OUT_ROOT/${project_moniker}.fastq_stats.sh
 
      ################ fasta_sample script
      echo "#!/bin/bash
@@ -410,6 +428,12 @@ function html() {
       rm $OUT_ROOT/html/$projectname/kmer_analysis/*
       for file in $OUT_ROOT/$samplesheet_base/$projectname/kmer_analysis/*.jpg $OUT_ROOT/$samplesheet_base/$projectname/kmer_analysis/*.txt ; do
           cp -s $file $OUT_ROOT/html/$projectname/kmer_analysis
+      done
+
+      mkdir -p  $OUT_ROOT/html/$projectname/fastq_counts
+      rm $OUT_ROOT/html/$projectname/fastq_counts/*
+      for file in $OUT_ROOT/$samplesheet_base/$projectname/seq_stats/*.txt  ; do
+          sort -k 2,2 -n $file >> $OUT_ROOT/html/$projectname/fastq_counts/sorted_seq_counts.txt
       done
 
       mkdir -p  $OUT_ROOT/html/$projectname/blast

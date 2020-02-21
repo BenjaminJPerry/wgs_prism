@@ -35,6 +35,10 @@
 	$@.sh > $@.mk.log 2>&1
 	date > $@
 
+%.fastq_stats:   %.bcl2fastq
+	$@.sh > $@.mk.log 2>&1
+	date > $@
+
 %.bcl2fastq:
 	$@.sh > $@.mk.log 2>&1
 	date > $@

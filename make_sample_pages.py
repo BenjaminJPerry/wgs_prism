@@ -65,6 +65,7 @@ def generate_run_plot(options):
 
     file_group_iter = ( ("fastqc", "link"),\
                        ("kmer summary (plots)", "image"), ("text kmer summary (clusters)", "link"),\
+                        ("Sequence counts", "in-line"),\
                        ("Preview common sequence", "in-line"), ("All common sequence", "link"), \
                        )
     file_iters = {
@@ -74,6 +75,7 @@ def generate_run_plot(options):
         #        'KGD/Co-call-HWdgm.05.png', 'KGD/Gcompare.png', 'KGD/GHWdgm.05-diag.png', 'KGD/LRT-QQ.png', 'KGD/SampDepthCR.png', 'KGD/SNPCallRate.png'
         #        'KGD/Co-call-.png', 'KGD/Gdiagdepth.png', 'KGD/Heatmap-G5HWdgm.05.png', 'KGD/MAFHWdgm.05.png', 'KGD/SampDepthHist.png', 'KGD/SNPDepthHist.png'],
         "fastqc" : ["fastqc"],
+        "Sequence counts" : ['fastq_counts/sorted_seq_counts.txt'],
         "Preview common sequence" : [ 'common_sequence/preview_common_sequence.txt']            ,
         "All common sequence" : [ 'common_sequence/all_common_sequence.txt']            ,        
         "kmer summary (plots)" : [ 'kmer_analysis/kmer_entropy.k6A.jpg', 'kmer_analysis/kmer_entropy_plus.k6A.jpg', 'kmer_analysis/kmer_zipfian_comparisons.k6A.jpg','kmer_analysis/zipfian_distances.k6A.jpg']            ,
