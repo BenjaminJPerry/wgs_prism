@@ -1,26 +1,24 @@
 #!/bin/sh
 
 function get_pipeline() {
-   export SEQ_PRISMS_BIN=/dataset/gseq_processing/active/bin/gbs_prism/seq_prisms
-   export GBS_PRISM_BIN=/dataset/gseq_processing/active/bin/gbs_prism
-   cd $GBS_PRISM_BIN
-   gbs_version=$1
+   export SEQ_PRISMS_BIN=/dataset/gseq_processing/active/bin/wgs_prism/seq_prisms
+   export WGS_PRISM_BIN=/dataset/gseq_processing/active/bin/wgs_prism
+   cd $WGS_PRISM_BIN
+   wgs_version=$1
 
-   # (to move to another KGD version, git pull  in the KGD folder, and then check out the version you want)
-   kgd_version=`$GBS_PRISM_BIN/get_kgd_version.sh`
-   echo "preparing to run gbs qc pipeline version $gbs_version (KGD version $kgd_version) (press enter to continue)"
+   echo "preparing to run wgs qc pipeline (press enter to continue)"
    read answer
-   is_alpha=`echo $gbs_version | grep alpha`
+   is_alpha=`echo $wgs_version | grep alpha`
    if [ ! $is_alpha ]; then 
-      git checkout -q $gbs_version 
+      git checkout -q $wgs_version 
       if [ $? != 0 ]; then
-         echo "unable to checkout pipeline version $gbs_version"
+         echo "unable to checkout pipeline version $wgs_version"
          exit 1
       fi
-      exec ./_run_gbs_qc $gbs_version
+      exec ./_run_wgs_qc -i $wgs_version
    else
       echo "(no checkout for alpha versions, just running in current branch)"
-      exec ./_run_gbs_qc $gbs_version $kgd_version
+      exec ./_run_wgs_qc -i $wgs_version 
    fi
 }
 

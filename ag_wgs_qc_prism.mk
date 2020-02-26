@@ -16,26 +16,30 @@
 	date > $@
 
 ########## standard analysis 
-%.all:  %.kmer_analysis %.fastqc  
+%.all:  %.kmer_analysis %.fastqc  %.fastq_stats
 	date > $@
 
 %.kmer_analysis:   %.fasta_sample
 	$@.sh > $@.mk.log 2>&1
 	date > $@
 
-%.fastqc:   %.bcl2fastq
+%.fastqc:   %.project_folders
 	$@.sh > $@.mk.log 2>&1
 	date > $@
 
-%.fasta_sample:   %.bcl2fastq
+%.fasta_sample:   %.project_folders
 	$@.sh > $@.mk.log 2>&1
 	date > $@
 
-%.fastq_sample:   %.bcl2fastq
+%.fastq_sample:   %.project_folders
 	$@.sh > $@.mk.log 2>&1
 	date > $@
 
-%.fastq_stats:   %.bcl2fastq
+%.fastq_stats:   %.project_folders
+	$@.sh > $@.mk.log 2>&1
+	date > $@
+
+%.project_folders: %.bcl2fastq
 	$@.sh > $@.mk.log 2>&1
 	date > $@
 

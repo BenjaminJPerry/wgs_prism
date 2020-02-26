@@ -2,7 +2,11 @@
 #
 # this prism supports a basic production and q/c wgs analysis, of data that is assumed to be 
 # generated and hosted by AgResearch  - i.e. there are local dependencies 
-# 
+#
+# Call it once to do bcl2fastq , then again with project names
+#
+# Call again to generate html page 
+#
 #
 
 declare -a files_array
@@ -14,16 +18,18 @@ function get_opts() {
    HPC_TYPE=slurm
    FILES=""
    OUT_ROOT=""
-   FORCE=no
    ANALYSIS=all
 
    help_text="
 usage :\n 
-./ag_wgs_qc_prism.sh  [-h] [-n] [-d] [-f] [-C hpctype] [-s SAMPLESHEET] [-a bcl2fastq|bcl2fastq_custom|fastqc|fasta_sample|fastq_sample|kmer_analysis|fastq_stats|blast_analysis|all|html|common_sequence|clean] -O outdir  project1 project2 . . . \n
+./ag_wgs_qc_prism.sh  [-h] [-n] [-d] [-C hpctype] [-s SAMPLESHEET] [-a all|project_folders|bcl2fastq|bcl2fastq_custom|fastqc|fasta_sample|fastq_sample|kmer_analysis|fastq_stats|blast_analysis|all|html|common_sequence|clean] -O outdir  [project1 project2 . . .] \n
 example:\n
-./ag_wgs_qc_prism.sh -f -a bcl2fastq -O /dataset/gseq_processing/scratch/illumina/hiseq/190524_D00390_0462_ACDN6VANXX  -r 190524_D00390_0462_ACDN6VANXX -s /dataset/hiseq/active/190524_D00390_0462_ACDN6VANXX/SampleSheet.csv \n
-./ag_wgs_qc_prism.sh -f -a fastqc -O /dataset/gseq_processing/scratch/illumina/hiseq/190524_D00390_0462_ACDN6VANXX  -r 190524_D00390_0462_ACDN6VANXX -s /dataset/hiseq/active/190524_D00390_0462_ACDN6VANXX/SampleSheet.csv  OLW_Plate1 \n
-./ag_wgs_qc_prism.sh -a html  -O /dataset/gseq_processing/scratch/illumina/hiseq/190510_D00390_0457_AHYFCVBCX2 -r 190510_D00390_0457_AHYFCVBCX2 -s /dataset/hiseq/active/190510_D00390_0457_AHYFCVBCX2/SampleSheet.csv \n
+\n
+./ag_wgs_qc_prism.sh -a project_folders -O /dataset/gseq_processing/scratch/illumina/hiseq/200105_D00390_0525_BH3NHLBCX3 -r 200105_D00390_0525_BH3NHLBCX3 -s /dataset/hiseq/active/200105_D00390_0525_BH3NHLBCX3/SampleSheet.csv\n
+./ag_wgs_qc_prism.sh -a all  -O /dataset/gseq_processing/scratch/illumina/hiseq/200105_D00390_0525_BH3NHLBCX3 -r 200105_D00390_0525_BH3NHLBCX3 -s /dataset/hiseq/active/200105_D00390_0525_BH3NHLBCX3/SampleSheet.csv \`cat /dataset/gseq_processing/scratch/illumina/hiseq/200105_D00390_0525_BH3NHLBCX3/SampleSheet/project_list.txt\`\n
+./ag_wgs_qc_prism.sh -a html -O /dataset/gseq_processing/scratch/illumina/hiseq/200105_D00390_0525_BH3NHLBCX3 -r 200105_D00390_0525_BH3NHLBCX3 -s /dataset/hiseq/active/200105_D00390_0525_BH3NHLBCX3/SampleSheet.csv\n
+\n
+\n
 "
    while getopts ":nhfO:C:r:a:s:" opt; do
    case $opt in
@@ -32,9 +38,6 @@ example:\n
          ;;
        d)
          DEBUG=yes
-         ;;
-       f)
-         FORCE=yes
          ;;
        h)
          echo -e $help_text
@@ -70,11 +73,6 @@ example:\n
 
    PROJECT_STRING=$@
    
-   # when we run bcl2fastq there are not any projects yet
-   if [ -z "$PROJECT_STRING" ]; then
-      PROJECT_STRING="all"
-   fi
-
    # this is needed because of the way we process args a "$@" - which
    # is needed in order to parse parameter sets to be passed to the
    # aligner (which are space-separated)
@@ -114,8 +112,8 @@ function check_opts() {
       exit 1
    fi
 
-   if [[ ( $ANALYSIS != "all" ) && ( $ANALYSIS != "bcl2fastq" ) && ( $ANALYSIS != "fastqc" ) && ( $ANALYSIS != "bcl2fastq_custom" ) && ( $ANALYSIS != "clean" ) && ( $ANALYSIS != "fasta_sample" ) && ( $ANALYSIS != "kmer_analysis" ) && ( $ANALYSIS != "fastq_stats" ) && ( $ANALYSIS != "blast_analysis" ) && ( $ANALYSIS != "annotation" )  && ( $ANALYSIS != "html" ) && ( $ANALYSIS != "clientreport" )  && ( $ANALYSIS != "fastq_sample" ) && ( $ANALYSIS != "common_sequence" ) ]]; then
-      echo "analysis must be one of all, demultiplex, kgd , unblind, kmer_analysis, fastq_stats , allkmer_analysis, blast_analysis , common_sequencs, clean "
+   if [[ ( $ANALYSIS != "all" ) && ( $ANALYSIS != "project_folders" ) && ( $ANALYSIS != "bcl2fastq" ) && ( $ANALYSIS != "fastqc" ) && ( $ANALYSIS != "bcl2fastq_custom" ) && ( $ANALYSIS != "clean" ) && ( $ANALYSIS != "fasta_sample" ) && ( $ANALYSIS != "kmer_analysis" ) && ( $ANALYSIS != "fastq_stats" ) && ( $ANALYSIS != "blast_analysis" ) && ( $ANALYSIS != "annotation" )  && ( $ANALYSIS != "html" ) && ( $ANALYSIS != "clientreport" )  && ( $ANALYSIS != "fastq_sample" ) && ( $ANALYSIS != "common_sequence" ) ]]; then
+      echo "analysis must be one of all, project_folders, bcl2fastq, fastqc, bcl2fastq_custom, clean, fasta_sample, kmer_analysis, fastq_stats, blast_analysis, annotation, html, clientreport, fastq_sample, common_sequence" 
       exit 1
    fi
 
@@ -179,57 +177,80 @@ function get_targets() {
 
    rm -f $OUT_ROOT/*_targets.txt
 
-   for ((j=0;$j<$NUM_PROJECTS;j=$j+1)) do
-      projectname=${projects_array[$j]}
+   for analysis_type in bcl2fastq project_folders; do
       samplesheet_base=`basename $SAMPLESHEET .csv`
+      project_moniker=${RUN}.$samplesheet_base
+      echo $OUT_ROOT/$project_moniker.$analysis_type  >> $OUT_ROOT/${analysis_type}_targets.txt
+   done
 
-      if [ $ANALYSIS != "bcl2fastq" ]; then
-         project_moniker=${RUN}.${projectname}.$samplesheet_base
-      else
-         project_moniker=${RUN}.$samplesheet_base
-      fi
+   #generate run-level call-backs
+   # assume sample sheet is in standard location
+   B_rundir=`dirname $SAMPLESHEET`
+   B_intensitydir=$B_rundir/Data/Intensities/BaseCalls
 
-      for analysis_type in all bcl2fastq fastqc clean fastq_stats kmer_analysis blast_analysis fasta_sample fastq_sample annotation common_sequence; do
-         echo $OUT_ROOT/$project_moniker.$analysis_type  >> $OUT_ROOT/${analysis_type}_targets.txt
-         script=$OUT_ROOT/${project_moniker}.${analysis_type}.sh
-         if [ -f $script ]; then
-            if [ ! $FORCE == yes ]; then
-               echo "found existing wg script $script  - will re-use (use -f to force rebuild of scripts) "
-               continue
-            fi
-         fi
-      done
-
-      # assume sample sheet is in standard location
-      B_rundir=`dirname $SAMPLESHEET`
-      B_intensitydir=$B_rundir/Data/Intensities/BaseCalls
-
-
-      ############### bcl2fastq script 
-      echo "#!/bin/bash
+   ############### bcl2fastq script
+   echo "#!/bin/bash
 cd $OUT_ROOT
 mkdir -p $samplesheet_base
 $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a bcl2fastq -B \"-R $B_rundir -i $B_intensitydir\" -O $OUT_ROOT/$samplesheet_base $SAMPLESHEET > $OUT_ROOT/$samplesheet_base/bcl2fastq.log  2>&1
 if [ \$? != 0 ]; then
    echo \"warning bcl2fastq of $samplesheet_base returned an error code\"
-      exit 1
-   fi
-      " > $OUT_ROOT/${project_moniker}.bcl2fastq.sh
-      chmod +x $OUT_ROOT/${project_moniker}.bcl2fastq.sh
+   exit 1
+fi
+   " > $OUT_ROOT/${project_moniker}.bcl2fastq.sh
+   chmod +x $OUT_ROOT/${project_moniker}.bcl2fastq.sh
 
 
-      ############### bcl2fastq_custom script
-      echo "#!/bin/bash
+   ############### bcl2fastq_custom script
+   echo "#!/bin/bash
 cd $OUT_ROOT
 mkdir -p $samplesheet_base
 $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a bcl2fastq -B \"-R $B_rundir -i $B_intensitydir --ignore-missing-bcls\"  -O $OUT_ROOT/$samplesheet_base $SAMPLESHEET > $OUT_ROOT/$samplesheet_base/bcl2fastq.log  2>&1
 if [ \$? != 0 ]; then
    echo \"warning custom bcl2fastq of $samplesheet_base returned an error code\"
       exit 1
-   fi
-      " > $OUT_ROOT/${project_moniker}.bcl2fastq_custom.sh
-      chmod +x $OUT_ROOT/${project_moniker}.bcl2fastq_custom.sh
+fi
+   " > $OUT_ROOT/${project_moniker}.bcl2fastq_custom.sh
+   chmod +x $OUT_ROOT/${project_moniker}.bcl2fastq_custom.sh
 
+
+   ############### project_folders script
+   echo "#!/bin/bash
+cd $OUT_ROOT
+mkdir -p $samplesheet_base
+rm -f $OUT_ROOT/$samplesheet_base/project_list.tmp
+for outfile in \`ls $OUT_ROOT/$samplesheet_base/bcl2fastq/*/*.fastq.gz\`; do
+   dir=\`dirname \$outfile\`
+   project=\`basename \$dir\`
+   echo \$project >> $OUT_ROOT/$samplesheet_base/project_list.tmp
+done
+sort -u $OUT_ROOT/$samplesheet_base/project_list.tmp > $OUT_ROOT/$samplesheet_base/project_list.txt
+rm -f $OUT_ROOT/$samplesheet_base/project_list.tmp
+if [ \$? != 0 ]; then
+   echo \"warning project_folders of $samplesheet_base returned an error code\"
+   exit 1
+fi
+
+# write project folder landmark 
+for project in \`cat $OUT_ROOT/$samplesheet_base/project_list.txt\`; do
+   samplesheet_base=\`basename $SAMPLESHEET .csv\`
+   project_moniker=${RUN}.\${project}.\$samplesheet_base
+   date > $OUT_ROOT/\${project_moniker}.project_folders
+done
+" > $OUT_ROOT/${project_moniker}.project_folders.sh
+   chmod +x $OUT_ROOT/${project_moniker}.project_folders.sh
+
+
+   # also generate project-level call-backs
+   for ((j=0;$j<$NUM_PROJECTS;j=$j+1)) do
+      projectname=${projects_array[$j]}
+      samplesheet_base=`basename $SAMPLESHEET .csv`
+      project_moniker=${RUN}.${projectname}.$samplesheet_base
+
+      for analysis_type in all fastqc clean fastq_stats kmer_analysis blast_analysis fasta_sample fastq_sample annotation common_sequence; do
+         echo $OUT_ROOT/$project_moniker.$analysis_type  >> $OUT_ROOT/${analysis_type}_targets.txt
+         script=$OUT_ROOT/${project_moniker}.${analysis_type}.sh
+      done
 
       ############### fastqc script 
       echo "#!/bin/bash
@@ -498,8 +519,6 @@ function main() {
 
    if [ $ANALYSIS == "html" ]; then
       html
-   elif [ $ANALYSIS == "clientreport" ]; then
-      clientreport
    else
       get_targets
       if [ $DRY_RUN != "no" ]; then
