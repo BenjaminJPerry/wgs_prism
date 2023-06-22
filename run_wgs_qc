@@ -6,7 +6,7 @@ function get_pipeline() {
    cd $WGS_PRISM_BIN
    wgs_version=$1
 
-   echo "preparing to run wgs qc pipeline (press enter to continue)"
+   echo "preparing to run wgs qc pipeline version $wgs_version (press enter to continue)"
    read answer
    is_alpha=`echo $wgs_version | grep alpha`
    if [ ! $is_alpha ]; then 
@@ -15,7 +15,7 @@ function get_pipeline() {
          echo "unable to checkout pipeline version $wgs_version"
          exit 1
       fi
-      exec ./_run_wgs_qc -i $wgs_version
+      exec ./_run_wgs_qc -i $wgs_version 
    else
       echo "(no checkout for alpha versions, just running in current branch)"
       exec ./_run_wgs_qc -i $wgs_version 
