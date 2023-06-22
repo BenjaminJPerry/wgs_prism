@@ -1,0 +1,144 @@
+#!/bin/sh
+
+POLL_INTERVAL=900      # seconds - i.e. 15 minutes 
+
+function read_answer_with_default() {
+   read answer
+   if [ -z "$answer" ]; then
+      answer=$@
+   fi
+}
+
+function get_opts() {
+   help_text="
+usage example (currently run in a screen session) :\n
+autostart_wgs_qc 230307_A01439_0152_AHVWF2DRX2 | tee /dataset/gseq_processing/scratch/wgs/log/230307_A01439_0152_AHVWF2DRX2.log \n
+"
+   while getopts ":h" opt; do
+   case $opt in
+       h)
+         echo -e $help_text
+         exit 0
+         ;;
+       \?)
+         echo "Invalid option: -$OPTARG" >&2
+         exit 1
+         ;;
+       :)
+         echo "Option -$OPTARG requires an argument." >&2
+         exit 1
+         ;;
+     esac
+   done
+
+   shift $((OPTIND-1))
+   
+   if [ -z "$1" ]; then
+      echo "must supply a run name "
+      exit 1
+   fi
+
+   ARGRUN=$1
+   get_run_folder
+}
+
+
+function get_pipeline() {
+   wgs_version=$1
+   RUN=$2 
+
+   export GBS_PRISM_BIN=/dataset/gseq_processing/active/bin/gbs_prism
+   export WGS_PRISM_BIN=/dataset/gseq_processing/active/bin/wgs_prism
+   export SEQ_PRISMS_BIN=$WGS_PRISM_BIN/seq_prisms
+
+   cd $WGS_PRISM_BIN
+
+   echo "running wgs qc pipeline version $wgs_version"
+   is_alpha=`echo $wgs_version | grep alpha`
+   if [ ! $is_alpha ]; then 
+      git checkout -q $wgs_version 
+      if [ $? != 0 ]; then
+         echo "unable to checkout pipeline version $wgs_version"
+         exit 1
+      fi
+      echo "running exec ./_run_wgs_qc -r $RUN $wgs_version "
+      send_mail
+      exec ./_run_wgs_qc -r $RUN $wgs_version 
+   else
+      echo "(no checkout for alpha versions, just running in current branch)"
+      echo "running exec ./_run_wgs_qc -r $RUN $wgs_version "
+      send_mail
+      exec ./_run_wgs_qc -r $RUN $wgs_version 
+   fi
+}
+
+function send_mail() {
+   echo "sending mail to vanstijnt , mccullocha, bairdh "
+   echo "(please check results carefully, non-GBS flowcells often need custom processing, mostly involving customising the sample-sheet)" | mutt -s "FYI - looks like upload of (non GBS) $RUN is complete so auto-starting processing" vanstijnt , mccullocha, bairdh, perrybe
+}
+
+
+function get_run_folder() {
+   #try novaseq
+   RUN_FOLDER=/dataset/2023_illumina_sequencing_a/scratch/$ARGRUN
+   if [ ! -d $RUN_FOLDER ]; then
+      # try iseq
+      RUN_FOLDER=/dataset/hiseq/active/$ARGRUN
+      if [ ! -d $RUN_FOLDER ]; then 
+         # try miseq
+         RUN_FOLDER=/dataset/miseq/active/$ARGRUN
+         if [ ! -d $RUN_FOLDER ]; then
+            echo "Sorry could not find run folder for $ARGRUN ! - giving up"
+            exit 1
+         fi
+      fi
+   fi
+}
+   
+function get_landmark() {
+   RUN=$1
+   landmark=""
+   if [ -f $RUN_FOLDER/RTAComplete.txt ]; then
+      landmark=$RUN_FOLDER/RTAComplete.txt 
+   fi
+}
+
+function get_digest() {
+   RUN=$1
+   digest=`ls -lR $RUN_FOLDER/ | md5sum -b `
+   echo $digest
+}
+
+
+function poll_for() {
+   RUN=$1 
+
+   # polls for the run landmark 
+   poll_count=0
+   while [ 1 ]; do
+      get_landmark $RUN
+      get_digest $RUN
+      if [ ! -z "$landmark" ]; then
+         if [ $poll_count == 0 ]; then
+            echo "*** warning - landmark $landmark is already there ! *** "
+            echo "(final digest : "
+            get_digest $RUN
+            echo ")"
+            get_pipeline 1.0.4alpha $RUN
+         else
+            echo "found landmark ($landmark) - starting processing"
+            echo "(final digest : "
+            get_digest $RUN
+            echo ")"
+            get_pipeline 1.0.4alpha $RUN
+         fi
+      else
+         let poll_count=${poll_count}+1
+         echo "sleeping for $POLL_INTERVAL (poll count = $poll_count )"
+         sleep $POLL_INTERVAL
+      fi
+   done
+}
+
+get_opts "$@"
+poll_for $ARGRUN
