@@ -80,7 +80,7 @@ function send_mail() {
 
 function get_run_folder() {
    #try novaseq
-   RUN_FOLDER=/dataset/2023_illumina_sequencing_a/scratch/$ARGRUN
+   RUN_FOLDER=/dataset/2023_illumina_sequencing_b/active/$ARGRUN
    if [ ! -d $RUN_FOLDER ]; then
       # try iseq
       RUN_FOLDER=/dataset/hiseq/active/$ARGRUN
