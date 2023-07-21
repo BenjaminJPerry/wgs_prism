@@ -110,25 +110,25 @@ checking run is completed (i.e. looking for $SEQ_ROOT/$RUN/RTAComplete.txt)...
    samplesheet_to_fastqnames_phrase=""
 
    # set up for bclconvert run
-   mkdir -p $BCLCONVERT_ROOT/$RUN/SampleSheet
-   if [ ! -d $BCLCONVERT_ROOT/$RUN/SampleSheet ]; then
-      echo "could not create bclconvert output folder $BCLCONVERT_ROOT/$RUN/SampleSheet , quitting"
+   mkdir -p $OUTPUT_ROOT/SampleSheet
+   if [ ! -d $OUTPUT_ROOT/SampleSheet ]; then
+      echo "could not create bclconvert output folder $OUTPUT_ROOT/SampleSheet , quitting"
       exit 1
    fi
 
    ####### ensure sample sheet used for bclconvert contains header, and includes specification of adapter
    # (but allow user to customise )
    #
-   if [ ! -f $BCLCONVERT_ROOT/$RUN/SampleSheet.csv ]; then
-      cat $SAMPLE_SHEET | $WGS_PRISM_BIN/add_sample_sheet_header.py -H  $WGS_PRISM_BIN/etc/sample_sheet_header.csv  > $BCLCONVERT_ROOT/$RUN/SampleSheet.csv
+   if [ ! -f $OUTPUT_ROOT/SampleSheet.csv ]; then
+      cat $SAMPLE_SHEET | $WGS_PRISM_BIN/add_sample_sheet_header.py -H  $WGS_PRISM_BIN/etc/sample_sheet_header.csv  > $OUTPUT_ROOT/SampleSheet.csv
    fi
 
-   echo "will use sample sheet $BCLCONVERT_ROOT/$RUN/SampleSheet.csv as follows  - please review. 
+   echo "will use sample sheet $OUTPUT_ROOT/SampleSheet.csv as follows  - please review. 
 ***** Some points to note *****
 *
 * the sample sheet has been minimally checked and filtered by $WGS_PRISM_BIN/add_sample_sheet_header.py - e.g. setting Adapter1 updated to AdapterRead1.
 * The following common requirements are not checked. (If you need to include these or other settings, just answer "n" to the next prompt, and 
-* manually edit $BCLCONVERT_ROOT/$RUN/SampleSheet.csv)
+* manually edit $OUTPUT_ROOT/SampleSheet.csv)
 *
 * - if this is a paired end run, you will need to also add AdapterRead2 setting
 * - if you need to specify more than one adapter, they all go on the same line concatenated with +
@@ -168,32 +168,32 @@ checking run is completed (i.e. looking for $SEQ_ROOT/$RUN/RTAComplete.txt)...
    echo "(press Enter to review sample sheet)"
    read_answer_with_default ""
 
-   more $BCLCONVERT_ROOT/$RUN/SampleSheet.csv
+   more $OUTPUT_ROOT/SampleSheet.csv
    echo "
    if this is OK ? answer y (or just press enter).
    "
    read_answer_with_default y
    if [ $answer != "y" ]; then
       echo "OK quitting
-(please edit $BCLCONVERT_ROOT/$RUN/SampleSheet.csv and try again)"
+(please edit $OUTPUT_ROOT/SampleSheet.csv and try again)"
       exit 1
    fi 
 
    
    ###### ensure output folder does not exist
-   if [ -d $BCLCONVERT_ROOT/$RUN/SampleSheet/bclconvert ]; then
+   if [ -d $OUTPUT_ROOT/SampleSheet/bclconvert ]; then
       echo "
 *** error *** 
-$BCLCONVERT_ROOT/$RUN/SampleSheet/bclconvert already exists - please clean up and retry"
+$OUTPUT_ROOT/SampleSheet/bclconvert already exists - please clean up and retry"
       exit 1
    fi
 
    # remove the make target if it exists
-   rm -f $BCLCONVERT_ROOT/$RUN/SampleSheet/SampleSheet.csv.bclconvert
+   rm -f $OUTPUT_ROOT/SampleSheet/SampleSheet.csv.bclconvert
 
    echo "about to run bclconvert using
 
-   $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a bclconvert $run_info_phrase -I $SEQ_ROOT/$RUN -B \"$bclconvert_phrase\" -Q \"$samplesheet_to_fastqnames_phrase\" -O $BCLCONVERT_ROOT/$RUN/SampleSheet $BCLCONVERT_ROOT/$RUN/SampleSheet.csv  > $BCLCONVERT_ROOT/$RUN/SampleSheet/bclconvert.log  2>&1
+   $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a bclconvert $run_info_phrase -I $SEQ_ROOT/$RUN -B \"$bclconvert_phrase\" -Q \"$samplesheet_to_fastqnames_phrase\" -O $OUTPUT_ROOT/SampleSheet $OUTPUT_ROOT/SampleSheet.csv  > $OUTPUT_ROOT/SampleSheet/bclconvert.log  2>&1
 
    OK ? (y/n, default=y)
    "
@@ -208,14 +208,14 @@ $BCLCONVERT_ROOT/$RUN/SampleSheet/bclconvert already exists - please clean up an
    "
 
    echo "
-running $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a bclconvert $run_info_phrase -I $SEQ_ROOT/$RUN -B \"$bclconvert_phrase\" -Q \"$samplesheet_to_fastqnames_phrase\"  -O $BCLCONVERT_ROOT/$RUN/SampleSheet $BCLCONVERT_ROOT/$RUN/SampleSheet.csv " > $BCLCONVERT_ROOT/$RUN/SampleSheet/bclconvert.log
+running $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a bclconvert $run_info_phrase -I $SEQ_ROOT/$RUN -B \"$bclconvert_phrase\" -Q \"$samplesheet_to_fastqnames_phrase\"  -O $OUTPUT_ROOT/SampleSheet $OUTPUT_ROOT/SampleSheet.csv " > $OUTPUT_ROOT/SampleSheet/bclconvert.log
 
-   $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a bclconvert $run_info_phrase -I $SEQ_ROOT/$RUN -B "$bclconvert_phrase" -Q "$samplesheet_to_fastqnames_phrase"  -O $BCLCONVERT_ROOT/$RUN/SampleSheet $BCLCONVERT_ROOT/$RUN/SampleSheet.csv  >> $BCLCONVERT_ROOT/$RUN/SampleSheet/bclconvert.log 2>&1
+   $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a bclconvert $run_info_phrase -I $SEQ_ROOT/$RUN -B "$bclconvert_phrase" -Q "$samplesheet_to_fastqnames_phrase"  -O $OUTPUT_ROOT/SampleSheet $OUTPUT_ROOT/SampleSheet.csv  >> $OUTPUT_ROOT/SampleSheet/bclconvert.log 2>&1
 
    if [ $? != 0 ]; then
 
       # bad code but might ignore that if we have sequence data
-      ls -lR $BCLCONVERT_ROOT/$RUN/SampleSheet/bclconvert 2>/dev/null | grep "fastq.gz"   > /dev/null 2>&1
+      ls -lR $OUTPUT_ROOT/SampleSheet/bclconvert 2>/dev/null | grep "fastq.gz"   > /dev/null 2>&1
 
       if [ $? == 0 ]; then
          echo "*** warning , bclconvert exit code was non-zero, but it did generate fastq data ***"
@@ -252,13 +252,13 @@ running $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a bclconvert $run_info_phrase -I
 
 function find_barcodes() {
    # get the number of barcodes
-   num_barcodes=`gquery -t barcodes -p dump $BCLCONVERT_ROOT/$RUN/SampleSheet.csv 2>/dev/null | wc -w`
+   num_barcodes=`gquery -t barcodes -p dump $OUTPUT_ROOT/SampleSheet.csv 2>/dev/null | wc -w`
    echo "reviewing $num_barcodes barcodes and reverse complements in sample sheet . . . (press enter to continue)
 
    "
    read_answer_with_default x
    
-   gquery -t barcodes -v -p reverse $BCLCONVERT_ROOT/$RUN/SampleSheet.csv 2>/dev/null | more  
+   gquery -t barcodes -v -p reverse $OUTPUT_ROOT/SampleSheet.csv 2>/dev/null | more  
 
    echo "
    
@@ -267,14 +267,14 @@ function find_barcodes() {
    "
    read_answer_with_default x
 
-   rm -f $BCLCONVERT_ROOT/$RUN/SampleSheet/bclconvert/Reports/found_codes.tmp
-   for code in `gquery -t barcodes -p dump $BCLCONVERT_ROOT/$RUN/SampleSheet.csv 2>/dev/null`; do 
-      grep -H $code $BCLCONVERT_ROOT/$RUN/SampleSheet/bclconvert/Reports/Top_Unknown_Barcodes.csv >> $BCLCONVERT_ROOT/$RUN/SampleSheet/bclconvert/Reports/found_codes.tmp 
+   rm -f $OUTPUT_ROOT/SampleSheet/bclconvert/Reports/found_codes.tmp
+   for code in `gquery -t barcodes -p dump $OUTPUT_ROOT/SampleSheet.csv 2>/dev/null`; do 
+      grep -H $code $OUTPUT_ROOT/SampleSheet/bclconvert/Reports/Top_Unknown_Barcodes.csv >> $OUTPUT_ROOT/SampleSheet/bclconvert/Reports/found_codes.tmp 
    done
-   sort -u -t, -n -r -k6,6 $BCLCONVERT_ROOT/$RUN/SampleSheet/bclconvert/Reports/found_codes.tmp | head -$num_barcodes > $BCLCONVERT_ROOT/$RUN/SampleSheet/bclconvert/Reports/found_codes
-   rm -f $BCLCONVERT_ROOT/$RUN/SampleSheet/bclconvert/Reports/found_codes.tmp
+   sort -u -t, -n -r -k6,6 $OUTPUT_ROOT/SampleSheet/bclconvert/Reports/found_codes.tmp | head -$num_barcodes > $OUTPUT_ROOT/SampleSheet/bclconvert/Reports/found_codes
+   rm -f $OUTPUT_ROOT/SampleSheet/bclconvert/Reports/found_codes.tmp
 
-   num_found=`cat $BCLCONVERT_ROOT/$RUN/SampleSheet/bclconvert/Reports/found_codes | wc -l`
+   num_found=`cat $OUTPUT_ROOT/SampleSheet/bclconvert/Reports/found_codes | wc -l`
    if [ $num_found == "0" ]; then
       echo "sorry no codes in the unknown codes report match anything obvious in the sample sheet (i.e. codes or their reverse complement)
       "
@@ -282,14 +282,14 @@ function find_barcodes() {
       echo "
    The following unknown barcode combinations from bclconvert contain a code matching a code or its reverse complement in the sample-sheeta:
       "
-      more $BCLCONVERT_ROOT/$RUN/SampleSheet/bclconvert/Reports/found_codes 
+      more $OUTPUT_ROOT/SampleSheet/bclconvert/Reports/found_codes 
       echo "
 
-   The above list of unknown barcode combinations where at least one code matches a code or its reverse complement in the sample-sheet, is saved in $BCLCONVERT_ROOT/$RUN/SampleSheet/bclconvert/Reports/found_codes
+   The above list of unknown barcode combinations where at least one code matches a code or its reverse complement in the sample-sheet, is saved in $OUTPUT_ROOT/SampleSheet/bclconvert/Reports/found_codes
   
    (to summarise the barcodes in the sample-sheet, use 
 
-    gquery -t barcodes -v -p reverse $BCLCONVERT_ROOT/$RUN/SampleSheet.csv
+    gquery -t barcodes -v -p reverse $OUTPUT_ROOT/SampleSheet.csv
  
    )
       "
@@ -306,9 +306,9 @@ function review_enriched_seqs() {
    CUSTOM_ADAPTERS_FILES=/dataset/gseq_processing/active/bin/gquery/database/t_BarcodePlates.csv
    CUSTOM_CONTAMINANTS_FILES=""
 
-   echo "running cat $ADAPTERS_FILE $CONTAMINANTS_FILE $CUSTOM_ADAPTERS_FILES $CUSTOM_CONTAMINANTS_FILES | $GBS_PRISM_BIN/reconcile_contaminants.py $BCLCONVERT_ROOT/$RUN/SampleSheet/kmer_run/kmer_analysis/*.k6A.log | head -30 ...."
+   echo "running cat $ADAPTERS_FILE $CONTAMINANTS_FILE $CUSTOM_ADAPTERS_FILES $CUSTOM_CONTAMINANTS_FILES | $GBS_PRISM_BIN/reconcile_contaminants.py $OUTPUT_ROOT/SampleSheet/kmer_run/kmer_analysis/*.k6A.log | head -30 ...."
 
-   cat $ADAPTERS_FILE $CONTAMINANTS_FILE $CUSTOM_ADAPTERS_FILES $CUSTOM_CONTAMINANTS_FILES | $GBS_PRISM_BIN/reconcile_contaminants.py $BCLCONVERT_ROOT/$RUN/SampleSheet/kmer_run/kmer_analysis/*.k6A.log | head -30
+   cat $ADAPTERS_FILE $CONTAMINANTS_FILE $CUSTOM_ADAPTERS_FILES $CUSTOM_CONTAMINANTS_FILES | $GBS_PRISM_BIN/reconcile_contaminants.py $OUTPUT_ROOT/SampleSheet/kmer_run/kmer_analysis/*.k6A.log | head -30
 
 }
 
@@ -317,11 +317,11 @@ function run_lane_qc() {
    echo "
 
    finding sequence files for fastqc..."
-   mkdir -p $BCLCONVERT_ROOT/$RUN/SampleSheet
-   find $BCLCONVERT_ROOT/$RUN/SampleSheet/bclconvert -name "*.fastq.gz" -size +1000c -print | grep -vi Undetermined > $BCLCONVERT_ROOT/$RUN/SampleSheet/sequence_files.txt
+   mkdir -p $OUTPUT_ROOT/SampleSheet
+   find $OUTPUT_ROOT/SampleSheet/bclconvert -name "*.fastq.gz" -size +1000c -print | grep -vi Undetermined > $OUTPUT_ROOT/SampleSheet/sequence_files.txt
    
    if [ $? != 0 ]; then
-      echo "run_lane_qc: oops could not find any fastq files under $BCLCONVERT_ROOT/$RUN/SampleSheet/bclconvert ! giving up"
+      echo "run_lane_qc: oops could not find any fastq files under $OUTPUT_ROOT/SampleSheet/bclconvert ! giving up"
       exit 1
    fi  
 
@@ -330,23 +330,23 @@ function run_lane_qc() {
    export WGS_PRISM_BIN=/dataset/gseq_processing/active/bin/wgs_prism
    export GBS_PRISM_BIN=/dataset/gseq_processing/active/bin/gbs_prism
 
-   mkdir -p $BCLCONVERT_ROOT/$RUN/SampleSheet/fastqc_run
-   $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a fastqc -O $BCLCONVERT_ROOT/$RUN/SampleSheet/fastqc_run \`cat $BCLCONVERT_ROOT/$RUN/SampleSheet/sequence_files.txt\` > $BCLCONVERT_ROOT/$RUN/SampleSheet/fastqc_run/fastqc.log 2>&1  
+   mkdir -p $OUTPUT_ROOT/SampleSheet/fastqc_run
+   $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a fastqc -O $OUTPUT_ROOT/SampleSheet/fastqc_run \`cat $OUTPUT_ROOT/SampleSheet/sequence_files.txt\` > $OUTPUT_ROOT/SampleSheet/fastqc_run/fastqc.log 2>&1  
 
    echo \"
 conda activate $GBS_PRISM_BIN/conda/multiqc
-\" >  $BCLCONVERT_ROOT/$RUN/SampleSheet/multiqc_env.inc
-   mkdir -p $BCLCONVERT_ROOT/$RUN/SampleSheet/multiqc
-   tardis -d $BCLCONVERT_ROOT/$RUN/SampleSheet --hpctype local --shell-include-file $BCLCONVERT_ROOT/$RUN/SampleSheet/multiqc_env.inc  multiqc -i \\\"multifastqc for $RUN\\\" -o $BCLCONVERT_ROOT/$RUN/SampleSheet/multiqc $BCLCONVERT_ROOT/$RUN/SampleSheet/fastqc_run/fastqc
+\" >  $OUTPUT_ROOT/SampleSheet/multiqc_env.inc
+   mkdir -p $OUTPUT_ROOT/SampleSheet/multiqc
+   tardis -d $OUTPUT_ROOT/SampleSheet --hpctype local --shell-include-file $OUTPUT_ROOT/SampleSheet/multiqc_env.inc  multiqc -i \\\"multifastqc for $RUN\\\" -o $OUTPUT_ROOT/SampleSheet/multiqc $OUTPUT_ROOT/SampleSheet/fastqc_run/fastqc
 
-   mkdir -p $BCLCONVERT_ROOT/$RUN/SampleSheet/kmer_run
-   $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a kmer_analysis -s .0002 -M 10000 -O $BCLCONVERT_ROOT/$RUN/SampleSheet/kmer_run  \`cat $BCLCONVERT_ROOT/$RUN/SampleSheet/sequence_files.txt\` > $BCLCONVERT_ROOT/$RUN/SampleSheet/kmer_analysis.log 2>&1  
-   " > $BCLCONVERT_ROOT/$RUN/SampleSheet/lane_qc.src
+   mkdir -p $OUTPUT_ROOT/SampleSheet/kmer_run
+   $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a kmer_analysis -s .0002 -M 10000 -O $OUTPUT_ROOT/SampleSheet/kmer_run  \`cat $OUTPUT_ROOT/SampleSheet/sequence_files.txt\` > $OUTPUT_ROOT/SampleSheet/kmer_analysis.log 2>&1  
+   " > $OUTPUT_ROOT/SampleSheet/lane_qc.src
    echo "
 
    about to start fastqc and kmer_analysis using 
 "
-   cat $BCLCONVERT_ROOT/$RUN/SampleSheet/lane_qc.src 
+   cat $OUTPUT_ROOT/SampleSheet/lane_qc.src 
    echo "
 OK ? (y/n, default=y)
    "
@@ -360,16 +360,16 @@ OK ? (y/n, default=y)
    running fastqc and kmer analysis ...
 
    "
-   source $BCLCONVERT_ROOT/$RUN/SampleSheet/lane_qc.src 
+   source $OUTPUT_ROOT/SampleSheet/lane_qc.src 
 }
 
 function run_dedupe() {
-   ls $BCLCONVERT_ROOT/$RUN/SampleSheet/bclconvert/*.fastq.gz | grep -vi undetermined > $BCLCONVERT_ROOT/$RUN/SampleSheet/files_to_dedupe.txt
+   ls $OUTPUT_ROOT/SampleSheet/bclconvert/*.fastq.gz | grep -vi undetermined > $OUTPUT_ROOT/SampleSheet/files_to_dedupe.txt
 
    echo "
    About to start dedupe using : 
 
-   $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a dedupe -D \"dedupe optical dupedist=15000 subs=0\" -T /dataset/gseq_processing/itmp/illumina -O $BCLCONVERT_ROOT/$RUN/SampleSheet \`cat $BCLCONVERT_ROOT/$RUN/SampleSheet/files_to_dedupe.txt\`  > $BCLCONVERT_ROOT/$RUN/SampleSheet/dedupe.log 2>&1
+   $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a dedupe -D \"dedupe optical dupedist=15000 subs=0\" -T /dataset/gseq_processing/itmp/illumina -O $OUTPUT_ROOT/SampleSheet \`cat $OUTPUT_ROOT/SampleSheet/files_to_dedupe.txt\`  > $OUTPUT_ROOT/SampleSheet/dedupe.log 2>&1
 
 OK ? (y/n, default=y)
    "
@@ -387,18 +387,18 @@ OK ? (y/n, default=y)
    export SEQ_PRISMS_BIN=/dataset/gseq_processing/active/bin/wgs_prism/seq_prisms
    export WGS_PRISM_BIN=/dataset/gseq_processing/active/bin/wgs_prism
 
-   $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a dedupe -D \"dedupe optical dupedist=15000 subs=0\" -T /dataset/gseq_processing/itmp/illumina -O $BCLCONVERT_ROOT/$RUN/SampleSheet \`cat $BCLCONVERT_ROOT/$RUN/SampleSheet/files_to_dedupe.txt\`  > $BCLCONVERT_ROOT/$RUN/SampleSheet/dedupe.log 2>&1
-   " > $BCLCONVERT_ROOT/$RUN/SampleSheet/restart_dedupe.src
+   $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a dedupe -D \"dedupe optical dupedist=15000 subs=0\" -T /dataset/gseq_processing/itmp/illumina -O $OUTPUT_ROOT/SampleSheet \`cat $OUTPUT_ROOT/SampleSheet/files_to_dedupe.txt\`  > $OUTPUT_ROOT/SampleSheet/dedupe.log 2>&1
+   " > $OUTPUT_ROOT/SampleSheet/restart_dedupe.src
 
    echo "
 
    running dedupe (to restart or rerun this step , you can 
   
-   source $BCLCONVERT_ROOT/$RUN/SampleSheet/restart_dedupe.src
+   source $OUTPUT_ROOT/SampleSheet/restart_dedupe.src
 
    -this should take about an hour 
    "
-   $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a dedupe -D "dedupe optical dupedist=15000 subs=0" -T /dataset/gseq_processing/itmp/illumina -O $BCLCONVERT_ROOT/$RUN/SampleSheet `cat $BCLCONVERT_ROOT/$RUN/SampleSheet/files_to_dedupe.txt`  > $BCLCONVERT_ROOT/$RUN/SampleSheet/dedupe.log 2>&1
+   $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a dedupe -D "dedupe optical dupedist=15000 subs=0" -T /dataset/gseq_processing/itmp/illumina -O $OUTPUT_ROOT/SampleSheet `cat $OUTPUT_ROOT/SampleSheet/files_to_dedupe.txt`  > $OUTPUT_ROOT/SampleSheet/dedupe.log 2>&1
 
    if [ $? != 0 ]; then
 
@@ -478,6 +478,8 @@ please give the full name of wgs run you would like to process (e.g. 210712_A014
                   break
                else
                   echo "sorry can't find $RUN under $SEQ_ROOT"
+                  SEQ_ROOT=/dataset/2023_illumina_sequencing_b/active
+                  SEQ_BCLCONVERT_ROOT=/dataset/2023_illumina_sequencing_b/scratch/postprocessing/illumina/novaseq
                fi
             fi
          fi
@@ -512,13 +514,39 @@ try /dataset/hiseq/active/sample-sheets. If it is there, please copy to the run 
       fi
    fi
 
+
+   ######## confirm output folder ###########
+   # set up output folder
+   while [ 1 ]; do
+      echo "
+
+      please specify q/c output base folder (or just press ENTER to use default , $BCLCONVERT_ROOT/$RUN )"
+      read_answer_with_default $BCLCONVERT_ROOT/$RUN
+      NEW_ROOT=$answer
+      if [ -d $NEW_ROOT ]; then
+         echo "warning - $NEW_ROOT already exists, use anyway ? (y/n, default=y)"
+         read_answer_with_default y
+         if [ $answer == "y" ]; then
+            OUTPUT_ROOT=$NEW_ROOT
+            break
+         fi
+      else
+         mkdir -p $NEW_ROOT
+         if [ -d $NEW_ROOT ]; then
+            OUTPUT_ROOT=$NEW_ROOT
+            break
+         fi
+      fi
+   done
+
+
    ####### check whether we can find sequence data - if not confirm  bclconvert is needed 
-   echo "checking sequence data (looking under  $BCLCONVERT_ROOT/$RUN)....
+   echo "checking sequence data (looking under  $OUTPUT_ROOT)....
 
 "
-   ls -lR $BCLCONVERT_ROOT/$RUN/SampleSheet/bclconvert 2>/dev/null | grep "fastq.gz"   > /dev/null 2>&1 
+   ls -lR $OUTPUT_ROOT/$RUN/SampleSheet/bclconvert 2>/dev/null | grep "fastq.gz"   > /dev/null 2>&1 
    if [ $? != 0 ]; then
-      echo "could not find fastq data under $BCLCONVERT_ROOT/$RUN so looks like bclconvert is needed - OK to run that ? (y/n, default=y)"
+      echo "could not find fastq data under $OUTPUT_ROOT so looks like bclconvert is needed - OK to run that ? (y/n, default=y)"
       read_answer_with_default y 
       if [ "$answer" != "y" ]; then
          echo "OK continuing..."
@@ -541,10 +569,10 @@ do you want to look for barcodes in the unknown barcodes report (in both orienta
 
 
    ####### check whether we can find lane q/c landmark - if not confirm 
-   echo "checking for lane q/c results (looking for landmarks $BCLCONVERT_ROOT/$RUN/SampleSheet/fastqc_run/*.fastqc and $BCLCONVERT_ROOT/$RUN/SampleSheet/kmer_run/qc.kmer_analysis )...
+   echo "checking for lane q/c results (looking for landmarks $OUTPUT_ROOT/SampleSheet/fastqc_run/*.fastqc and $OUTPUT_ROOT/SampleSheet/kmer_run/qc.kmer_analysis )...
 
 "
-   ls $BCLCONVERT_ROOT/$RUN/SampleSheet/fastqc_run/*.fastqc  $BCLCONVERT_ROOT/$RUN/SampleSheet/kmer_run/qc.kmer_analysis > /dev/null 2>&1
+   ls $OUTPUT_ROOT/SampleSheet/fastqc_run/*.fastqc  $OUTPUT_ROOT/SampleSheet/kmer_run/qc.kmer_analysis > /dev/null 2>&1
    if [ $? != 0 ]; then 
       echo "could not find all lane q/c landmarks so looks like lane q/c is needed - OK to run that ? (y/n, default=y)"
       read_answer_with_default y
@@ -564,20 +592,20 @@ do you want to review the enriched seqs kmer analysis assembled that are known t
    "
    read_answer_with_default y
    if [ "$answer" == "y" ]; then
-      echo "(listing will also be saved to $BCLCONVERT_ROOT/$RUN/SampleSheet/review_enriched_seqs.log)"
-      review_enriched_seqs | tee  $BCLCONVERT_ROOT/$RUN/SampleSheet/review_enriched_seqs.log
+      echo "(listing will also be saved to $OUTPUT_ROOT/SampleSheet/review_enriched_seqs.log)"
+      review_enriched_seqs | tee  $OUTPUT_ROOT/SampleSheet/review_enriched_seqs.log
    fi
 
 
    ####### check whether we can find deduped data   - if not confirm
    echo "
 
-checking for deduped data (looking for $BCLCONVERT_ROOT/$RUN/SampleSheet/dedupe/*.fastq.gz )....
+checking for deduped data (looking for $OUTPUT_ROOT/SampleSheet/dedupe/*.fastq.gz )....
 
 "
-   ls $BCLCONVERT_ROOT/$RUN/SampleSheet/dedupe/*.fastq.gz > /dev/null 2>&1
+   ls $OUTPUT_ROOT/SampleSheet/dedupe/*.fastq.gz > /dev/null 2>&1
    if [ $? != 0 ]; then
-      echo "could not find deduped fastq files (i.e. $BCLCONVERT_ROOT/$RUN/SampleSheet/dedupe/*.fastq.gz) so looks like dedupe is needed - OK to run that ? (y/n, default=y)"
+      echo "could not find deduped fastq files (i.e. $OUTPUT_ROOT/SampleSheet/dedupe/*.fastq.gz) so looks like dedupe is needed - OK to run that ? (y/n, default=y)"
       read_answer_with_default n
       if [ "$answer" != "y" ]; then
          echo "OK not running dedupe"
