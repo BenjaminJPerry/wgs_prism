@@ -337,7 +337,7 @@ function run_lane_qc() {
 conda activate $GBS_PRISM_BIN/conda/multiqc
 \" >  $OUTPUT_ROOT/SampleSheet/multiqc_env.inc
    mkdir -p $OUTPUT_ROOT/SampleSheet/multiqc
-   tardis -d $OUTPUT_ROOT/SampleSheet --hpctype local --shell-include-file $OUTPUT_ROOT/SampleSheet/multiqc_env.inc  multiqc -i \\\"multifastqc for $RUN\\\" -o $OUTPUT_ROOT/SampleSheet/multiqc $OUTPUT_ROOT/SampleSheet/fastqc_run/fastqc
+   tardis -d $OUTPUT_ROOT/SampleSheet --hpctype local --shell-include-file $OUTPUT_ROOT/SampleSheet/multiqc_env.inc  multiqc --interactive -i \\\"multifastqc for $RUN\\\" -o $OUTPUT_ROOT/SampleSheet/multiqc $OUTPUT_ROOT/SampleSheet/fastqc_run/fastqc
 
    mkdir -p $OUTPUT_ROOT/SampleSheet/kmer_run
    $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a kmer_analysis -s .0002 -M 10000 -O $OUTPUT_ROOT/SampleSheet/kmer_run  \`cat $OUTPUT_ROOT/SampleSheet/sequence_files.txt\` > $OUTPUT_ROOT/SampleSheet/kmer_analysis.log 2>&1  
