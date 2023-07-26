@@ -520,7 +520,7 @@ try /dataset/hiseq/active/sample-sheets. If it is there, please copy to the run 
    while [ 1 ]; do
       echo "
 
-      please specify q/c output base folder (or just press ENTER to use default , $BCLCONVERT_ROOT/$RUN )"
+      please specify the full path to the q/c output folder (or just press ENTER to use default , $BCLCONVERT_ROOT/$RUN )"
       read_answer_with_default $BCLCONVERT_ROOT/$RUN
       NEW_ROOT=$answer
       if [ -d $NEW_ROOT ]; then
