@@ -19,7 +19,7 @@ CUSTOM_CONTAMINANTS_FILES=""
 function send_mail() {
    message="$1"
    echo "sending mail"
-   echo "" | mutt -s "$message" vanstijnt , mccullocha, bairdh, perrybe, andersonr
+   echo "" | mutt -s "$message" vanstijnt , mccullocha, bairdh, perrybe, andersonr, andrewsa, henryh, frenchm, hicklandm
 }
 
 
