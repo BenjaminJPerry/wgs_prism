@@ -73,8 +73,8 @@ function get_pipeline() {
 }
 
 function send_mail() {
-   echo "sending mail to vanstijnt , mccullocha, bairdh "
-   echo "(please check results carefully, non-GBS flowcells often need custom processing, mostly involving customising the sample-sheet)" | mutt -s "FYI - looks like upload of (non GBS) $RUN is complete so auto-starting processing" vanstijnt , mccullocha, bairdh, perrybe
+   echo "sending mail to vanstijnt , mccullocha, bairdh, perrybe, andersonr, andrewsa, henryh, frenchm, hicklandm "
+   echo "(please check results carefully, non-GBS flowcells often need custom processing, mostly involving customising the sample-sheet)" | mutt -s "FYI - looks like upload of (non GBS) $RUN is complete so auto-starting processing" vanstijnt , mccullocha, bairdh, perrybe, andersonr, andrewsa, henryh, frenchm, hicklandm 
 }
 
 
