@@ -203,7 +203,7 @@ $OUTPUT_ROOT/SampleSheet/bclconvert already exists - please clean up and retry"
       exit 1
    fi
    echo "
-   starting bclconvert, this should take around an hour or two...
+   starting bclconvert, this should take around an hour or two for novaseq (less than a minute for iseq/miseq)...
 
    "
 
@@ -223,6 +223,8 @@ running $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a bclconvert $run_info_phrase -I
          if [ $INTERACTIVE != yes ]; then
             send_mail "sorry bclconvert for $RUN exited with an error code and no fastq data was generated"
          fi
+         echo "*** error , bclconvert exit code was non-zero and no sequence data generated ***"
+         echo "(suggest check $OUTPUT_ROOT/SampleSheet/bcl-convert.log)"
          exit 1
       fi
 
@@ -319,9 +321,12 @@ function run_lane_qc() {
    finding sequence files for fastqc..."
    mkdir -p $OUTPUT_ROOT/SampleSheet
    find $OUTPUT_ROOT/SampleSheet/bclconvert -name "*.fastq.gz" -size +1000c -print | grep -vi Undetermined > $OUTPUT_ROOT/SampleSheet/sequence_files.txt
+   return_code=$?
+
+   find $OUTPUT_ROOT/SampleSheet/bclconvert -name "*.fastq.gz" -type l -print | grep -vi Undetermined >> $OUTPUT_ROOT/SampleSheet/sequence_files.txt
    
-   if [ $? != 0 ]; then
-      echo "run_lane_qc: oops could not find any fastq files under $OUTPUT_ROOT/SampleSheet/bclconvert ! giving up"
+   if [[ ( $return_code != 0 ) && (  $? != 0 ) ]]; then
+      echo "run_lane_qc: oops could not find any fastq files ( or links to fastq files) under $OUTPUT_ROOT/SampleSheet/bclconvert ! giving up"
       exit 1
    fi  
 
@@ -544,9 +549,17 @@ try /dataset/hiseq/active/sample-sheets. If it is there, please copy to the run 
    echo "checking sequence data (looking under  $OUTPUT_ROOT)....
 
 "
-   ls -lR $OUTPUT_ROOT/$RUN/SampleSheet/bclconvert 2>/dev/null | grep "fastq.gz"   > /dev/null 2>&1 
+   ls -lR $OUTPUT_ROOT/SampleSheet/bclconvert 2>/dev/null | grep "fastq.gz"   > /dev/null 2>&1 
    if [ $? != 0 ]; then
-      echo "could not find fastq data under $OUTPUT_ROOT so looks like bclconvert is needed - OK to run that ? (y/n, default=y)"
+      echo "could not find fastq data under $OUTPUT_ROOT/SampleSheet/bclconvert 
+
+(If you just want to run downstream q/c, CTRL-C here and create symlinks to your data in 
+$OUTPUT_ROOT/SampleSheet/bclconvert 
+- e.g. 
+mkdir -p $OUTPUT_ROOT/SampleSheet/bclconvert
+cp -s /dataset/2023_illumina_sequencing_b/active/$RUN/Alignment_1/*/Fastq/*.fastq.gz $OUTPUT_ROOT/SampleSheet/bclconvert )
+
+. . . but you probably want to run bclconvert  - OK to run that ? (y/n, default=y)"
       read_answer_with_default y 
       if [ "$answer" != "y" ]; then
          echo "OK continuing..."
@@ -559,7 +572,7 @@ try /dataset/hiseq/active/sample-sheets. If it is there, please copy to the run 
    ####### found sequence data - see if we want to debug barcodes
    echo "
 
-do you want to look for barcodes in the unknown barcodes report (in both orientations) ? (y/n, default=n)
+do you want to look for barcodes in the unknown barcodes report (in both orientations) ? (y/n, default=y)
 
    "
    read_answer_with_default y
