@@ -435,8 +435,8 @@ function get_run_opts() {
    OUT_ROOT=""
    SNP_ENGINE=tassel        # the only one supported at this point
 
-   SEQ_ROOT=/dataset/2023_illumina_sequencing_b/active
-   SEQ_BCLCONVERT_ROOT=/dataset/2023_illumina_sequencing_b/scratch/postprocessing/illumina/novaseq
+   SEQ_ROOT=/dataset/2023_illumina_sequencing_c/active
+   SEQ_BCLCONVERT_ROOT=/dataset/2023_illumina_sequencing_c/scratch/postprocessing/illumina/novaseq
    mkdir -p $SEQ_BCLCONVERT_ROOT
 
 
@@ -464,7 +464,7 @@ please give the full name of wgs run you would like to process (e.g. 210712_A014
          else 
             # try looking in other places - e.g. for iseq runs in /dataset/hiseq/active
             SEQ_ROOT=/dataset/hiseq/active
-            SEQ_BCLCONVERT_ROOT=/dataset/2023_illumina_sequencing_b/scratch/postprocessing/illumina/iseq
+            SEQ_BCLCONVERT_ROOT=/dataset/2023_illumina_sequencing_c/scratch/postprocessing/illumina/iseq
             mkdir -p $SEQ_BCLCONVERT_ROOT
             if [ -d $SEQ_ROOT/$RUN ]; then
                platform=iseq
@@ -474,7 +474,7 @@ please give the full name of wgs run you would like to process (e.g. 210712_A014
             else 
                # try miseq
                SEQ_ROOT=/dataset/miseq/active
-               SEQ_BCLCONVERT_ROOT=/dataset/2023_illumina_sequencing_b/scratch/postprocessing/illumina/miseq
+               SEQ_BCLCONVERT_ROOT=/dataset/2023_illumina_sequencing_c/scratch/postprocessing/illumina/miseq
                mkdir -p $SEQ_BCLCONVERT_ROOT
                if [ -d $SEQ_ROOT/$RUN ]; then
                   platform=miseq
@@ -483,8 +483,8 @@ please give the full name of wgs run you would like to process (e.g. 210712_A014
                   break
                else
                   echo "sorry can't find $RUN under $SEQ_ROOT"
-                  SEQ_ROOT=/dataset/2023_illumina_sequencing_b/active
-                  SEQ_BCLCONVERT_ROOT=/dataset/2023_illumina_sequencing_b/scratch/postprocessing/illumina/novaseq
+                  SEQ_ROOT=/dataset/2023_illumina_sequencing_c/active
+                  SEQ_BCLCONVERT_ROOT=/dataset/2023_illumina_sequencing_c/scratch/postprocessing/illumina/novaseq
                fi
             fi
          fi
@@ -557,7 +557,7 @@ try /dataset/hiseq/active/sample-sheets. If it is there, please copy to the run 
 $OUTPUT_ROOT/SampleSheet/bclconvert 
 - e.g. 
 mkdir -p $OUTPUT_ROOT/SampleSheet/bclconvert
-cp -s /dataset/2023_illumina_sequencing_b/active/$RUN/Alignment_1/*/Fastq/*.fastq.gz $OUTPUT_ROOT/SampleSheet/bclconvert )
+cp -s /dataset/2023_illumina_sequencing_c/active/$RUN/Alignment_1/*/Fastq/*.fastq.gz $OUTPUT_ROOT/SampleSheet/bclconvert )
 
 . . . but you probably want to run bclconvert  - OK to run that ? (y/n, default=y)"
       read_answer_with_default y 

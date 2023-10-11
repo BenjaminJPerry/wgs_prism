@@ -12,7 +12,7 @@ function read_answer_with_default() {
 function get_opts() {
    help_text="
 usage example (currently run in a screen session) :\n
-autostart_wgs_qc 230307_A01439_0152_AHVWF2DRX2 | tee /dataset/2023_illumina_sequencing_b/scratch/postprocessing/autostart_logs/230623_A01439_0188_AHFFGNDRX3.log \n
+autostart_wgs_qc 230307_A01439_0152_AHVWF2DRX2 | tee /dataset/2023_illumina_sequencing_c/scratch/postprocessing/autostart_logs/230623_A01439_0188_AHFFGNDRX3.log \n
 "
    while getopts ":h" opt; do
    case $opt in
@@ -80,7 +80,7 @@ function send_mail() {
 
 function get_run_folder() {
    #try novaseq
-   RUN_FOLDER=/dataset/2023_illumina_sequencing_b/active/$ARGRUN
+   RUN_FOLDER=/dataset/2023_illumina_sequencing_c/active/$ARGRUN
    if [ ! -d $RUN_FOLDER ]; then
       # try iseq
       RUN_FOLDER=/dataset/hiseq/active/$ARGRUN
