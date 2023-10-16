@@ -16,6 +16,8 @@ CONTAMINANTS_FILE=/stash/miniconda3/envs/bifo-essential/opt/fastqc-0.11.8/Config
 CUSTOM_ADAPTERS_FILES=/dataset/gseq_processing/active/bin/gquery/database/t_BarcodePlates.csv
 CUSTOM_CONTAMINANTS_FILES=""
 
+FASTQC_WALL=72
+
 function send_mail() {
    message="$1"
    echo "sending mail"
@@ -316,6 +318,21 @@ function review_enriched_seqs() {
 
 
 function run_lane_qc() {
+   while [ 1 ] ; do
+      echo "
+please enter how long to allow for fastq step - or just press enter to accept default ( $FASTQC_WALL hours ) 
+
+"
+      read_answer_with_default $FASTQC_WALL
+      FASTQC_WALL=$answer
+      python -c "print int('$FASTQC_WALL')" >/dev/null 2>&1
+      if [ $? != 0 ]; then
+         echo "looks like time  requested ( $FASTQC_WALL ) is not a number"
+      else
+         break
+      fi
+   done
+
    echo "
 
    finding sequence files for fastqc..."
@@ -336,7 +353,7 @@ function run_lane_qc() {
    export GBS_PRISM_BIN=/dataset/gseq_processing/active/bin/gbs_prism
 
    mkdir -p $OUTPUT_ROOT/SampleSheet/fastqc_run
-   $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a fastqc -O $OUTPUT_ROOT/SampleSheet/fastqc_run \`cat $OUTPUT_ROOT/SampleSheet/sequence_files.txt\` > $OUTPUT_ROOT/SampleSheet/fastqc_run/fastqc.log 2>&1  
+   $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a fastqc -W $FASTQC_WALL -O $OUTPUT_ROOT/SampleSheet/fastqc_run \`cat $OUTPUT_ROOT/SampleSheet/sequence_files.txt\` > $OUTPUT_ROOT/SampleSheet/fastqc_run/fastqc.log 2>&1  
 
    echo \"
 conda activate $GBS_PRISM_BIN/conda/multiqc
@@ -345,7 +362,7 @@ conda activate $GBS_PRISM_BIN/conda/multiqc
    tardis -d $OUTPUT_ROOT/SampleSheet --hpctype local --shell-include-file $OUTPUT_ROOT/SampleSheet/multiqc_env.inc  multiqc --interactive -i \\\"multifastqc for $RUN\\\" -o $OUTPUT_ROOT/SampleSheet/multiqc $OUTPUT_ROOT/SampleSheet/fastqc_run/fastqc
 
    mkdir -p $OUTPUT_ROOT/SampleSheet/kmer_run
-   $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a kmer_analysis -s .0002 -M 10000 -O $OUTPUT_ROOT/SampleSheet/kmer_run  \`cat $OUTPUT_ROOT/SampleSheet/sequence_files.txt\` > $OUTPUT_ROOT/SampleSheet/kmer_analysis.log 2>&1  
+   $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -W $FASTQC_WALL -a kmer_analysis -s .0002 -M 10000 -O $OUTPUT_ROOT/SampleSheet/kmer_run  \`cat $OUTPUT_ROOT/SampleSheet/sequence_files.txt\` > $OUTPUT_ROOT/SampleSheet/kmer_analysis.log 2>&1  
    " > $OUTPUT_ROOT/SampleSheet/lane_qc.src
    echo "
 
