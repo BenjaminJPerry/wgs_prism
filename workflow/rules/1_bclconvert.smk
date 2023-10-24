@@ -39,7 +39,7 @@ sample_sheet_path = os.path.join(config["OUT_ROOT"], config["RUN"], "SampleSheet
 
 rule targets:
     input:
-        directory(bclconvert_out = expand("{out_root}/{run}/SampleSheet/bclconvert", out_root = config["OUT_ROOT"], run = config["RUN"])),
+        directory(expand("{out_root}/{run}/SampleSheet/bclconvert", out_root = config["OUT_ROOT"], run = config["RUN"])),
         top_unknown = expand("{out_root}/{run}/SampleSheet/bclconvert/Top_Unknown_Barcodes.csv", out_root = config["OUT_ROOT"], run = config["RUN"])
 
 
