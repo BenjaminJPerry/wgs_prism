@@ -1,0 +1,33 @@
+# Based on: https://github.com/jdblischak/smk-simple-slurm
+# Default slurm profile for running the pipeline on the legacy HPC
+cluster:
+  mkdir -p {config[OUT_ROOT]}/{config[RUN]}/logs/slurm &&
+  sbatch
+    --account={resources.account}
+    --partition={resources.partition}
+    --cpus-per-task={threads}
+    --mem="{resources.mem_gb}G"
+    --job-name=smk-{rule}-{wildcards}
+    --time={resources.time}
+    --output={config[OUT_ROOT]}/{config[RUN]}/logs/slurm/{rule}-{wildcards}-%j.out
+    --parsable
+default-resources:
+  - account=perrybe
+  - partition=inv-iranui,inv-iranui-fast
+  - time=120
+  - mem_gb=8
+restart-times: 0
+local-cores: 6
+latency-wait: 6000
+jobs: 20
+keep-going: False
+rerun-incomplete: True
+printshellcmds: True
+scheduler: greedy
+use-conda: True
+use-singularity: True
+reason: True
+conda-frontend: conda
+cluster-status: workflow/scripts/status.py
+cluster-cancel: scancel
+max-status-checks-per-second: 1

@@ -208,7 +208,7 @@ $OUTPUT_ROOT/SampleSheet/bclconvert already exists - please clean up and retry"
    starting bclconvert, this should take around an hour or two for novaseq (less than a minute for iseq/miseq)...
 
    "
-
+ #TODO #3 UPDATED WITH SMK
    echo "
 running $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a bclconvert $run_info_phrase -I $SEQ_ROOT/$RUN -B \"$bclconvert_phrase\" -Q \"$samplesheet_to_fastqnames_phrase\"  -O $OUTPUT_ROOT/SampleSheet $OUTPUT_ROOT/SampleSheet.csv " > $OUTPUT_ROOT/SampleSheet/bclconvert.log
 
@@ -280,11 +280,11 @@ function find_barcodes() {
 
    num_found=`cat $OUTPUT_ROOT/SampleSheet/bclconvert/Reports/found_codes | wc -l`
    if [ $num_found == "0" ]; then
-      echo "sorry no codes in the unknown codes report match anything obvious in the sample sheet (i.e. codes or their reverse complement)
+      echo "sorry no codes in the unknown codes report match anything obvious in SampleSheet.csv (i.e. codes or their reverse complement)
       "
    else
       echo "
-   The following unknown barcode combinations from bclconvert contain a code matching a code or its reverse complement in the sample-sheeta:
+   The following unknown barcode combinations from bclconvert contain a code matching a code or its reverse complement in SampleSheet.csv:
       "
       more $OUTPUT_ROOT/SampleSheet/bclconvert/Reports/found_codes 
       echo "

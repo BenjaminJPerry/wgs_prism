@@ -1,0 +1,1 @@
+Pipeline environments can be defined here in yaml format for construction with conda. It is recommended to mannually create conda environments in a centralised 'conda-store' and use these environments in the pipeline.

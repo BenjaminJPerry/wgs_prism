@@ -1,0 +1,27 @@
+# Default pipeline configurations
+# These will be overridden by parameters passed on the CLI via the --config flag
+# It is recommended that these variables are mapped in the params: and not accessed directly through the config[] dictionary
+
+## HPC data organsiation global variables
+
+# RUN must be passed via --config parameter at runtime
+# eg. 231019_A01439_0219_AHNKGFDRX3
+RUN: ""
+
+# eg. /dataset/2023_illumina_sequencing_[a-z]/active/$RUN
+IN_ROOT: "/dataset/2023_illumina_sequencing_c/active"
+
+# eg. /datasets/2023_illumina_sequencing_[a-z]/scratch/postprocessing/illumina/novaseq/$RUN
+OUT_ROOT: "/dataset/2023_illumina_sequencing_c/scratch/postprocessing/illumina/novaseq"
+
+## bclconvert configuration
+
+
+## fastqc configuration
+
+
+## kraken2 configuration
+
+
+## multiQC configuration
+
