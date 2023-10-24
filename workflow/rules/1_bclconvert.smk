@@ -48,7 +48,7 @@ rule run_bclconvert:
         run_in = expand("{in_root}/{run}", in_root = config["IN_ROOT"], run = config["RUN"]),
         sample_sheet = expand("{out_root}/{run}/SampleSheet.csv", out_root = config["OUT_ROOT"], run = config["RUN"])
     output:
-        directory(bclconvert_out = expand("{out_root}/{run}/SampleSheet/bclconvert", out_root = config["OUT_ROOT"], run = config["RUN"])),
+        bclconvert_out = directory(expand("{out_root}/{run}/SampleSheet/bclconvert", out_root = config["OUT_ROOT"], run = config["RUN"])),
         top_unknown = expand("{out_root}/{run}/SampleSheet/bclconvert/Top_Unknown_Barcodes.csv", out_root = config["OUT_ROOT"], run = config["RUN"])
     log:
         expand("{out_root}/{run}/logs/1_run_bclconvert.log", out_root = config["OUT_ROOT"], run = config["RUN"])
