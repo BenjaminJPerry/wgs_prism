@@ -39,8 +39,8 @@ sample_sheet_path = os.path.join(config["OUT_ROOT"], config["RUN"], "SampleSheet
 
 rule targets:
     input:
-        directory(expand("{out_root}/{run}/SampleSheet/bclconvert", out_root = config["OUT_ROOT"], run = config["RUN"])),
-        top_unknown = expand("{out_root}/{run}/SampleSheet/bclconvert/Top_Unknown_Barcodes.csv", out_root = config["OUT_ROOT"], run = config["RUN"])
+        top_unknown = expand("{out_root}/{run}/SampleSheet/bclconvert/Reports/Top_Unknown_Barcodes.csv", out_root = config["OUT_ROOT"], run = config["RUN"]),
+        fastq_complete = expand("{out_root}/{run}/SampleSheet/bclconvert/Logs/FastqComplete.txt", out_root = config["OUT_ROOT"], run = config["RUN"]),
 
 
 rule run_bclconvert:
@@ -49,7 +49,8 @@ rule run_bclconvert:
         sample_sheet = expand("{out_root}/{run}/SampleSheet.csv", out_root = config["OUT_ROOT"], run = config["RUN"])
     output:
         bclconvert_out = directory(expand("{out_root}/{run}/SampleSheet/bclconvert", out_root = config["OUT_ROOT"], run = config["RUN"])),
-        top_unknown = expand("{out_root}/{run}/SampleSheet/bclconvert/Top_Unknown_Barcodes.csv", out_root = config["OUT_ROOT"], run = config["RUN"])
+        fastq_complete = expand("{out_root}/{run}/SampleSheet/bclconvert/Logs/FastqComplete.txt", out_root = config["OUT_ROOT"], run = config["RUN"]),
+        top_unknown = expand("{out_root}/{run}/SampleSheet/bclconvert/Reports/Top_Unknown_Barcodes.csv", out_root = config["OUT_ROOT"], run = config["RUN"])
     log:
         expand("{out_root}/{run}/logs/1_run_bclconvert.log", out_root = config["OUT_ROOT"], run = config["RUN"])
     conda:
