@@ -28,8 +28,10 @@ onstart:
 # Global variables
 
 # config dictionary values to be defined on running snakemake with --config flag
+fastqc_in_root = os.path.join(config["OUT_ROOT"], "SampleSheet/bclconvert")
 fastqc_in_samples = os.path.join(config["OUT_ROOT"], "SampleSheet/bclconvert/{sample}.fastq.gz")
-SAMPLES, = glob_wildcards(fastqc_in_samples)
+#SAMPLES, = glob_wildcards(fastqc_in_samples)
+SAMPLES = glob_wildcards(os.path.join(fastqc_in_root,"{sample, (?!Undet).*}.fastq.gz")).sample
 
 fastqc_out_root = os.path.join(config["OUT_ROOT"], "SampleSheet/fastqc_run/fastqc")
 fastqc_out_samples = os.path.join(config["OUT_ROOT"], "SampleSheet/fastqc_run/fastqc/{sample}_fastqc.zip")
