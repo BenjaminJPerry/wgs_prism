@@ -61,9 +61,9 @@ rule run_bclconvert:
         "docker://nfcore/bclconvert:4.0.3"
     benchmark:
         bclconvert_benchmark
-    threads: 16
+    threads: 24
     resources:
-        mem_gb = lambda wildcards, attempt: 32 + ((attempt - 1) * 32),
+        mem_gb = lambda wildcards, attempt: 24 + ((attempt - 1) * 32),
         time = lambda wildcards, attempt: 120 + ((attempt - 1) * 120),
     shell:
         """
@@ -74,7 +74,7 @@ rule run_bclconvert:
         
         bcl-convert -V 
         
-        bcl-convert --force --bcl-input-directory {input.run_in} --sample-sheet {input.sample_sheet} --output-directory {output.bclconvert_out} > {log} 2>&1
+        bcl-convert --bcl-input-directory {input.run_in} --sample-sheet {input.sample_sheet} --output-directory {output.bclconvert_out} > {log} 2>&1
         
         if [ $? != 0 ]; then
         echo "error: bclconvert of {input.sample_sheet} - returned an error code."
