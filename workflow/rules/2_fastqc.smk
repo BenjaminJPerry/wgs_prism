@@ -23,8 +23,8 @@ onstart:
     os.system('echo "  CONDA VERSION: $(conda --version)"')
 
 
-# wildcard_constraints:
-#     samples="\w+"
+wildcard_constraints:
+    sample="^SQ.+"
 
 # Global variables
 
