@@ -58,7 +58,7 @@ rule run_bclconvert:
     log:
         bclconvert_log
     singularity:
-        "docker://nfcore/bclconvert:4.0.3"
+        "docker://nfcore/bclconvert:3.9.3"
     benchmark:
         bclconvert_benchmark
     threads: 24
