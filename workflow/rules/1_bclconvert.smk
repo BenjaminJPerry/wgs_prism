@@ -21,7 +21,6 @@ onstart:
     print(f"Env TMPDIR = {os.environ.get('TMPDIR', '<n/a>')}")
     os.system('echo "  PYTHON VERSION: $(python --version)"')
     os.system('echo "  CONDA VERSION: $(conda --version)"')
-    print("Found: ")
 
 
 # wildcard_constraints:
@@ -29,18 +28,15 @@ onstart:
 
 # Global variables
 # config dictionary values to be defined on running snakemake with --config flag
-bclconvert_in_path = os.path.join(config["IN_ROOT"], config["RUN"])
-bclconvert_out_path = os.path.join(config["OUT_ROOT"], config["RUN"], "SampleSheet")
-sample_sheet_path = os.path.join(config["OUT_ROOT"], config["RUN"], "SampleSheet.csv")
+# bclconvert_in_path = os.path.join(config["IN_ROOT"], config["RUN"])
+# bclconvert_out_path = os.path.join(config["OUT_ROOT"], config["RUN"], "SampleSheet")
+# sample_sheet_path = os.path.join(config["OUT_ROOT"], config["RUN"], "SampleSheet.csv")
 
-#TODO: Update ALL paths for inputs and outputs below!
-
-# FIDs, = glob_wildcards('results/01_cutadapt/{samples}.fastq.gz')
 
 rule targets:
     input:
-        top_unknown = expand("{out_root}/{run}/SampleSheet/bclconvert/Reports/Top_Unknown_Barcodes.csv", out_root = config["OUT_ROOT"], run = config["RUN"]),
-        fastq_complete = expand("{out_root}/{run}/SampleSheet/bclconvert/Logs/FastqComplete.txt", out_root = config["OUT_ROOT"], run = config["RUN"]),
+        expand("{out_root}/{run}/SampleSheet/bclconvert/Reports/Top_Unknown_Barcodes.csv", out_root = config["OUT_ROOT"], run = config["RUN"]),
+        expand("{out_root}/{run}/SampleSheet/bclconvert/Logs/FastqComplete.txt", out_root = config["OUT_ROOT"], run = config["RUN"]),
 
 
 rule run_bclconvert:
