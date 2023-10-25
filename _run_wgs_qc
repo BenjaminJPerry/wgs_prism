@@ -581,7 +581,6 @@ try /dataset/hiseq/active/sample-sheets. If it is there, please copy to the run 
 $OUTPUT_ROOT/SampleSheet/bclconvert 
 - e.g. 
 mkdir -p $OUTPUT_ROOT/SampleSheet/bclconvert
-cp -s /dataset/2023_illumina_sequencing_c/active/$RUN/Alignment_1/*/Fastq/*.fastq.gz $OUTPUT_ROOT/SampleSheet/bclconvert )
 
 . . . but you probably want to run bclconvert  - OK to run that ? (y/n, default=y)"
       read_answer_with_default y 
