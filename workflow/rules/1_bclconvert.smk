@@ -76,9 +76,14 @@ rule run_bclconvert:
         
         bcl-convert --force --bcl-input-directory {input.run_in} --sample-sheet {input.sample_sheet} --output-directory {output.bclconvert_out} > {log} 2>&1
         
-        if [ $? != 0 ]; then
-        echo "error: bclconvert of {input.sample_sheet} - returned an error code."
-        exit 1
+        
+        if [ $? != 0 ]
+        then
+            echo "error: bclconvert of {input.sample_sheet} - returned an error code."
+            exit 1
+        else
+            touch {output.fastq_complete}
+            exit 0
         fi
         
         """
