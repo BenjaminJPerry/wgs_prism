@@ -19,8 +19,6 @@ CUSTOM_CONTAMINANTS_FILES=""
 
 FASTQC_WALL=72
 
-# For conda integration
-conda init bash -q
 
 function send_mail() {
    message="$1"
@@ -218,6 +216,8 @@ Starting bclconvert...
    "
    # echo "running $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a bclconvert $run_info_phrase -I $SEQ_ROOT/$RUN -B \"$bclconvert_phrase\" -Q \"$samplesheet_to_fastqnames_phrase\"  -O $OUTPUT_ROOT/SampleSheet $OUTPUT_ROOT/SampleSheet.csv " > $OUTPUT_ROOT/SampleSheet/bclconvert.log
    # $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a bclconvert $run_info_phrase -I $SEQ_ROOT/$RUN -B "$bclconvert_phrase" -Q "$samplesheet_to_fastqnames_phrase"  -O $OUTPUT_ROOT/SampleSheet $OUTPUT_ROOT/SampleSheet.csv  >> $OUTPUT_ROOT/SampleSheet/bclconvert.log 2>&1
+   # For conda integration
+   conda init bash > /dev/null
 
    echo "snakemake --profile config/slurm/legacy --snakefile workflow/rules/1_bclconvert.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN " | tee > $OUTPUT_ROOT/SampleSheet/bclconvert.log
    source activate snakemake
