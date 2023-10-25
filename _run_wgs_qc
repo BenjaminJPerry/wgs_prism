@@ -19,6 +19,9 @@ CUSTOM_CONTAMINANTS_FILES=""
 
 FASTQC_WALL=72
 
+# For conda integration
+
+
 function send_mail() {
    message="$1"
    echo "sending mail"
@@ -200,8 +203,8 @@ $OUTPUT_ROOT/SampleSheet/bclconvert already exists - please clean up and retry"
    # "
 
    echo "about to run bclconvert using:
-   snakemake --profile config/slurm/legacy --snakefile workflow/rules/1_bclconvert.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN
-   OK ? (y/n, default=y)
+snakemake --profile config/slurm/legacy --snakefile workflow/rules/1_bclconvert.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN
+OK ? (y/n, default=y)
    "
 
    read_answer_with_default  y
@@ -210,14 +213,14 @@ $OUTPUT_ROOT/SampleSheet/bclconvert already exists - please clean up and retry"
       exit 1
    fi
    echo "
-   starting bclconvert...
+Starting bclconvert...
 
    "
    # echo "running $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a bclconvert $run_info_phrase -I $SEQ_ROOT/$RUN -B \"$bclconvert_phrase\" -Q \"$samplesheet_to_fastqnames_phrase\"  -O $OUTPUT_ROOT/SampleSheet $OUTPUT_ROOT/SampleSheet.csv " > $OUTPUT_ROOT/SampleSheet/bclconvert.log
    # $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a bclconvert $run_info_phrase -I $SEQ_ROOT/$RUN -B "$bclconvert_phrase" -Q "$samplesheet_to_fastqnames_phrase"  -O $OUTPUT_ROOT/SampleSheet $OUTPUT_ROOT/SampleSheet.csv  >> $OUTPUT_ROOT/SampleSheet/bclconvert.log 2>&1
 
    echo "snakemake --profile config/slurm/legacy --snakefile workflow/rules/1_bclconvert.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN " | tee > $OUTPUT_ROOT/SampleSheet/bclconvert.log
-   conda activate snakemake
+   source activate snakemake
    snakemake --profile config/slurm/legacy --snakefile workflow/rules/1_bclconvert.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN
    conda deactivate
 
@@ -549,7 +552,7 @@ try /dataset/hiseq/active/sample-sheets. If it is there, please copy to the run 
    while [ 1 ]; do
       echo "
 
-      please specify the full path to the q/c output folder (or just press ENTER to use default , $BCLCONVERT_ROOT/$RUN )"
+please specify the full path to the q/c output folder (or just press ENTER to use default , $BCLCONVERT_ROOT/$RUN )"
       read_answer_with_default $BCLCONVERT_ROOT/$RUN
       NEW_ROOT=$answer
       if [ -d $NEW_ROOT ]; then
