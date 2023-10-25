@@ -124,13 +124,13 @@ checking run is completed (i.e. looking for $SEQ_ROOT/$RUN/RTAComplete.txt)...
    # (but allow user to customise )
    #
    if [ ! -f $OUTPUT_ROOT/SampleSheet.csv ]; then
-      cat $SAMPLE_SHEET | $WGS_PRISM_BIN/add_sample_sheet_header.py -H  $WGS_PRISM_BIN/etc/sample_sheet_header.csv  > $OUTPUT_ROOT/SampleSheet.csv
+      cat $SAMPLE_SHEET | $WGS_PRISM_BIN/workflow/scripts/add_sample_sheet_header.py -H  $WGS_PRISM_BIN/resources/sample_sheet_header.csv  > $OUTPUT_ROOT/SampleSheet.csv
    fi
 
    echo "will use sample sheet $OUTPUT_ROOT/SampleSheet.csv as follows  - please review. 
 ***** Some points to note *****
 *
-* the sample sheet has been minimally checked and filtered by $WGS_PRISM_BIN/add_sample_sheet_header.py - e.g. setting Adapter1 updated to AdapterRead1.
+* the sample sheet has been minimally checked and filtered by $WGS_PRISM_BIN/workflow/scripts/add_sample_sheet_header.py - e.g. setting Adapter1 updated to AdapterRead1.
 * The following common requirements are not checked. (If you need to include these or other settings, just answer "n" to the next prompt, and 
 * manually edit $OUTPUT_ROOT/SampleSheet.csv)
 *
@@ -242,7 +242,7 @@ Starting bclconvert...
 
       echo "
 
-      bclconvert has finished but received a non zero process exit code from sequencing_qc_prism , though did generate fastq data so might be OK: do
+      bcl-convert has finished but received a non zero process exit code from sequencing_qc_prism , though did generate fastq data so might be OK: do
       you want to continue ? (y/n, default = y)
       "
       read_answer_with_default y 
@@ -259,7 +259,7 @@ Starting bclconvert...
 
    echo "
 
-   bclconvert completed  
+bcl-convert completed.
 
    "
 }
