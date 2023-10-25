@@ -2,7 +2,7 @@
 
 function get_pipeline() {
    export SEQ_PRISMS_BIN=/dataset/gseq_processing/active/bin/wgs_prism/seq_prisms
-   export WGS_PRISM_BIN=/dataset/gseq_processing/active/bin/wgs_prism
+   export WGS_PRISM_BIN=/home/perrybe/wgs_prism2
    cd $WGS_PRISM_BIN
    wgs_version=$1
 
@@ -22,4 +22,4 @@ function get_pipeline() {
    fi
 }
 
-get_pipeline 1.0.4alpha
+get_pipeline 2.0.0
