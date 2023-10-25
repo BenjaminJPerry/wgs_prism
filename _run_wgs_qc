@@ -5,7 +5,7 @@
 
 export SEQ_PRISMS_BIN=/dataset/gseq_processing/active/bin/wgs_prism/seq_prisms 
 #temp for testing
-export WGS_PRISM_BIN=~/wgs_prism2
+export WGS_PRISM_BIN=/home/perrybe/wgs_prism2
 export GBS_PRISM_BIN=/dataset/gseq_processing/active/bin/gbs_prism
 
 BCLCONVERT_NODE=invbfopp10.agresearch.co.nz   # iramohio-01
