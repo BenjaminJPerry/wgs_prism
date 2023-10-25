@@ -28,31 +28,35 @@ onstart:
 
 # Global variables
 # config dictionary values to be defined on running snakemake with --config flag
-# bclconvert_in_path = os.path.join(config["IN_ROOT"], config["RUN"])
-# bclconvert_out_path = os.path.join(config["OUT_ROOT"], config["RUN"], "SampleSheet")
-# sample_sheet_path = os.path.join(config["OUT_ROOT"], config["RUN"], "SampleSheet.csv")
+bclconvert_in_path = os.path.join(config["IN_ROOT"], config["RUN"])
+sample_sheet_path = os.path.join(config["OUT_ROOT"], config["RUN"], "SampleSheet.csv")
+
+bclconvert_out_root = os.path.join(config["OUT_ROOT"], config["RUN"])
+bclconvert_out_path = os.path.join(bclconvert_out_root, "SampleSheet/bclconvert")
+top_unknown_path = os.path.join(bclconvert_out_root, "SampleSheet/bclconvert/Reports/Top_Unknown_Barcodes.csv")
+fastq_complete_path = os.path.join(bclconvert_out_root, "SampleSheet/bclconvert/Logs/FastqComplete.txt")
 
 
 rule targets:
     input:
-        expand("{out_root}/{run}/SampleSheet/bclconvert/Reports/Top_Unknown_Barcodes.csv", out_root = config["OUT_ROOT"], run = config["RUN"]),
-        expand("{out_root}/{run}/SampleSheet/bclconvert/Logs/FastqComplete.txt", out_root = config["OUT_ROOT"], run = config["RUN"]),
+        fastq_complete_path,
+        top_unknown_path
 
 
 rule run_bclconvert:
     input:
-        run_in = expand("{in_root}/{run}", in_root = config["IN_ROOT"], run = config["RUN"]),
-        sample_sheet = expand("{out_root}/{run}/SampleSheet.csv", out_root = config["OUT_ROOT"], run = config["RUN"])
+        run_in = bclconvert_in_path,
+        sample_sheet = sample_sheet_path,
     output:
-        bclconvert_out = expand("{out_root}/{run}/SampleSheet/bclconvert", out_root = config["OUT_ROOT"], run = config["RUN"]),
-        fastq_complete = expand("{out_root}/{run}/SampleSheet/bclconvert/Logs/FastqComplete.txt", out_root = config["OUT_ROOT"], run = config["RUN"]),
-        top_unknown = expand("{out_root}/{run}/SampleSheet/bclconvert/Reports/Top_Unknown_Barcodes.csv", out_root = config["OUT_ROOT"], run = config["RUN"])
+        bclconvert_out = bclconvert_out_path,
+        fastq_complete = fastq_complete_path,
+        top_unknown = top_unknown_path
     log:
-        expand("{out_root}/{run}/logs/1_run_bclconvert.log", out_root = config["OUT_ROOT"], run = config["RUN"])
+        "{bclconvert_out_root}/logs/1_run_bclconvert.log"
     conda:
-        "bclconvert" # Container OR module in the future!
+        "bclconvert"
     benchmark:
-        expand("{out_root}/{run}/benchmarks/run_bclconvert.log", out_root = config["OUT_ROOT"], run = config["RUN"])
+        "{bclconvert_out_root}/benchmarks/run_bclconvert.log"
     threads: 16
     resources:
         mem_gb = lambda wildcards, attempt: 32 + ((attempt - 1) * 32),
