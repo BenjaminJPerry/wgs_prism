@@ -29,10 +29,9 @@ onstart:
 # Global variables
 # config dictionary values to be defined on running snakemake with --config flag
 bclconvert_in_path = os.path.join(config["IN_ROOT"], config["RUN"])
-sample_sheet_path = os.path.join(config["OUT_ROOT"], config["RUN"], "SampleSheet.csv")
 
 bclconvert_out_root = os.path.join(config["OUT_ROOT"])
-
+sample_sheet_path = os.path.join(bclconvert_out_root, "SampleSheet.csv")
 bclconvert_out_path = os.path.join(bclconvert_out_root, "SampleSheet/bclconvert")
 top_unknown_path = os.path.join(bclconvert_out_root, "SampleSheet/bclconvert/Reports/Top_Unknown_Barcodes.csv")
 fastq_complete_path = os.path.join(bclconvert_out_root, "SampleSheet/bclconvert/Logs/FastqComplete.txt")
