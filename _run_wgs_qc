@@ -20,7 +20,7 @@ CUSTOM_CONTAMINANTS_FILES=""
 FASTQC_WALL=72
 
 # For conda integration
-
+conda init bash
 
 function send_mail() {
    message="$1"
