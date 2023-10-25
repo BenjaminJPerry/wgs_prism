@@ -74,7 +74,6 @@ rule run_bclconvert:
         bcl-convert -V 
         
         bcl-convert --force --bcl-input-directory {input.run_in} --sample-sheet {input.sample_sheet} --output-directory {output.bclconvert_out} > {log} 2>&1
-        
 
         if [ $? != 0 ]
         then

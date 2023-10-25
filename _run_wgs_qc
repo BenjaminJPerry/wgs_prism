@@ -19,6 +19,8 @@ CUSTOM_CONTAMINANTS_FILES=""
 
 FASTQC_WALL=72
 
+# For conda integration
+conda init bash > /dev/null
 
 function send_mail() {
    message="$1"
@@ -115,6 +117,8 @@ checking run is completed (i.e. looking for $SEQ_ROOT/$RUN/RTAComplete.txt)...
 
    # set up for bclconvert run
    mkdir -p $OUTPUT_ROOT/SampleSheet
+   mkdir -p $OUTPUT_ROOT/logs
+
    if [ ! -d $OUTPUT_ROOT/SampleSheet ]; then
       echo "could not create bclconvert output folder $OUTPUT_ROOT/SampleSheet , quitting"
       exit 1
@@ -216,12 +220,10 @@ Starting bclconvert...
    "
    # echo "running $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a bclconvert $run_info_phrase -I $SEQ_ROOT/$RUN -B \"$bclconvert_phrase\" -Q \"$samplesheet_to_fastqnames_phrase\"  -O $OUTPUT_ROOT/SampleSheet $OUTPUT_ROOT/SampleSheet.csv " > $OUTPUT_ROOT/SampleSheet/bclconvert.log
    # $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a bclconvert $run_info_phrase -I $SEQ_ROOT/$RUN -B "$bclconvert_phrase" -Q "$samplesheet_to_fastqnames_phrase"  -O $OUTPUT_ROOT/SampleSheet $OUTPUT_ROOT/SampleSheet.csv  >> $OUTPUT_ROOT/SampleSheet/bclconvert.log 2>&1
-   # For conda integration
-   conda init bash > /dev/null
 
-   echo "snakemake --profile config/slurm/legacy --snakefile workflow/rules/1_bclconvert.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN " | tee > $OUTPUT_ROOT/SampleSheet/bclconvert.log
+   echo "snakemake --profile config/slurm/legacy --snakefile workflow/rules/1_bclconvert.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN " | tee > $OUTPUT_ROOT/logs/bclconvert.smk.log
    source activate snakemake
-   snakemake --profile config/slurm/legacy --snakefile workflow/rules/1_bclconvert.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN
+   snakemake --profile config/slurm/legacy --snakefile workflow/rules/1_bclconvert.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN > $OUTPUT_ROOT/logs/bclconvert.smk.log
    conda deactivate
 
    if [ $? != 0 ]; then
@@ -347,6 +349,7 @@ please enter how long to allow for fastq step - or just press enter to accept de
 
    finding sequence files for fastqc..."
    mkdir -p $OUTPUT_ROOT/SampleSheet
+   mkdir -p $OUTPUT_ROOT/logs
    find $OUTPUT_ROOT/SampleSheet/bclconvert -name "*.fastq.gz" -size +1000c -print | grep -vi Undetermined > $OUTPUT_ROOT/SampleSheet/sequence_files.txt
    return_code=$?
 
