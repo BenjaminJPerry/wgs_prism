@@ -52,7 +52,7 @@ rule run_bclconvert:
         run_in = bclconvert_in_path,
         sample_sheet = sample_sheet_path,
     output:
-        bclconvert_out = bclconvert_out_path,
+        bclconvert_out = directory(bclconvert_out_path),
         fastq_complete = fastq_complete_path,
         top_unknown = top_unknown_path
     log:
