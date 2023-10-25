@@ -24,7 +24,7 @@ onstart:
 
 
 wildcard_constraints:
-    sample="^SQ.+"
+    sample="(?!Undetermined).+"
 
 # Global variables
 
