@@ -56,9 +56,9 @@ rule fastqc:
         'docker://biocontainers/fastqc:v0.11.9_cv8'
     benchmark:
         fastqc_benchmark
-    threads: 6
+    threads: 12
     resources:
-        mem_gb = lambda wildcards, attempt: 24 + ((attempt - 1) * 32),
+        mem_gb = lambda wildcards, attempt: 8 + ((attempt - 1) * 32),
         time = lambda wildcards, attempt: 60 + ((attempt - 1) * 120),
     shell:
         """ 
