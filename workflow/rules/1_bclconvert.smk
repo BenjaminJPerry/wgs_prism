@@ -32,9 +32,12 @@ bclconvert_in_path = os.path.join(config["IN_ROOT"], config["RUN"])
 sample_sheet_path = os.path.join(config["OUT_ROOT"], config["RUN"], "SampleSheet.csv")
 
 bclconvert_out_root = os.path.join(config["OUT_ROOT"], config["RUN"])
+
 bclconvert_out_path = os.path.join(bclconvert_out_root, "SampleSheet/bclconvert")
 top_unknown_path = os.path.join(bclconvert_out_root, "SampleSheet/bclconvert/Reports/Top_Unknown_Barcodes.csv")
 fastq_complete_path = os.path.join(bclconvert_out_root, "SampleSheet/bclconvert/Logs/FastqComplete.txt")
+bclconvert_log = os.path.join(bclconvert_out_root, "/logs/1_run_bclconvert.log")
+bclconvert_benchmark = os.path.join(bclconvert_out_root, "/benchmarks/run_bclconvert.log")
 
 
 rule targets:
@@ -52,11 +55,11 @@ rule run_bclconvert:
         fastq_complete = fastq_complete_path,
         top_unknown = top_unknown_path
     log:
-        "{bclconvert_out_root}/logs/1_run_bclconvert.log"
+        bclconvert_log
     conda:
         "bclconvert"
     benchmark:
-        "{bclconvert_out_root}/benchmarks/run_bclconvert.log"
+        bclconvert_benchmark
     threads: 16
     resources:
         mem_gb = lambda wildcards, attempt: 32 + ((attempt - 1) * 32),
