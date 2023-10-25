@@ -58,7 +58,7 @@ rule run_bclconvert:
     log:
         bclconvert_log
     conda:
-        "bclconvert"
+        "docker://nfcore/bclconvert:4.0.3"
     benchmark:
         bclconvert_benchmark
     threads: 16
