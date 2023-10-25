@@ -37,8 +37,8 @@ bclconvert_out_path = os.path.join(bclconvert_out_root, "SampleSheet/bclconvert"
 top_unknown_path = os.path.join(bclconvert_out_root, "SampleSheet/bclconvert/Reports/Top_Unknown_Barcodes.csv")
 fastq_complete_path = os.path.join(bclconvert_out_root, "SampleSheet/bclconvert/Logs/FastqComplete.txt")
 
-bclconvert_log = os.path.join(bclconvert_out_root, "/logs/1_run_bclconvert.log")
-bclconvert_benchmark = os.path.join(bclconvert_out_root, "/benchmarks/run_bclconvert.log")
+bclconvert_log = os.path.join(bclconvert_out_root, "logs/1_run_bclconvert.log")
+bclconvert_benchmark = os.path.join(bclconvert_out_root, "benchmarks/run_bclconvert.log")
 
 
 rule targets:
