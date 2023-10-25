@@ -9,7 +9,7 @@ function get_pipeline() {
    echo "preparing to run wgs qc pipeline version $wgs_version (press enter to continue)"
    read answer
    is_alpha=`echo $wgs_version | grep alpha`
-   if [ ! $is_alpha ]; then 
+   if [ $is_alpha ]; then 
       git checkout -q $wgs_version 
       if [ $? != 0 ]; then
          echo "unable to checkout pipeline version $wgs_version"
