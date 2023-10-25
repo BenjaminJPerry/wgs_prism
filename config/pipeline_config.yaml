@@ -6,7 +6,7 @@
 
 # RUN must be passed via --config parameter at runtime
 # eg. 231019_A01439_0219_AHNKGFDRX3
-RUN: "testing"
+RUN: "230928_A01439_0215_BHLLNHDRX3"
 
 # eg. /dataset/2023_illumina_sequencing_[a-z]/active/$RUN
 IN_ROOT: "/dataset/2023_illumina_sequencing_c/active"
