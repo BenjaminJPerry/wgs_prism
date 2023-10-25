@@ -57,7 +57,7 @@ rule run_bclconvert:
         top_unknown = top_unknown_path
     log:
         bclconvert_log
-    conda:
+    singularity:
         "docker://nfcore/bclconvert:4.0.3"
     benchmark:
         bclconvert_benchmark
