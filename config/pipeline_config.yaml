@@ -14,8 +14,8 @@ RUN: "231005_A01439_0216_AHL7NKDRX3"
 IN_ROOT: "/dataset/2023_illumina_sequencing_c/active"
 
 # eg. /datasets/2023_illumina_sequencing_[a-z]/scratch/postprocessing/illumina/novaseq/$RUN
-# AKA. $SEQ_BCLCONVERT_ROOT or $OUTPUT_ROOT
-OUT_ROOT: "/dataset/2023_illumina_sequencing_c/scratch/postprocessing/illumina/novaseq"
+# AKA. $OUTPUT_ROOT
+OUT_ROOT: "/dataset/2023_illumina_sequencing_c/scratch/postprocessing/illumina/novaseq/test"
 
 ## bclconvert configuration
 

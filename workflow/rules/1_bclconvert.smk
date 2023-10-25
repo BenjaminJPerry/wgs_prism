@@ -31,7 +31,7 @@ onstart:
 bclconvert_in_path = os.path.join(config["IN_ROOT"], config["RUN"])
 sample_sheet_path = os.path.join(config["OUT_ROOT"], config["RUN"], "SampleSheet.csv")
 
-bclconvert_out_root = os.path.join(config["OUT_ROOT"], config["RUN"])
+bclconvert_out_root = os.path.join(config["OUT_ROOT"])
 
 bclconvert_out_path = os.path.join(bclconvert_out_root, "SampleSheet/bclconvert")
 top_unknown_path = os.path.join(bclconvert_out_root, "SampleSheet/bclconvert/Reports/Top_Unknown_Barcodes.csv")
@@ -76,7 +76,7 @@ rule run_bclconvert:
         
         bcl-convert --force --bcl-input-directory {input.run_in} --sample-sheet {input.sample_sheet} --output-directory {output.bclconvert_out} > {log} 2>&1
         
-        
+
         if [ $? != 0 ]
         then
             echo "error: bclconvert of {input.sample_sheet} - returned an error code."
