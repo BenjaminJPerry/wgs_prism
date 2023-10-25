@@ -65,15 +65,17 @@ rule run_bclconvert:
         """
         # run bcl-convert
         # report version 
-        echo "bcl-convert version in use: "
+        
+        # echo "bcl-convert version in use:"
+        
         bcl-convert -V 
         
         bcl-convert --bcl-input-directory {input.run_in} --sample-sheet {input.sample_sheet} --output-directory {output.bclconvert_out} > {log} 2>&1
         
-        if [ $? != 0 ]; then
-        echo "error: bclconvert of {input.sample_sheet} - returned an error code."
-        exit 1
-        fi
+        # if [ $? != 0 ]; then
+        # echo "error: bclconvert of {input.sample_sheet} - returned an error code."
+        # exit 1
+        # fi
         
         """
         
