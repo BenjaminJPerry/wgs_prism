@@ -39,7 +39,7 @@ fastqc_benchmark = os.path.join(config["OUT_ROOT"], "benchmarks/run_fastqc.{samp
 
 
 rule targets:
-    wildcard_constraints: sample = ".+(?!Undetermined).+"
+    wildcard_constraints: sample = "(!Undetermined).+"
     input:
         expand(fastqc_out_samples, sample = SAMPLES),
         
