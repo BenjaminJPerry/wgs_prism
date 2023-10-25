@@ -44,7 +44,7 @@ rule run_bclconvert:
         run_in = expand("{in_root}/{run}", in_root = config["IN_ROOT"], run = config["RUN"]),
         sample_sheet = expand("{out_root}/{run}/SampleSheet.csv", out_root = config["OUT_ROOT"], run = config["RUN"])
     output:
-        bclconvert_out = directory(expand("{out_root}/{run}/SampleSheet/bclconvert", out_root = config["OUT_ROOT"], run = config["RUN"])),
+        bclconvert_out = expand("{out_root}/{run}/SampleSheet/bclconvert", out_root = config["OUT_ROOT"], run = config["RUN"]),
         fastq_complete = expand("{out_root}/{run}/SampleSheet/bclconvert/Logs/FastqComplete.txt", out_root = config["OUT_ROOT"], run = config["RUN"]),
         top_unknown = expand("{out_root}/{run}/SampleSheet/bclconvert/Reports/Top_Unknown_Barcodes.csv", out_root = config["OUT_ROOT"], run = config["RUN"])
     log:
@@ -58,7 +58,7 @@ rule run_bclconvert:
         mem_gb = lambda wildcards, attempt: 32 + ((attempt - 1) * 32),
         time = lambda wildcards, attempt: 120 + ((attempt - 1) * 120),
     shell:
-        "bcl-convert --bcl-input-directory {input.run_in} --sample-sheet {input.sample_sheet} --output-directory {output.bclconvert_out} > {log} 2>&1"
+        "bcl-convert --bcl-input-directory {input.run_in} --sample-sheet {input.sample_sheet} --output-directory {output.bclconvert_out} > {log} 2>&1 "
 
 
         # """
