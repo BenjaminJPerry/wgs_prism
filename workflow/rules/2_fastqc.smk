@@ -63,7 +63,7 @@ rule fastqc:
         """ 
         mkdir -p {fastqc_out_root}
 
-        fastqc -t {threads} -o {output.fastqc} {input.fastq} > {log} 2>&1
+        fastqc -t {threads} -o {fastqc_out_root} {input.fastq} > {log} 2>&1
 
         success_landmark={output.zip}
 
