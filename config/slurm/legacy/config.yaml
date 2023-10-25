@@ -1,7 +1,7 @@
 # Based on: https://github.com/jdblischak/smk-simple-slurm
 # Default slurm profile for running the pipeline on the legacy HPC
 cluster:
-  mkdir -p {config[OUT_ROOT]}/{config[RUN]}/logs/slurm &&
+  mkdir -p {config[OUT_ROOT]}/logs/slurm &&
   sbatch
     --account={resources.account}
     --partition={resources.partition}
@@ -9,7 +9,7 @@ cluster:
     --mem="{resources.mem_gb}G"
     --job-name=smk-{rule}-{wildcards}
     --time={resources.time}
-    --output={config[OUT_ROOT]}/{config[RUN]}/logs/slurm/{rule}-{wildcards}-%j.out
+    --output={config[OUT_ROOT]}/logs/slurm/{rule}-{wildcards}-%j.out
     --parsable
 default-resources:
   - account=perrybe
