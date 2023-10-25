@@ -37,9 +37,9 @@ fastqc_out_samples = os.path.join(config["OUT_ROOT"], "SampleSheet/fastqc_run/fa
 fastqc_log = os.path.join(config["OUT_ROOT"], "logs/2_run_fastqc.{sample}.log")
 fastqc_benchmark = os.path.join(config["OUT_ROOT"], "benchmarks/run_fastqc.{sample}.log")
 
+wildcard_constraints: sample = "^(?!.*Undetermined).*$"
 
 rule targets:
-    wildcard_constraints: sample = "^(?!.*Undetermined).*$"
     input:
         expand(fastqc_out_samples, sample = SAMPLES),
         
