@@ -2,8 +2,7 @@
 # These will be overridden by parameters passed on the CLI via the --config flag
 # It is recommended that these variables are mapped in the params: and not accessed directly through the config[] dictionary
 
-## HPC data organsiation global variables
-
+## HPC data organsiation global variables; passed via --config in practise ##
 # RUN must be passed via --config parameter at runtime
 # eg. 231019_A01439_0219_AHNKGFDRX3
 # AKA. $RUN
@@ -15,16 +14,24 @@ IN_ROOT: "/dataset/2023_illumina_sequencing_c/active"
 
 # eg. /datasets/2023_illumina_sequencing_[a-z]/scratch/postprocessing/illumina/novaseq/$RUN
 # AKA. $OUTPUT_ROOT
+# OUTPUT_ROOT must be passed via --config parameter at runtime
 OUT_ROOT: "/dataset/2023_illumina_sequencing_c/scratch/postprocessing/illumina/novaseq/test"
 
-## bclconvert configuration
+
+## bclconvert configuration; passed via --config in practise ##
 
 
-## fastqc configuration
+## fastqc configuration defaults; passed via --config in practise ##
 fastqc_walltime: 4320
 
-## kraken2 configuration
+## kmer_prism.py configuration defaults; passed via --config in practise ##
+SAMPLE_RATE: .0002
+KMER_PARAMETERS: "-k 6 -A"
 
 
-## multiQC configuration
+
+## kraken2 configuration ##
+
+
+## multiQC configuration ##
 

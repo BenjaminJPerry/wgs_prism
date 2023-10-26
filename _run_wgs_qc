@@ -365,7 +365,7 @@ Finding sequence files for fastqc.
    find $OUTPUT_ROOT/SampleSheet/bclconvert -name "*.fastq.gz" -type l -print | grep -vi Undetermined >> $OUTPUT_ROOT/SampleSheet/sequence_files.txt
    
    if [[ ( $return_code != 0 ) && (  $? != 0 ) ]]; then
-      echo "error: oops could not find any fastq files ( or links to fastq files) under $OUTPUT_ROOT/SampleSheet/bclconvert - quiting."
+      echo "error: oops could not find any .fastq.gz files ( or links to fastq files) under $OUTPUT_ROOT/SampleSheet/bclconvert - quiting."
       exit 1
    fi  
 

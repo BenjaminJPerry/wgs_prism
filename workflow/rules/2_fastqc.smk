@@ -37,7 +37,7 @@ fastqc_out_root = os.path.join(config["OUT_ROOT"], "SampleSheet/fastqc_run/fastq
 fastqc_out_samples_zips = os.path.join(config["OUT_ROOT"], "SampleSheet/fastqc_run/fastqc/{sample}_fastqc.zip")
 fastqc_out_samples_htmls = os.path.join(config["OUT_ROOT"], "SampleSheet/fastqc_run/fastqc/{sample}_fastqc.html")
 
-fastqc_log = os.path.join(config["OUT_ROOT"], "logs/2_run_fastqc.{sample}.log")
+fastqc_log = os.path.join(config["OUT_ROOT"], "logs/2.1_run_fastqc.{sample}.log")
 fastqc_benchmark = os.path.join(config["OUT_ROOT"], "benchmarks/run_fastqc.{sample}.log")
 
 
@@ -46,7 +46,8 @@ rule targets:
         expand(fastqc_out_samples_zips, sample = SAMPLES),
         expand(fastqc_out_samples_htmls, sample = SAMPLES),
 
-rule fastqc:
+
+rule run_fastqc:
     input:
         fastq = fastqc_in_samples
     output:

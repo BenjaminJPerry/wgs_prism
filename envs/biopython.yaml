@@ -1,0 +1,26 @@
+name: biopython
+channels:
+  - defaults
+  - conda-forge
+  - bioconda
+  - r
+dependencies:
+  - biopython=1.70=py27_2
+  - ca-certificates=2018.1.18=0
+  - certifi=2018.1.18=py27_0
+  - intel-openmp=2018.0.0=hc7b2577_8
+  - libgcc-ng=7.2.0=hdf63c60_3
+  - libgfortran-ng=7.2.0=hdf63c60_3
+  - mkl=2018.0.1=h19d6760_4
+  - ncurses=5.9=10
+  - numpy=1.14.2=py27hdbf6ddf_0
+  - openssl=1.0.2n=0
+  - pip=9.0.1=py27_1
+  - python=2.7.14=4
+  - readline=7.0=0
+  - setuptools=38.5.2=py27_0
+  - sqlite=3.20.1=2
+  - tk=8.6.7=0
+  - wheel=0.30.0=py27_2
+  - zlib=1.2.11=0
+prefix: /dataset/bioinformatics_dev/active/conda-env/biopython
