@@ -39,6 +39,8 @@ rule targets:
     input:
         expand(kmer_prism_out_samples_pickle_path, sample = SAMPLES),
 
+
+
 # Path and file name construction for rule downsample
 sampling_rate = config["SAMPLE_RATE"]
 downsample_out_samples_root = os.path.join(config["OUT_ROOT"], "SampleSheet/kmer_run/fastq_sample")
@@ -50,7 +52,6 @@ downsample_logs_path = os.path.join(config["OUT_ROOT"], downsample_log_files)
 
 downsample_benchmark_files = "benchmarks/downsample_fastq.{sample}.s" + sampling_rate + "." + "txt"
 downsample_benchmark_path = os.path.join(config["OUT_ROOT"], downsample_benchmark_files)
-
 
 rule downsample_fastq:
     input:
@@ -124,7 +125,6 @@ kmer_prism_out_logs_path = os.path.join(config["OUT_ROOT"], kmer_prism_out_log_f
 kmer_prism_out_benchmark_files = "benchmarks/run_kmer_prism.pickle.{sample}" + ".txt"
 kmer_prism_out_benchmark_path = os.path.join(config["OUT_ROOT"], kmer_fastq_to_fasta_benchmark_files)
 
-
 rule run_kmer_prism:
     input:
         kmer_fastq_to_fasta_out_samples_path
@@ -149,85 +149,85 @@ rule run_kmer_prism:
         """"
 
 
-rule aggregate_kmer_spectra:
-    input:
-        fastq = fastqc_in_samples
-    output:
-        zip = fastqc_out_samples_zips,
-        html = fastqc_out_samples_htmls
-    log:
-        fastqc_log
-    conda:
-        'envs/biopython.yaml'
-    benchmark:
-        fastqc_benchmark
-    threads: 12
-    resources:
-        mem_gb = lambda wildcards, attempt: 8 + ((attempt - 1) * 32),
-        time = lambda wildcards, attempt: 60 + ((attempt - 1) * 120),
-    shell:
-        """ 
-        # below uses the .kmerdist.pickle distribution files to make the final spectra
-        # (note that the -k 6 arg here is not actually used , as the distributions have already been done by the make step)
-        rm -f $OUT_DIR/kmer_summary_plus.${parameters_moniker}.txt
-        tardis.py --hpctype $HPC_TYPE -d $OUT_DIR --shell-include-file configure_biopython_env.src kmer_prism.py -k 6 -t zipfian -o $OUT_DIR/kmer_summary_plus.${parameters_moniker}.txt -b $OUT_DIR $SUMMARY_TARGETS >> $OUT_DIR/kmer_prism.log 2>&1
+# rule aggregate_kmer_spectra:
+#     input:
+#         fastq = fastqc_in_samples
+#     output:
+#         zip = fastqc_out_samples_zips,
+#         html = fastqc_out_samples_htmls
+#     log:
+#         fastqc_log
+#     conda:
+#         'envs/biopython.yaml'
+#     benchmark:
+#         fastqc_benchmark
+#     threads: 12
+#     resources:
+#         mem_gb = lambda wildcards, attempt: 8 + ((attempt - 1) * 32),
+#         time = lambda wildcards, attempt: 60 + ((attempt - 1) * 120),
+#     shell:
+#         """ 
+#         # below uses the .kmerdist.pickle distribution files to make the final spectra
+#         # (note that the -k 6 arg here is not actually used , as the distributions have already been done by the make step)
+#         rm -f $OUT_DIR/kmer_summary_plus.${parameters_moniker}.txt
+#         tardis.py --hpctype $HPC_TYPE -d $OUT_DIR --shell-include-file configure_biopython_env.src kmer_prism.py -k 6 -t zipfian -o $OUT_DIR/kmer_summary_plus.${parameters_moniker}.txt -b $OUT_DIR $SUMMARY_TARGETS >> $OUT_DIR/kmer_prism.log 2>&1
 
-        rm -f $OUT_DIR/kmer_frequency_plus.${parameters_moniker}.txt
-        tardis.py --hpctype $HPC_TYPE -d $OUT_DIR --shell-include-file configure_biopython_env.src kmer_prism.py -k 6 -t frequency -o $OUT_DIR/kmer_frequency_plus.${parameters_moniker}.txt -b $OUT_DIR $SUMMARY_TARGETS >> $OUT_DIR/kmer_prism.log 2>&1
+#         rm -f $OUT_DIR/kmer_frequency_plus.${parameters_moniker}.txt
+#         tardis.py --hpctype $HPC_TYPE -d $OUT_DIR --shell-include-file configure_biopython_env.src kmer_prism.py -k 6 -t frequency -o $OUT_DIR/kmer_frequency_plus.${parameters_moniker}.txt -b $OUT_DIR $SUMMARY_TARGETS >> $OUT_DIR/kmer_prism.log 2>&1
         
-        rm -f $OUT_DIR/kmer_summary.${parameters_moniker}.txt
-        tardis.py --hpctype $HPC_TYPE -d $OUT_DIR --shell-include-file configure_biopython_env.src kmer_prism.py -k 6 -a CGAT -t zipfian -o $OUT_DIR/kmer_summary.${parameters_moniker}.txt -b $OUT_DIR $SUMMARY_TARGETS >> $OUT_DIR/kmer_prism.log 2>&1
+#         rm -f $OUT_DIR/kmer_summary.${parameters_moniker}.txt
+#         tardis.py --hpctype $HPC_TYPE -d $OUT_DIR --shell-include-file configure_biopython_env.src kmer_prism.py -k 6 -a CGAT -t zipfian -o $OUT_DIR/kmer_summary.${parameters_moniker}.txt -b $OUT_DIR $SUMMARY_TARGETS >> $OUT_DIR/kmer_prism.log 2>&1
 
-        rm -f  $OUT_DIR/kmer_frequency.${parameters_moniker}.txt
-        tardis.py --hpctype $HPC_TYPE -d $OUT_DIR --shell-include-file configure_biopython_env.src kmer_prism.py -k 6 -a CGAT -t frequency -o $OUT_DIR/kmer_frequency.${parameters_moniker}.txt -b $OUT_DIR $SUMMARY_TARGETS >> $OUT_DIR/kmer_prism.log 2>&1
+#         rm -f  $OUT_DIR/kmer_frequency.${parameters_moniker}.txt
+#         tardis.py --hpctype $HPC_TYPE -d $OUT_DIR --shell-include-file configure_biopython_env.src kmer_prism.py -k 6 -a CGAT -t frequency -o $OUT_DIR/kmer_frequency.${parameters_moniker}.txt -b $OUT_DIR $SUMMARY_TARGETS >> $OUT_DIR/kmer_prism.log 2>&1
         
-        """
+#         """
 
 
 
-rule plot_kmer_prism:
-    input:
-        fastq = fastqc_in_samples
-    output:
-        zip = fastqc_out_samples_zips,
-        html = fastqc_out_samples_htmls
-    log:
-        fastqc_log
-    conda:
-        'envs/biopython.yaml'
-    benchmark:
-        fastqc_benchmark
-    threads: 12
-    resources:
-        mem_gb = lambda wildcards, attempt: 8 + ((attempt - 1) * 32),
-        time = lambda wildcards, attempt: 60 + ((attempt - 1) * 120),
-    shell:
-        """ 
-        for version in "" "_plus" ; do
-            rm -f $OUT_DIR/kmer_summary.txt
-            cp -s $OUT_DIR/kmer_summary${version}.${parameters_moniker}.txt $OUT_DIR/kmer_summary.txt
-            tardis.py 
-                    --hpctype $HPC_TYPE 
-                    -d $OUT_DIR 
-                    --shell-include-file configure_bioconductor_env.src 
-                    Rscript --vanilla 
-                        $OUT_DIR/kmer_plots.r datafolder=$OUT_DIR >> $OUT_DIR/kmer_prism.log 2>&1
+# rule plot_kmer_prism:
+#     input:
+#         fastq = fastqc_in_samples
+#     output:
+#         zip = fastqc_out_samples_zips,
+#         html = fastqc_out_samples_htmls
+#     log:
+#         fastqc_log
+#     conda:
+#         'envs/biopython.yaml'
+#     benchmark:
+#         fastqc_benchmark
+#     threads: 12
+#     resources:
+#         mem_gb = lambda wildcards, attempt: 8 + ((attempt - 1) * 32),
+#         time = lambda wildcards, attempt: 60 + ((attempt - 1) * 120),
+#     shell:
+#         """ 
+#         for version in "" "_plus" ; do
+#             rm -f $OUT_DIR/kmer_summary.txt
+#             cp -s $OUT_DIR/kmer_summary${version}.${parameters_moniker}.txt $OUT_DIR/kmer_summary.txt
+#             tardis.py 
+#                     --hpctype $HPC_TYPE 
+#                     -d $OUT_DIR 
+#                     --shell-include-file configure_bioconductor_env.src 
+#                     Rscript --vanilla 
+#                         $OUT_DIR/kmer_plots.r datafolder=$OUT_DIR >> $OUT_DIR/kmer_prism.log 2>&1
             
-            for output in kmer_entropy kmer_zipfian_comparisons kmer_zipfian zipfian_distances; do
-                if [ -f $OUT_DIR/${output}.jpg ]; then
-                    mv $OUT_DIR/${output}.jpg $OUT_DIR/${output}${version}.${parameters_moniker}.jpg
-                fi
-            done
+#             for output in kmer_entropy kmer_zipfian_comparisons kmer_zipfian zipfian_distances; do
+#                 if [ -f $OUT_DIR/${output}.jpg ]; then
+#                     mv $OUT_DIR/${output}.jpg $OUT_DIR/${output}${version}.${parameters_moniker}.jpg
+#                 fi
+#             done
             
-            for output in heatmap_sample_clusters  zipfian_distances_fit ; do
-                if [ -f $OUT_DIR/${output}.txt ]; then
-                    mv $OUT_DIR/${output}.txt $OUT_DIR/${output}${version}.${parameters_moniker}.txt
-                fi
-            done
+#             for output in heatmap_sample_clusters  zipfian_distances_fit ; do
+#                 if [ -f $OUT_DIR/${output}.txt ]; then
+#                     mv $OUT_DIR/${output}.txt $OUT_DIR/${output}${version}.${parameters_moniker}.txt
+#                 fi
+#             done
 
-        done
+#         done
 
 
-        """
+#         """
 
 
