@@ -716,10 +716,10 @@ do you want to look for barcodes in the unknown barcodes report (in both orienta
 
 
    ####### check whether we can find lane q/c landmark - if not confirm 
-   echo "checking for lane q/c results (looking for landmarks $OUTPUT_ROOT/SampleSheet/fastqc_run/*.fastqc and $OUTPUT_ROOT/SampleSheet/kmer_run/qc.kmer_analysis )...
+   echo "checking for fastqc results (looking for landmarks $OUTPUT_ROOT/SampleSheet/fastqc_run/fastqc/*.html...
 
 "
-   ls $OUTPUT_ROOT/SampleSheet/fastqc_run/*.fastqc  $OUTPUT_ROOT/SampleSheet/kmer_run/qc.kmer_analysis > /dev/null 2>&1
+   ls $OUTPUT_ROOT/SampleSheet/fastqc_run/fastqc/*.html  > /dev/null 2>&1
    if [ $? != 0 ]; then 
       echo "could not find all lane q/c landmarks so looks like lane q/c is needed - OK to run that ? (y/n, default=y)"
       read_answer_with_default y
@@ -729,6 +729,11 @@ do you want to look for barcodes in the unknown barcodes report (in both orienta
          run_lane_qc
       fi
    fi
+
+
+
+
+
 
 
    ####### kmer analysis hopefully available - see if we want to review the enriched sequences it assembles 
