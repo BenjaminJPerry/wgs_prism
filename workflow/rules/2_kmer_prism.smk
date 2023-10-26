@@ -33,6 +33,9 @@ kmer_in_samples = os.path.join(config["OUT_ROOT"], "SampleSheet/bclconvert/{samp
 SAMPLES = glob_wildcards(os.path.join(kmer_in_root,"{sample, (?!Undetermined).*}.fastq.gz")).sample
 kmer_out_root = os.path.join(config["OUT_ROOT"], "SampleSheet/kmer_analysis")
 
+for i in SAMPLES:
+    print(i)
+
 
 # Path and file name construction for rule downsample_fastq
 sampling_rate = str(config["SAMPLE_RATE"])
