@@ -34,14 +34,7 @@ SAMPLES = glob_wildcards(os.path.join(kmer_in_root,"{sample, (?!Undetermined).*}
 kmer_out_root = os.path.join(config["OUT_ROOT"], "SampleSheet/kmer_analysis")
 
 
-
-rule targets:
-    input:
-        expand(kmer_prism_out_samples_pickle_path, sample = SAMPLES),
-
-
-
-# Path and file name construction for rule downsample
+# Path and file name construction for rule downsample_fastq
 sampling_rate = config["SAMPLE_RATE"]
 downsample_out_samples_root = os.path.join(config["OUT_ROOT"], "SampleSheet/kmer_run/fastq_sample")
 downsample_out_samples = "{sample}.fastq.gz" + "." + "s" + sampling_rate + "." + "fastq.gz"
@@ -52,6 +45,43 @@ downsample_logs_path = os.path.join(config["OUT_ROOT"], downsample_log_files)
 
 downsample_benchmark_files = "benchmarks/downsample_fastq.{sample}.s" + sampling_rate + "." + "txt"
 downsample_benchmark_path = os.path.join(config["OUT_ROOT"], downsample_benchmark_files)
+
+
+# Path and file name construction for rule fastq_to_fasta
+kmer_parameters = config["KMER_PARAMETERS"]
+kmer_moniker = kmer_parameters.replace(" ", "").replace("-", "")
+
+kmer_fastq_to_fasta_root = os.path.join(config["OUT_ROOT"], "SampleSheet/kmer_run/kmer_analysis")
+kmer_fastq_to_fasta_out_samples = downsample_out_samples + "." + kmer_moniker + "." + "1"
+kmer_fastq_to_fasta_out_samples_path = os.path.join(kmer_fastq_to_fasta_root, kmer_fastq_to_fasta_out_samples)
+
+kmer_fastq_to_fasta_out_log_files = "logs/2.2.2_kmer_fastq_to_fasta.{sample}.s" + sampling_rate + "." + "log"
+kmer_fastq_to_fasta_out_logs_path = os.path.join(config["OUT_ROOT"], kmer_fastq_to_fasta_out_log_files)
+
+kmer_fastq_to_fasta_benchmark_files = "benchmarks/kmer_fastq_to_fasta.{sample}.s" + sampling_rate + "." + "txt"
+kmer_fastq_to_fasta_benchmark_path = os.path.join(config["OUT_ROOT"], kmer_fastq_to_fasta_benchmark_files)
+
+# Path and file name construction for rule run_kmer_prism
+kmer_prism_root = os.path.join(config["OUT_ROOT"], "SampleSheet/kmer_run/kmer_analysis")
+kmer_prism_out_samples_frequency = kmer_fastq_to_fasta_out_samples + "." + "kmer_prism" + "." + "frequency.txt"
+kmer_prism_out_samples_pickle = kmer_fastq_to_fasta_out_samples + "." + "kmderdist" + "." + "pickle"
+
+kmer_prism_out_samples_frequency_path = os.path.join(kmer_prism_root, kmer_prism_out_samples_frequency)
+kmer_prism_out_samples_pickle_path = os.path.join(kmer_prism_root, kmer_prism_out_samples_pickle)
+
+kmer_prism_out_log_files = "logs/2.2.3_run_kmer_prism.pickle.{sample}" + ".log"
+kmer_prism_out_logs_path = os.path.join(config["OUT_ROOT"], kmer_prism_out_log_files)
+
+kmer_prism_out_benchmark_files = "benchmarks/run_kmer_prism.pickle.{sample}" + ".txt"
+kmer_prism_out_benchmark_path = os.path.join(config["OUT_ROOT"], kmer_fastq_to_fasta_benchmark_files)
+
+
+# Beging Snakemake rule definitions
+
+rule targets:
+    input:
+        expand(kmer_prism_out_samples_pickle_path, sample = SAMPLES),
+
 
 rule downsample_fastq:
     input:
@@ -75,20 +105,6 @@ rule downsample_fastq:
         """ 
 
 
-
-kmer_parameters = config["KMER_PARAMETERS"]
-kmer_moniker = kmer_parameters.replace(" ", "").replace("-", "")
-
-kmer_fastq_to_fasta_root = os.path.join(config["OUT_ROOT"], "SampleSheet/kmer_run/kmer_analysis")
-kmer_fastq_to_fasta_out_samples = downsample_out_samples + "." + kmer_moniker + "." + "1"
-kmer_fastq_to_fasta_out_samples_path = os.path.join(kmer_fastq_to_fasta_root, kmer_fastq_to_fasta_out_samples)
-
-kmer_fastq_to_fasta_out_log_files = "logs/2.2.2_kmer_fastq_to_fasta.{sample}.s" + sampling_rate + "." + "log"
-kmer_fastq_to_fasta_out_logs_path = os.path.join(config["OUT_ROOT"], kmer_fastq_to_fasta_out_log_files)
-
-kmer_fastq_to_fasta_benchmark_files = "benchmarks/kmer_fastq_to_fasta.{sample}.s" + sampling_rate + "." + "txt"
-kmer_fastq_to_fasta_benchmark_path = os.path.join(config["OUT_ROOT"], kmer_fastq_to_fasta_benchmark_files)
-
 rule fastq_to_fasta:
     input:
         downsample_out_samples_path
@@ -108,22 +124,8 @@ rule fastq_to_fasta:
         """ 
         seqkit fq2fa {input} -o {output} > {log} 2>&1
 
-        """
-        
-        
-    
-kmer_prism_root = os.path.join(config["OUT_ROOT"], "SampleSheet/kmer_run/kmer_analysis")
-kmer_prism_out_samples_frequency = kmer_fastq_to_fasta_out_samples + "." + "kmer_prism" + "." + "frequency.txt"
-kmer_prism_out_samples_pickle = kmer_fastq_to_fasta_out_samples + "." + "kmderdist" + "." + "pickle"
+        """    
 
-kmer_prism_out_samples_frequency_path = os.path.join(kmer_prism_root, kmer_prism_out_samples_frequency)
-kmer_prism_out_samples_pickle_path = os.path.join(kmer_prism_root, kmer_prism_out_samples_pickle)
-
-kmer_prism_out_log_files = "logs/2.2.3_run_kmer_prism.pickle.{sample}" + ".log"
-kmer_prism_out_logs_path = os.path.join(config["OUT_ROOT"], kmer_prism_out_log_files)
-
-kmer_prism_out_benchmark_files = "benchmarks/run_kmer_prism.pickle.{sample}" + ".txt"
-kmer_prism_out_benchmark_path = os.path.join(config["OUT_ROOT"], kmer_fastq_to_fasta_benchmark_files)
 
 rule run_kmer_prism:
     input:
