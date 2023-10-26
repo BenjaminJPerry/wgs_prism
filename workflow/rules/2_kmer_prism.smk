@@ -30,7 +30,7 @@ onstart:
 # config dictionary values to be defined on running snakemake with --config flag
 kmer_in_root = os.path.join(config["OUT_ROOT"], "SampleSheet/bclconvert")
 kmer_in_samples = os.path.join(config["OUT_ROOT"], "SampleSheet/bclconvert/{sample}.fastq.gz")
-SAMPLES = glob_wildcards(os.path.join(fastqc_in_root,"{sample, (?!Undetermined).*}.fastq.gz")).sample
+SAMPLES = glob_wildcards(os.path.join(kmer_in_samples,"{sample, (?!Undetermined).*}.fastq.gz")).sample
 kmer_out_root = os.path.join(config["OUT_ROOT"], "SampleSheet/kmer_analysis")
 
 
