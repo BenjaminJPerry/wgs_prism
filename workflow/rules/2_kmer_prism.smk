@@ -35,7 +35,7 @@ kmer_out_root = os.path.join(config["OUT_ROOT"], "SampleSheet/kmer_analysis")
 
 
 # Path and file name construction for rule downsample_fastq
-sampling_rate = config["SAMPLE_RATE"]
+sampling_rate = str(config["SAMPLE_RATE"])
 downsample_out_samples_root = os.path.join(config["OUT_ROOT"], "SampleSheet/kmer_run/fastq_sample")
 downsample_out_samples = "{sample}.fastq.gz" + "." + "s" + sampling_rate + "." + "fastq.gz"
 downsample_out_samples_path = os.path.join(downsample_out_samples_root, downsample_out_samples)
