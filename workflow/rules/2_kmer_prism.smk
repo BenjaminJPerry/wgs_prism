@@ -146,7 +146,7 @@ rule run_kmer_prism:
         
         workflow/scripts/kmer_prism.py -f fasta -k 6 -A -b {kmer_prism_root} -o {output.txt} {input} > {log} 2>&1
 
-        """"
+        """
 
 
 # rule aggregate_kmer_spectra:
