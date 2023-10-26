@@ -56,8 +56,8 @@ function get_opts() {
    INTERACTIVE_OPT=""
    ARGRUN=""
    help_text="
-This script is called by run_wgs_qc (or non-interactively by a cron job)
-usage :\n
+This script is called by run_wgs_qc (or non-interactively by a cron job).
+Usage :\n
 "
    while getopts ":hir:" opt; do
    case $opt in
@@ -91,24 +91,25 @@ usage :\n
 
 
 function run_bclconvert() {
-   if [ $HOSTNAME != $BCLCONVERT_NODE ]; then
-      echo "sorry you need to be logged on to iramohio-01 to run bclconvert"
-      exit 1
-   fi
+   # Depricated test, bcl-convert now run on nodes
+   # if [ $HOSTNAME != $BCLCONVERT_NODE ]; then
+   #    echo "Sorry you need to be logged on to iramohio-01 to run bclconvert."
+   #    exit 1
+   # fi
 
    echo "
 
-checking run is completed (i.e. looking for $SEQ_ROOT/$RUN/RTAComplete.txt)...
+Checking run is completed (i.e. looking for $SEQ_ROOT/$RUN/RTAComplete.txt).
 
 "
    if [ ! -f $SEQ_ROOT/$RUN/RTAComplete.txt ]; then
-      echo "*** landmark file $SEQ_ROOT/$RUN/RTAComplete.txt does not exist => this run has not completed sequencing (or uploading?) - are you SURE you want to continue !? (y/n default n)"
+      echo "warning: landmark file $SEQ_ROOT/$RUN/RTAComplete.txt does not exist => this run has not completed sequencing (or uploading?) - are you SURE you want to continue !? (y/n default n)"
       read_answer_with_default n
       if [ $answer != "y" ]; then
-         echo "OK quitting"
+         echo "OK quitting."
          exit 1
       else
-         echo "OK will continue but note that output may be incomplete"
+         echo "OK will continue but note that output may be incomplete."
       fi
    fi
 
@@ -120,7 +121,7 @@ checking run is completed (i.e. looking for $SEQ_ROOT/$RUN/RTAComplete.txt)...
    mkdir -p $OUTPUT_ROOT/logs
 
    if [ ! -d $OUTPUT_ROOT/SampleSheet ]; then
-      echo "could not create bclconvert output folder $OUTPUT_ROOT/SampleSheet , quitting"
+      echo "error: could not create bclconvert output folder $OUTPUT_ROOT/SampleSheet -- quitting."
       exit 1
    fi
 
@@ -131,10 +132,12 @@ checking run is completed (i.e. looking for $SEQ_ROOT/$RUN/RTAComplete.txt)...
       cat $SAMPLE_SHEET | $WGS_PRISM_BIN/workflow/scripts/add_sample_sheet_header.py -H  $WGS_PRISM_BIN/resources/sample_sheet_header.csv  > $OUTPUT_ROOT/SampleSheet.csv
    fi
 
-   echo "will use sample sheet $OUTPUT_ROOT/SampleSheet.csv as follows  - please review. 
+   echo "
+Will use sample sheet $OUTPUT_ROOT/SampleSheet.csv as follows  -- please review: 
+
 ***** Some points to note *****
 *
-* the sample sheet has been minimally checked and filtered by $WGS_PRISM_BIN/workflow/scripts/add_sample_sheet_header.py - e.g. setting Adapter1 updated to AdapterRead1.
+* The sample sheet has been minimally checked and filtered by $WGS_PRISM_BIN/workflow/scripts/add_sample_sheet_header.py - e.g. setting Adapter1 updated to AdapterRead1.
 * The following common requirements are not checked. (If you need to include these or other settings, just answer "n" to the next prompt, and 
 * manually edit $OUTPUT_ROOT/SampleSheet.csv)
 *
@@ -173,16 +176,18 @@ checking run is completed (i.e. looking for $SEQ_ROOT/$RUN/RTAComplete.txt)...
 
 "
 
-   echo "(press Enter to review sample sheet)"
+   echo "Press Enter to review sample sheet:"
    read_answer_with_default ""
 
    more $OUTPUT_ROOT/SampleSheet.csv
    echo "
-   if this is OK ? answer y (or just press enter).
+If this is OK ? answer y (or just press enter):
    "
    read_answer_with_default y
    if [ $answer != "y" ]; then
-      echo "OK quitting
+      echo "
+OK quitting.
+
 (please edit $OUTPUT_ROOT/SampleSheet.csv and try again)"
       exit 1
    fi 
@@ -191,8 +196,7 @@ checking run is completed (i.e. looking for $SEQ_ROOT/$RUN/RTAComplete.txt)...
    ###### ensure output folder does not exist
    if [ -d $OUTPUT_ROOT/SampleSheet/bclconvert ]; then
       echo "
-*** error *** 
-$OUTPUT_ROOT/SampleSheet/bclconvert already exists - please clean up and retry"
+error: $OUTPUT_ROOT/SampleSheet/bclconvert already exists - please clean up and retry."
       exit 1
    fi
 
@@ -204,20 +208,23 @@ $OUTPUT_ROOT/SampleSheet/bclconvert already exists - please clean up and retry"
    # OK ? (y/n, default=y)
    # "
 
-   echo "about to run bclconvert using:
+   echo "
+About to run bclconvert using:
+
 snakemake --profile config/slurm/legacy --snakefile workflow/rules/1_bclconvert.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN
-OK ? (y/n, default=y)
-   "
+
+OK ? (y/n, default=y):
+"
 
    read_answer_with_default  y
    if [ $answer != "y" ]; then
-      echo "OK quitting"
+      echo "OK quitting."
       exit 1
    fi
    echo "
 Starting bclconvert...
 
-   "
+"
    # echo "running $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a bclconvert $run_info_phrase -I $SEQ_ROOT/$RUN -B \"$bclconvert_phrase\" -Q \"$samplesheet_to_fastqnames_phrase\"  -O $OUTPUT_ROOT/SampleSheet $OUTPUT_ROOT/SampleSheet.csv " > $OUTPUT_ROOT/SampleSheet/bclconvert.log
    # $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a bclconvert $run_info_phrase -I $SEQ_ROOT/$RUN -B "$bclconvert_phrase" -Q "$samplesheet_to_fastqnames_phrase"  -O $OUTPUT_ROOT/SampleSheet $OUTPUT_ROOT/SampleSheet.csv  >> $OUTPUT_ROOT/SampleSheet/bclconvert.log 2>&1
 
@@ -232,21 +239,22 @@ Starting bclconvert...
       ls -lR $OUTPUT_ROOT/SampleSheet/bclconvert 2>/dev/null | grep "fastq.gz"   > /dev/null 2>&1
 
       if [ $? == 0 ]; then
-         echo "*** warning , bclconvert exit code was non-zero, but it did generate fastq data ***"
+         echo "warning: bclconvert exit code was non-zero, but it did generate fastq data. "
       else
          if [ $INTERACTIVE != yes ]; then
-            send_mail "sorry bclconvert for $RUN exited with an error code and no fastq data was generated"
+            send_mail "Sorry bclconvert for $RUN exited with an error code and no fastq data was generated."
          fi
-         echo "*** error , bclconvert exit code was non-zero and no sequence data generated ***"
+         echo "error: bclconvert exit code was non-zero and no sequence data generated. "
          echo "(suggest check $OUTPUT_ROOT/SampleSheet/bcl-convert.log)"
          exit 1
       fi
 
       echo "
 
-      bcl-convert has finished but received a non zero process exit code from sequencing_qc_prism , though did generate fastq data so might be OK: do
-      you want to continue ? (y/n, default = y)
-      "
+bcl-convert has finished but received a non-zero exit code, though did generate fastq data so might be OK. 
+
+Do you want to continue ? (y/n, default = y):
+"
       read_answer_with_default y 
       if [ $answer != "y" ]; then
          echo "OK quitting"
@@ -256,12 +264,12 @@ Starting bclconvert...
    
 
    if [ $INTERACTIVE != yes ]; then
-      send_mail "(bclconvert for $RUN completed - fastq data is now available)"
+      send_mail "(bclconvert for $RUN has completed - fastq data is now available)"
    fi
 
    echo "
 
-bcl-convert completed.
+bclconvert completed.
 
    "
 }
@@ -332,14 +340,13 @@ function review_enriched_seqs() {
 function run_lane_qc() {
    while [ 1 ] ; do
       echo "
-please enter how long to allow for fastq step - or just press enter to accept default ( $FASTQC_WALL hours ) 
-
+Please enter how long to allow for fastqc - or just press enter to accept default ( $FASTQC_WALL hours ): 
 "
       read_answer_with_default $FASTQC_WALL
       FASTQC_WALL=$answer
       python -c "print int('$FASTQC_WALL')" >/dev/null 2>&1
       if [ $? != 0 ]; then
-         echo "looks like time  requested ( $FASTQC_WALL ) is not a number"
+         echo "error: looks like time requested ( $FASTQC_WALL ) is not a number."
       else
          break
       fi
@@ -347,7 +354,8 @@ please enter how long to allow for fastq step - or just press enter to accept de
 
    echo "
 
-   finding sequence files for fastqc..."
+Finding sequence files for fastqc.
+"
    mkdir -p $OUTPUT_ROOT/SampleSheet
    mkdir -p $OUTPUT_ROOT/logs
    find $OUTPUT_ROOT/SampleSheet/bclconvert -name "*.fastq.gz" -size +1000c -print | grep -vi Undetermined > $OUTPUT_ROOT/SampleSheet/sequence_files.txt
@@ -356,46 +364,143 @@ please enter how long to allow for fastq step - or just press enter to accept de
    find $OUTPUT_ROOT/SampleSheet/bclconvert -name "*.fastq.gz" -type l -print | grep -vi Undetermined >> $OUTPUT_ROOT/SampleSheet/sequence_files.txt
    
    if [[ ( $return_code != 0 ) && (  $? != 0 ) ]]; then
-      echo "run_lane_qc: oops could not find any fastq files ( or links to fastq files) under $OUTPUT_ROOT/SampleSheet/bclconvert ! giving up"
+      echo "error: oops could not find any fastq files ( or links to fastq files) under $OUTPUT_ROOT/SampleSheet/bclconvert - quiting."
       exit 1
    fi  
 
-   echo "
-   export SEQ_PRISMS_BIN=/dataset/gseq_processing/active/bin/wgs_prism/seq_prisms
-   export WGS_PRISM_BIN=/dataset/gseq_processing/active/bin/wgs_prism
-   export GBS_PRISM_BIN=/dataset/gseq_processing/active/bin/gbs_prism
+### fastqc rule ###
 
-   mkdir -p $OUTPUT_ROOT/SampleSheet/fastqc_run
-   $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a fastqc -W $FASTQC_WALL -O $OUTPUT_ROOT/SampleSheet/fastqc_run \`cat $OUTPUT_ROOT/SampleSheet/sequence_files.txt\` > $OUTPUT_ROOT/SampleSheet/fastqc_run/fastqc.log 2>&1  
+      echo "
+About to run fastqc using:
 
-   echo \"
-conda activate $GBS_PRISM_BIN/conda/multiqc
-\" >  $OUTPUT_ROOT/SampleSheet/multiqc_env.inc
-   mkdir -p $OUTPUT_ROOT/SampleSheet/multiqc
-   tardis -d $OUTPUT_ROOT/SampleSheet --hpctype local --shell-include-file $OUTPUT_ROOT/SampleSheet/multiqc_env.inc  multiqc --interactive -i \\\"multifastqc for $RUN\\\" -o $OUTPUT_ROOT/SampleSheet/multiqc $OUTPUT_ROOT/SampleSheet/fastqc_run/fastqc
+snakemake --profile config/slurm/legacy --snakefile workflow/rules/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN 
 
-   mkdir -p $OUTPUT_ROOT/SampleSheet/kmer_run
-   $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -W $FASTQC_WALL -a kmer_analysis -s .0002 -M 10000 -O $OUTPUT_ROOT/SampleSheet/kmer_run  \`cat $OUTPUT_ROOT/SampleSheet/sequence_files.txt\` > $OUTPUT_ROOT/SampleSheet/kmer_analysis.log 2>&1  
-   " > $OUTPUT_ROOT/SampleSheet/lane_qc.src
-   echo "
-
-   about to start fastqc and kmer_analysis using 
+OK ? (y/n, default=y):
 "
-   cat $OUTPUT_ROOT/SampleSheet/lane_qc.src 
+
+   read_answer_with_default  y
+   if [ $answer != "y" ]; then
+      echo "OK quitting."
+      exit 1
+   fi
    echo "
+Starting fastqc...
+"
+   echo "snakemake --profile config/slurm/legacy --snakefile workflow/rules/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN " | tee > $OUTPUT_ROOT/logs/bclconvert.smk.log
+   source activate snakemake
+   snakemake --profile config/slurm/legacy --snakefile workflow/rules/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN > $OUTPUT_ROOT/logs/fastqc.smk.log
+   conda deactivate
+
+### kmer_prism.py rule ###
+
+      echo "
+about to run kmer_prism.py using:
+
+snakemake --profile config/slurm/legacy --snakefile workflow/rules/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN 
+
 OK ? (y/n, default=y)
-   "
-   read_answer_with_default y
+"
+
+   read_answer_with_default  y
+   if [ $answer != "y" ]; then
+      echo "OK quitting."
+      exit 1
+   fi
+   echo "
+Starting kmer_prism.py...
+"
+   echo "snakemake --profile config/slurm/legacy --snakefile workflow/rules/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN " | tee > $OUTPUT_ROOT/logs/bclconvert.smk.log
+   source activate snakemake
+   snakemake --profile config/slurm/legacy --snakefile workflow/rules/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN > $OUTPUT_ROOT/logs/fastqc.smk.log
+   conda deactivate
+
+
+### kraken2 rule ###
+
+      echo "
+about to run kraken2 using:
+
+snakemake --profile config/slurm/legacy --snakefile workflow/rules/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN 
+
+OK ? (y/n, default=y)
+"
+
+   read_answer_with_default  y
    if [ $answer != "y" ]; then
       echo "OK quitting"
       exit 1
    fi
    echo "
-
-   running fastqc and kmer analysis ...
+Starting kraken2...
 
    "
-   source $OUTPUT_ROOT/SampleSheet/lane_qc.src 
+   echo "snakemake --profile config/slurm/legacy --snakefile workflow/rules/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN " | tee > $OUTPUT_ROOT/logs/bclconvert.smk.log
+   source activate snakemake
+   snakemake --profile config/slurm/legacy --snakefile workflow/rules/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN > $OUTPUT_ROOT/logs/fastqc.smk.log
+   conda deactivate
+
+
+### MultiQC rule ###
+
+      echo "
+about to run MultiQC using:
+
+snakemake --profile config/slurm/legacy --snakefile workflow/rules/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN 
+
+OK ? (y/n, default=y)
+"
+
+   read_answer_with_default  y
+   if [ $answer != "y" ]; then
+      echo "OK quitting"
+      exit 1
+   fi
+   echo "
+Starting MultiQC...
+
+   "
+   echo "snakemake --profile config/slurm/legacy --snakefile workflow/rules/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN " | tee > $OUTPUT_ROOT/logs/bclconvert.smk.log
+   source activate snakemake
+   snakemake --profile config/slurm/legacy --snakefile workflow/rules/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN > $OUTPUT_ROOT/logs/fastqc.smk.log
+   conda deactivate
+
+#    echo "
+#    export SEQ_PRISMS_BIN=/dataset/gseq_processing/active/bin/wgs_prism/seq_prisms
+#    export WGS_PRISM_BIN=/dataset/gseq_processing/active/bin/wgs_prism
+#    export GBS_PRISM_BIN=/dataset/gseq_processing/active/bin/gbs_prism
+
+#    # mkdir -p $OUTPUT_ROOT/SampleSheet/fastqc_run
+#    # $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a fastqc -W $FASTQC_WALL -O $OUTPUT_ROOT/SampleSheet/fastqc_run \`cat $OUTPUT_ROOT/SampleSheet/sequence_files.txt\` > $OUTPUT_ROOT/SampleSheet/fastqc_run/fastqc.log 2>&1  
+
+#    echo \"
+#    conda activate $GBS_PRISM_BIN/conda/multiqc
+# \" >  $OUTPUT_ROOT/SampleSheet/multiqc_env.inc
+#    mkdir -p $OUTPUT_ROOT/SampleSheet/multiqc
+#    tardis -d $OUTPUT_ROOT/SampleSheet --hpctype local --shell-include-file $OUTPUT_ROOT/SampleSheet/multiqc_env.inc  multiqc --interactive -i \\\"multifastqc for $RUN\\\" -o $OUTPUT_ROOT/SampleSheet/multiqc $OUTPUT_ROOT/SampleSheet/fastqc_run/fastqc
+
+#    mkdir -p $OUTPUT_ROOT/SampleSheet/kmer_run
+#    $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -W $FASTQC_WALL -a kmer_analysis -s .0002 -M 10000 -O $OUTPUT_ROOT/SampleSheet/kmer_run  \`cat $OUTPUT_ROOT/SampleSheet/sequence_files.txt\` > $OUTPUT_ROOT/SampleSheet/kmer_analysis.log 2>&1  
+#    " > $OUTPUT_ROOT/SampleSheet/lane_qc.src
+#    echo "
+
+#    about to start fastqc and kmer_analysis using 
+# "
+#    cat $OUTPUT_ROOT/SampleSheet/lane_qc.src 
+#    echo "
+# OK ? (y/n, default=y)
+#    "
+#    read_answer_with_default y
+#    if [ $answer != "y" ]; then
+#       echo "OK quitting"
+#       exit 1
+#    fi
+#    echo "
+
+#    running fastqc and kmer analysis ...
+
+#    "
+#    source $OUTPUT_ROOT/SampleSheet/lane_qc.src 
+
 }
 
 function run_dedupe() {

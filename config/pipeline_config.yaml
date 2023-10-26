@@ -21,7 +21,7 @@ OUT_ROOT: "/dataset/2023_illumina_sequencing_c/scratch/postprocessing/illumina/n
 
 
 ## fastqc configuration
-
+fastqc_walltime: 4320
 
 ## kraken2 configuration
 

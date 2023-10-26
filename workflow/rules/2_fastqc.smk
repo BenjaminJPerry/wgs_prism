@@ -61,7 +61,7 @@ rule fastqc:
     threads: 12
     resources:
         mem_gb = lambda wildcards, attempt: 8 + ((attempt - 1) * 32),
-        time = lambda wildcards, attempt: 60 + ((attempt - 1) * 120),
+        time = lambda w: config["fastqc_walltime"],
     shell:
         """ 
         mkdir -p {fastqc_out_root}
