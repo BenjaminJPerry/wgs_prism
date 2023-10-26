@@ -21,6 +21,8 @@ onstart:
     print(f"Env TMPDIR = {os.environ.get('TMPDIR', '<n/a>')}")
     os.system('echo "  PYTHON VERSION: $(python --version)"')
     os.system('echo "  CONDA VERSION: $(conda --version)"')
+    for i in SAMPLES:
+        print(i)
 
 
 #wildcard_constraints: sample = "(?!Undetermined).+"
@@ -30,11 +32,11 @@ onstart:
 # config dictionary values to be defined on running snakemake with --config flag
 kmer_in_root = os.path.join(config["OUT_ROOT"], "SampleSheet/bclconvert")
 kmer_in_samples = os.path.join(config["OUT_ROOT"], "SampleSheet/bclconvert/{sample}.fastq.gz")
-SAMPLES = glob_wildcards(os.path.join(kmer_in_root,"{sample, (?!Undetermined).*}.fastq.gz")).sample
+
+SAMPLES = glob_wildcards(os.path.join(kmer_in_root, "{sample, (?!Undetermined).*}.fastq.gz")).sample
+
 kmer_out_root = os.path.join(config["OUT_ROOT"], "SampleSheet/kmer_analysis")
 
-for i in SAMPLES:
-    print(i)
 
 
 # Path and file name construction for rule downsample_fastq
