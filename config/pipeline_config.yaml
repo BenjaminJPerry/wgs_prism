@@ -15,7 +15,7 @@ IN_ROOT: "/dataset/2023_illumina_sequencing_c/active"
 # eg. /datasets/2023_illumina_sequencing_[a-z]/scratch/postprocessing/illumina/novaseq/$RUN
 # AKA. $OUTPUT_ROOT
 # OUTPUT_ROOT must be passed via --config parameter at runtime
-OUT_ROOT: "/dataset/2023_illumina_sequencing_c/scratch/postprocessing/illumina/novaseq/test"
+#OUT_ROOT: "/dataset/2023_illumina_sequencing_c/scratch/postprocessing/illumina/novaseq/test"
 
 
 ## bclconvert configuration; passed via --config in practise ##
