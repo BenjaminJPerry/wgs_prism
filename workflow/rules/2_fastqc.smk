@@ -31,7 +31,7 @@ onstart:
 fastqc_in_root = os.path.join(config["OUT_ROOT"], "SampleSheet/bclconvert")
 fastqc_in_samples = os.path.join(config["OUT_ROOT"], "SampleSheet/bclconvert/{sample}.fastq.gz")
 
-SAMPLES, = glob_wildcards( os.path.join(fastqc_in_root,"{sample,(?!Undetermined).*}.fastq.gz") ).sample
+(SAMPLES,) = glob_wildcards( os.path.join(fastqc_in_root,"{sample,(?!Undetermined).*}.fastq.gz") ).sample
 
 fastqc_out_root = os.path.join(config["OUT_ROOT"], "SampleSheet/fastqc_run/fastqc")
 fastqc_out_samples_zips = os.path.join(config["OUT_ROOT"], "SampleSheet/fastqc_run/fastqc/{sample}_fastqc.zip")
