@@ -21,8 +21,7 @@ onstart:
     print(f"Env TMPDIR = {os.environ.get('TMPDIR', '<n/a>')}")
     os.system('echo "  PYTHON VERSION: $(python --version)"')
     os.system('echo "  CONDA VERSION: $(conda --version)"')
-    for i in SAMPLES:
-        print(i)
+
 
 
 # Global variables

@@ -23,7 +23,7 @@ onstart:
     os.system('echo "  CONDA VERSION: $(conda --version)"')
 
 
-#wildcard_constraints: sample = "(?!Undetermined).+"
+wildcard_constraints: sample = "(?!Undetermined).+"
 
 # Global variables
 
