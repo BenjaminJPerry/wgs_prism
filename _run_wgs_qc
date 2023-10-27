@@ -21,7 +21,7 @@ CUSTOM_CONTAMINANTS_FILES=""
 FASTQC_WALL=120
 
 # For conda integration
-conda init bash > /dev/null
+source activate /home/perrybe/conda-envs/snakemake
 
 function send_mail() {
    message="$1"
