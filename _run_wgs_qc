@@ -212,7 +212,7 @@ error: $OUTPUT_ROOT/SampleSheet/bclconvert already exists - please clean up and 
    echo "
 About to run bclconvert using:
 
-snakemake --profile config/slurm/legacy --snakefile workflow/rules/1_bclconvert.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN
+snakemake --profile config/slurm/legacy --snakefile workflow/1_bclconvert.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN
 
 OK ? (y/n, default=y):
 "
@@ -229,9 +229,9 @@ Starting bclconvert...
    # echo "running $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a bclconvert $run_info_phrase -I $SEQ_ROOT/$RUN -B \"$bclconvert_phrase\" -Q \"$samplesheet_to_fastqnames_phrase\"  -O $OUTPUT_ROOT/SampleSheet $OUTPUT_ROOT/SampleSheet.csv " > $OUTPUT_ROOT/SampleSheet/bclconvert.log
    # $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a bclconvert $run_info_phrase -I $SEQ_ROOT/$RUN -B "$bclconvert_phrase" -Q "$samplesheet_to_fastqnames_phrase"  -O $OUTPUT_ROOT/SampleSheet $OUTPUT_ROOT/SampleSheet.csv  >> $OUTPUT_ROOT/SampleSheet/bclconvert.log 2>&1
 
-   echo "snakemake --profile config/slurm/legacy --snakefile workflow/rules/1_bclconvert.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN " | tee > $OUTPUT_ROOT/logs/bclconvert.smk.log
+   echo "snakemake --profile config/slurm/legacy --snakefile workflow/1_bclconvert.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN " | tee > $OUTPUT_ROOT/logs/bclconvert.smk.log
    source activate snakemake
-   snakemake --profile config/slurm/legacy --snakefile workflow/rules/1_bclconvert.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN > $OUTPUT_ROOT/logs/bclconvert.smk.log
+   snakemake --profile config/slurm/legacy --snakefile workflow/1_bclconvert.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN > $OUTPUT_ROOT/logs/bclconvert.smk.log
    conda deactivate
 
    if [ $? != 0 ]; then
@@ -374,7 +374,7 @@ Finding sequence files for fastqc.
       echo "
 About to run fastqc using:
 
-snakemake --profile config/slurm/legacy --snakefile workflow/rules/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN 
+snakemake --profile config/slurm/legacy --snakefile workflow/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN 
 
 OK ? (y/n, default=y):
 "
@@ -387,9 +387,9 @@ OK ? (y/n, default=y):
    echo "
 Starting fastqc...
 "
-   echo "snakemake --profile config/slurm/legacy --snakefile workflow/rules/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN " | tee > $OUTPUT_ROOT/logs/bclconvert.smk.log
+   echo "snakemake --profile config/slurm/legacy --snakefile workflow/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN " | tee > $OUTPUT_ROOT/logs/bclconvert.smk.log
    source activate snakemake
-   snakemake --profile config/slurm/legacy --snakefile workflow/rules/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN > $OUTPUT_ROOT/logs/fastqc.smk.log
+   snakemake --profile config/slurm/legacy --snakefile workflow/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN > $OUTPUT_ROOT/logs/fastqc.smk.log
    conda deactivate
 
 ### kmer_prism.py rule ###
@@ -397,7 +397,7 @@ Starting fastqc...
       echo "
 about to run kmer_prism.py using:
 
-snakemake --profile config/slurm/legacy --snakefile workflow/rules/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN 
+snakemake --profile config/slurm/legacy --snakefile workflow/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN 
 
 OK ? (y/n, default=y)
 "
@@ -410,9 +410,9 @@ OK ? (y/n, default=y)
    echo "
 Starting kmer_prism.py...
 "
-   echo "snakemake --profile config/slurm/legacy --snakefile workflow/rules/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN " | tee > $OUTPUT_ROOT/logs/bclconvert.smk.log
+   echo "snakemake --profile config/slurm/legacy --snakefile workflow/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN " | tee > $OUTPUT_ROOT/logs/bclconvert.smk.log
    source activate snakemake
-   snakemake --profile config/slurm/legacy --snakefile workflow/rules/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN > $OUTPUT_ROOT/logs/fastqc.smk.log
+   snakemake --profile config/slurm/legacy --snakefile workflow/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN > $OUTPUT_ROOT/logs/fastqc.smk.log
    conda deactivate
 
 
@@ -421,7 +421,7 @@ Starting kmer_prism.py...
       echo "
 about to run kraken2 using:
 
-snakemake --profile config/slurm/legacy --snakefile workflow/rules/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN 
+snakemake --profile config/slurm/legacy --snakefile workflow/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN 
 
 OK ? (y/n, default=y)
 "
@@ -435,9 +435,9 @@ OK ? (y/n, default=y)
 Starting kraken2...
 
    "
-   echo "snakemake --profile config/slurm/legacy --snakefile workflow/rules/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN " | tee > $OUTPUT_ROOT/logs/bclconvert.smk.log
+   echo "snakemake --profile config/slurm/legacy --snakefile workflow/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN " | tee > $OUTPUT_ROOT/logs/bclconvert.smk.log
    source activate snakemake
-   snakemake --profile config/slurm/legacy --snakefile workflow/rules/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN > $OUTPUT_ROOT/logs/fastqc.smk.log
+   snakemake --profile config/slurm/legacy --snakefile workflow/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN > $OUTPUT_ROOT/logs/fastqc.smk.log
    conda deactivate
 
 
@@ -446,7 +446,7 @@ Starting kraken2...
       echo "
 about to run MultiQC using:
 
-snakemake --profile config/slurm/legacy --snakefile workflow/rules/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN 
+snakemake --profile config/slurm/legacy --snakefile workflow/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN 
 
 OK ? (y/n, default=y)
 "
@@ -460,9 +460,9 @@ OK ? (y/n, default=y)
 Starting MultiQC...
 
    "
-   echo "snakemake --profile config/slurm/legacy --snakefile workflow/rules/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN " | tee > $OUTPUT_ROOT/logs/bclconvert.smk.log
+   echo "snakemake --profile config/slurm/legacy --snakefile workflow/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN " | tee > $OUTPUT_ROOT/logs/bclconvert.smk.log
    source activate snakemake
-   snakemake --profile config/slurm/legacy --snakefile workflow/rules/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN > $OUTPUT_ROOT/logs/fastqc.smk.log
+   snakemake --profile config/slurm/legacy --snakefile workflow/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN > $OUTPUT_ROOT/logs/fastqc.smk.log
    conda deactivate
 
 #    echo "

@@ -12,7 +12,7 @@ cluster:
     --output=logs/{rule}/{rule}-{wildcards}-%j.out
     --parsable
 default-resources:
-  - account=2023-bjp-buccal
+  - account=2023_sequence_production
   - partition=compute
   - time=120
   - mem_gb=8
