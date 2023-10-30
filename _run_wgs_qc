@@ -180,7 +180,7 @@ Will use sample sheet $OUTPUT_ROOT/SampleSheet.csv as follows  -- please review:
    echo "Press Enter to review sample sheet:"
    read_answer_with_default ""
 
-   more $OUTPUT_ROOT/SampleSheet.csv
+   vim $OUTPUT_ROOT/SampleSheet.csv
    echo "
 If this is OK ? answer y (or just press enter):
    "
