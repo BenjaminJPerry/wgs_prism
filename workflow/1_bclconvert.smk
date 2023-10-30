@@ -70,6 +70,7 @@ rule run_bclconvert:
         # report version 
         
         echo "bcl-convert version in use:"
+        touch {log}
         
         bcl-convert -V 
         
