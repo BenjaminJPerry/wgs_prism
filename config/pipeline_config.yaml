@@ -8,9 +8,11 @@
 # AKA. $RUN
 RUN: "231005_A01439_0216_AHL7NKDRX3"
 
+
 # eg. /dataset/2023_illumina_sequencing_[a-z]/active/$RUN
 # AKA. $SEQ_ROOT
 IN_ROOT: "/dataset/2023_illumina_sequencing_c/active"
+
 
 # eg. /datasets/2023_illumina_sequencing_[a-z]/scratch/postprocessing/illumina/novaseq/$RUN
 # AKA. $OUTPUT_ROOT
@@ -19,19 +21,24 @@ OUT_ROOT: "/dataset/2023_illumina_sequencing_c/scratch/postprocessing/illumina/n
 
 
 ## bclconvert configuration; passed via --config in practise ##
+# 
 
 
 ## fastqc configuration defaults; passed via --config in practise ##
+# walltime is in minutes
 fastqc_walltime: "4320"
 
+
 ## kmer_prism.py configuration defaults; passed via --config in practise ##
-SAMPLE_RATE: ".0002"
+#
+SAMPLE_RATE: ".005"
 KMER_PARAMETERS: "-k 6 -A"
 
 
-
 ## kraken2 configuration ##
+#
 
 
 ## multiQC configuration ##
+#
 

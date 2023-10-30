@@ -79,11 +79,28 @@ kmer_prism_out_benchmark_files = "benchmarks/run_kmer_prism.pickle.{sample}" + "
 kmer_prism_out_benchmark_path = os.path.join(config["OUT_ROOT"], kmer_fastq_to_fasta_benchmark_files)
 
 
+# Path and file name construction for rule aggregate_kmer_spectra
+kmer_agg_summary_plus = "kmer_summary_plus" + "." + kmer_moniker + ".txt"
+kmer_agg_summary_plus_path = os.path.join(kmer_prism_root, kmer_agg_summary_plus)
+
+kmer_agg_frequency_plus = "kmer_frequency_plus" + "." + kmer_moniker + ".txt"
+kmer_agg_frequency_plus_path  = os.path.join(kmer_prism_root, kmer_agg_frequency_plus)
+
+kmer_agg_summary = "kmer_summary" + "." + kmer_moniker + ".txt"
+kmer_agg_summary_path  = os.path.join(kmer_prism_root, kmer_agg_summary)
+
+kmer_agg_frequency = "kmer_frequency" + "." + kmer_moniker + ".txt"
+kmer_agg_frequency_path  = os.path.join(kmer_prism_root, kmer_agg_frequency)
+
+
 # Beging Snakemake rule definitions
 
 rule targets:
     input:
-        expand(kmer_prism_out_samples_pickle_path, sample = SAMPLES),
+        kmer_agg_summary_plus_path,
+        kmer_agg_frequency_plus_path,
+        kmer_agg_summary_path,
+        kmer_agg_frequency_path
 
 
 rule downsample_fastq:
@@ -142,14 +159,14 @@ rule run_kmer_prism:
         "envs/biopython.yaml"
     benchmark:
         kmer_prism_out_benchmark_path
-    threads: 12
+    threads: 8
     resources:
         mem_gb = lambda wildcards, attempt: 8 + ((attempt - 1) * 32),
         time = lambda wildcards, attempt: 60 + ((attempt - 1) * 120),
     shell:   
         """ 
     
-        workflow/scripts/kmer_prism.py -f fasta -k 6 -A -b {kmer_prism_root} -o {output.txt} {input} > {log} 2>&1
+        workflow/scripts/kmer_prism.py -f fasta -p {threads} -k 6 -A -b {kmer_prism_root} -o {output.txt} {input} > {log} 2>&1
 
         success_landmark={output.pickle}
 
@@ -164,43 +181,67 @@ rule run_kmer_prism:
         """
 
 
-# rule aggregate_kmer_spectra:
-#     input:
-#         fastq = fastqc_in_samples
-#     output:
-#         zip = fastqc_out_samples_zips,
-#         html = fastqc_out_samples_htmls
-#     log:
-#         fastqc_log
-#     conda:
-#         'envs/biopython.yaml'
-#     benchmark:
-#         fastqc_benchmark
-#     threads: 12
-#     resources:
-#         mem_gb = lambda wildcards, attempt: 8 + ((attempt - 1) * 32),
-#         time = lambda wildcards, attempt: 60 + ((attempt - 1) * 120),
-#     shell:
-#         """ 
-#         # below uses the .kmerdist.pickle distribution files to make the final spectra
-#         # (note that the -k 6 arg here is not actually used , as the distributions have already been done by the make step)
-#         rm -f $OUT_DIR/kmer_summary_plus.${parameters_moniker}.txt
-#         tardis.py --hpctype $HPC_TYPE -d $OUT_DIR --shell-include-file configure_biopython_env.src kmer_prism.py -k 6 -t zipfian -o $OUT_DIR/kmer_summary_plus.${parameters_moniker}.txt -b $OUT_DIR $SUMMARY_TARGETS >> $OUT_DIR/kmer_prism.log 2>&1
+rule aggregate_kmer_spectra:
+    input:
+        pickles = expand(kmer_prism_out_samples_pickle_path, sample = SAMPLES),
+    output:
+        summary_plus = kmer_agg_summary_plus_path,
+        frequency_plus = kmer_agg_frequency_plus_path,
+        summary = kmer_agg_summary_path,
+        frequency = kmer_agg_frequency_path
+    log:
+        TODO
+    conda:
+        'envs/biopython.yaml'
+    benchmark:
+        TODO
+    threads: 8
+    resources:
+        mem_gb = lambda wildcards, attempt: 8 + ((attempt - 1) * 32),
+        time = lambda wildcards, attempt: 60 + ((attempt - 1) * 120),
+    shell:
+        """ 
 
-#         rm -f $OUT_DIR/kmer_frequency_plus.${parameters_moniker}.txt
-#         tardis.py --hpctype $HPC_TYPE -d $OUT_DIR --shell-include-file configure_biopython_env.src kmer_prism.py -k 6 -t frequency -o $OUT_DIR/kmer_frequency_plus.${parameters_moniker}.txt -b $OUT_DIR $SUMMARY_TARGETS >> $OUT_DIR/kmer_prism.log 2>&1
-        
-#         rm -f $OUT_DIR/kmer_summary.${parameters_moniker}.txt
-#         tardis.py --hpctype $HPC_TYPE -d $OUT_DIR --shell-include-file configure_biopython_env.src kmer_prism.py -k 6 -a CGAT -t zipfian -o $OUT_DIR/kmer_summary.${parameters_moniker}.txt -b $OUT_DIR $SUMMARY_TARGETS >> $OUT_DIR/kmer_prism.log 2>&1
+        # below uses the .kmerdist.pickle distribution files to make the final spectra
+        # (note that the -k 6 arg here is not actually used , as the distributions have already been done by the make step)
 
-#         rm -f  $OUT_DIR/kmer_frequency.${parameters_moniker}.txt
-#         tardis.py --hpctype $HPC_TYPE -d $OUT_DIR --shell-include-file configure_biopython_env.src kmer_prism.py -k 6 -a CGAT -t frequency -o $OUT_DIR/kmer_frequency.${parameters_moniker}.txt -b $OUT_DIR $SUMMARY_TARGETS >> $OUT_DIR/kmer_prism.log 2>&1
-        
-#         """
+        rm -f {output.summary_plus}
+        workflow/scripts/kmer_prism.py -p {threads} -k 6 -t zipfian -o {output.summary_plus} -b {kmer_prism_root} {input.pickles} >> {log} 2>&1
+        if [ -s {output.summary_plus}]
+        then
+            echo "error: kmer_prism.py did not aggregate spectra into {output.summary_plus} " | tee >> {log}
+            exit 1
+        fi
+
+        rm -f {output.frequency_plus}
+        workflow/scripts/kmer_prism.py -p {threads} -k 6 -t frequency -o {output.frequency_plus} -b {kmer_prism_root} {input.pickles} >> {log} 2>&1
+        if [ -s {output.frequency_plus}]
+        then
+            echo "error: kmer_prism.py did not aggregate spectra into {output.frequency_plus} " | tee >> {log}
+            exit 1
+        fi
+
+        rm -f {output.summary}
+        workflow/scripts/kmer_prism.py -p {threads} -k 6 -a CGAT -t zipfian -o {output.summary} -b {kmer_prism_root} {input.pickles} >> {log} 2>&1
+        if [ -s {output.summary}]
+        then
+            echo "error: kmer_prism.py did not aggregate spectra into {output.summary} " | tee >> {log}
+            exit 1
+        fi
+
+        rm -f  {output.frequency}
+        workflow/scripts/kmer_prism.py -p {threads} -k 6 -a CGAT -t frequency -o {output.frequency} -b {kmer_prism_root} {input.pickles} >> {log} 2>&1
+        if [ -s {output.frequency}]
+        then
+            echo "error: kmer_prism.py did not aggregate spectra into {output.frequency} " | tee >> {log}
+            exit 1
+        fi
+
+        """
 
 
 
-# rule plot_kmer_prism:
+# rule plot_kmer_spectra:
 #     input:
 #         fastq = fastqc_in_samples
 #     output:
