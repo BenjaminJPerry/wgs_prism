@@ -65,16 +65,20 @@ rule run_fastqc:
         time = lambda w: config["fastqc_walltime"],
     shell:
         """ 
+        
         mkdir -p {fastqc_out_root}
 
         fastqc -t {threads} -o {fastqc_out_root} {input.fastq} > {log} 2>&1
 
         success_landmark={output.zip}
 
-        if [ ! -f $success_landmark ]; then
-        echo "fastqc  of {wildcards.sample} did not generate the expected output file {output.zip} "
-        exit 1
-        fi 
+        if [ ! -f $success_landmark ]
+        then
+            echo "error: fastqc  did not generate the expected output file {output.zip}. "
+            exit 1
+        else
+            exit 0
+        fi
 
         """
 

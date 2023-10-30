@@ -66,12 +66,13 @@ rule run_bclconvert:
         time = lambda wildcards, attempt: 120 + ((attempt - 1) * 120),
     shell:
         """
+        
         # run bcl-convert
         # report version 
         
         echo "bcl-convert version in use:"
         touch {log}
-        
+
         bcl-convert -V 
         
         bcl-convert --force --bcl-input-directory {input.run_in} --sample-sheet {input.sample_sheet} --output-directory {output.bclconvert_out} > {log} 2>&1

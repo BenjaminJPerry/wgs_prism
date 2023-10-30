@@ -148,9 +148,19 @@ rule run_kmer_prism:
         time = lambda wildcards, attempt: 60 + ((attempt - 1) * 120),
     shell:   
         """ 
-        
+    
         workflow/scripts/kmer_prism.py -f fasta -k 6 -A -b {kmer_prism_root} -o {output.txt} {input} > {log} 2>&1
 
+        success_landmark={output.pickle}
+
+        if [ ! -f $success_landmark ]
+        then
+            echo "error: kmer_prism.py did not generate the expected output file {output.pickle}. "
+            exit 1
+        else
+            exit 0
+        fi
+        
         """
 
 
