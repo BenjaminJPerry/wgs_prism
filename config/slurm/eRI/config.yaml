@@ -12,7 +12,7 @@ cluster:
     --output={config[OUT_ROOT]}/logs/slurm/{rule}-{wildcards}-%j.out
     --parsable
 default-resources:
-  - account=2023_sequence_production
+  - account="2023_sequence_production"
   - partition=compute
   - time=120
   - mem_gb=8
