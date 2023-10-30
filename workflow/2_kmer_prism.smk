@@ -93,7 +93,7 @@ kmer_agg_frequency = "kmer_frequency" + "." + kmer_moniker + ".txt"
 kmer_agg_frequency_path  = os.path.join(kmer_prism_root, kmer_agg_frequency)
 
 kmer_agg_plot_data = "kmer_summary.txt"
-kmer_agg_plot_data_path  = os.path.join(kmer_prism_root, kmer_agg_summary)
+kmer_agg_plot_data_path  = os.path.join(kmer_prism_root, kmer_agg_plot_data)
 
 
 kmer_agg_out_log_files = "logs/2.2.4_run_aggregate_kmer_spectra" + ".log"
