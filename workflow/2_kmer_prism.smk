@@ -92,6 +92,12 @@ kmer_agg_summary_path  = os.path.join(kmer_prism_root, kmer_agg_summary)
 kmer_agg_frequency = "kmer_frequency" + "." + kmer_moniker + ".txt"
 kmer_agg_frequency_path  = os.path.join(kmer_prism_root, kmer_agg_frequency)
 
+kmer_agg_out_log_files = "logs/2.2.4_run_aggregate_kmer_spectra" + ".log"
+kmer_agg_out_logs_path = os.path.join(config["OUT_ROOT"], kmer_agg_out_log_files)
+
+kmer_agg_out_benchmark_files = "benchmarks/run_aggregate_kmer_spectra" + ".txt"
+kmer_agg_out_benchmark_path = os.path.join(config["OUT_ROOT"], kmer_agg_out_benchmark_files)
+
 
 # Beging Snakemake rule definitions
 
@@ -190,11 +196,11 @@ rule aggregate_kmer_spectra:
         summary = kmer_agg_summary_path,
         frequency = kmer_agg_frequency_path
     log:
-        TODO
+        kmer_agg_out_logs_path
     conda:
         'envs/biopython.yaml'
     benchmark:
-        TODO
+        kmer_agg_out_benchmark_path
     threads: 8
     resources:
         mem_gb = lambda wildcards, attempt: 8 + ((attempt - 1) * 32),
