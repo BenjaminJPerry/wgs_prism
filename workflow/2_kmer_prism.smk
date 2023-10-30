@@ -212,7 +212,7 @@ rule aggregate_kmer_spectra:
         # (note that the -k 6 arg here is not actually used , as the distributions have already been done by the make step)
 
         rm -f {output.summary_plus}
-        workflow/scripts/kmer_prism.py -p {threads} -k 6 -t zipfian -o {output.summary_plus} -b {kmer_prism_root} {input.pickles} >> {log} 2>&1
+        workflow/scripts/kmer_prism.py -k 6 -t zipfian -o {output.summary_plus} -b {kmer_prism_root} {input.pickles} >> {log} 2>&1
         if [ -s {output.summary_plus}]
         then
             echo "error: kmer_prism.py did not aggregate spectra into {output.summary_plus} " | tee >> {log}
@@ -220,7 +220,7 @@ rule aggregate_kmer_spectra:
         fi
 
         rm -f {output.frequency_plus}
-        workflow/scripts/kmer_prism.py -p {threads} -k 6 -t frequency -o {output.frequency_plus} -b {kmer_prism_root} {input.pickles} >> {log} 2>&1
+        workflow/scripts/kmer_prism.py -k 6 -t frequency -o {output.frequency_plus} -b {kmer_prism_root} {input.pickles} >> {log} 2>&1
         if [ -s {output.frequency_plus}]
         then
             echo "error: kmer_prism.py did not aggregate spectra into {output.frequency_plus} " | tee >> {log}
@@ -228,7 +228,7 @@ rule aggregate_kmer_spectra:
         fi
 
         rm -f {output.summary}
-        workflow/scripts/kmer_prism.py -p {threads} -k 6 -a CGAT -t zipfian -o {output.summary} -b {kmer_prism_root} {input.pickles} >> {log} 2>&1
+        workflow/scripts/kmer_prism.py -k 6 -a CGAT -t zipfian -o {output.summary} -b {kmer_prism_root} {input.pickles} >> {log} 2>&1
         if [ -s {output.summary}]
         then
             echo "error: kmer_prism.py did not aggregate spectra into {output.summary} " | tee >> {log}
@@ -236,7 +236,7 @@ rule aggregate_kmer_spectra:
         fi
 
         rm -f  {output.frequency}
-        workflow/scripts/kmer_prism.py -p {threads} -k 6 -a CGAT -t frequency -o {output.frequency} -b {kmer_prism_root} {input.pickles} >> {log} 2>&1
+        workflow/scripts/kmer_prism.py -k 6 -a CGAT -t frequency -o {output.frequency} -b {kmer_prism_root} {input.pickles} >> {log} 2>&1
         if [ -s {output.frequency}]
         then
             echo "error: kmer_prism.py did not aggregate spectra into {output.frequency} " | tee >> {log}
