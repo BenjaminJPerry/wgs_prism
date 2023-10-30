@@ -1,7 +1,7 @@
 # Based on: https://github.com/jdblischak/smk-simple-slurm
 # Default slurm profile for running the pipeline on the eRI
 cluster:
-  mkdir -p logs/{rule} &&
+  mkdir -p {config[OUT_ROOT]}/logs/slurm &&
   sbatch
     --account={resources.account}
     --partition={resources.partition}
