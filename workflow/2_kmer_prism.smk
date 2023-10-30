@@ -67,7 +67,7 @@ kmer_fastq_to_fasta_benchmark_path = os.path.join(config["OUT_ROOT"], kmer_fastq
 # Path and file name construction for rule run_kmer_prism
 kmer_prism_root = os.path.join(config["OUT_ROOT"], "SampleSheet/kmer_run/kmer_analysis")
 kmer_prism_out_samples_frequency = kmer_fastq_to_fasta_out_samples + "." + "kmer_prism" + "." + "frequency.txt"
-kmer_prism_out_samples_pickle = kmer_fastq_to_fasta_out_samples + "." + "kmderdist" + "." + "pickle"
+kmer_prism_out_samples_pickle = kmer_fastq_to_fasta_out_samples + "." + "kmerdist" + "." + "pickle"
 
 kmer_prism_out_samples_frequency_path = os.path.join(kmer_prism_root, kmer_prism_out_samples_frequency)
 kmer_prism_out_samples_pickle_path = os.path.join(kmer_prism_root, kmer_prism_out_samples_pickle)
@@ -155,12 +155,12 @@ rule run_kmer_prism:
 
         if [ ! -f $success_landmark ]
         then
-            echo "error: kmer_prism.py did not generate the expected output file {output.pickle}. "
+            echo "error: kmer_prism.py did not generate the expected output file {output.pickle} "
             exit 1
         else
             exit 0
         fi
-        
+
         """
 
 
