@@ -26,6 +26,7 @@ printshellcmds: False
 scheduler: greedy
 use-conda: True
 use-singularity: True
+singularity-args: "--bind {config[OUT_ROOT]}"
 reason: True
 conda-frontend: conda
 rerun-trigger: mtime
