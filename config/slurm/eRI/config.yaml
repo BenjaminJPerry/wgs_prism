@@ -9,14 +9,14 @@ cluster:
     --mem="{resources.mem_gb}G"
     --job-name=smk-{rule}-{wildcards}
     --time={resources.time}
-    --output=logs/{rule}/{rule}-{wildcards}-%j.out
+    --output={config[OUT_ROOT]}/logs/slurm/{rule}-{wildcards}-%j.out
     --parsable
 default-resources:
-  - account=2023_sequence_production
+  - account=2023-bjp-buccal
   - partition=compute
   - time=120
   - mem_gb=8
-restart-times: 2
+restart-times: 1
 local-cores: 6
 latency-wait: 6000
 jobs: 100
