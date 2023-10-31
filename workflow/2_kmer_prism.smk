@@ -136,7 +136,7 @@ rule downsample_fastq:
     input:
         kmer_in_samples,
     output:
-        temp(downsample_out_samples_path)
+        downsample_out_samples_path
     log:
         downsample_logs_path
     conda:

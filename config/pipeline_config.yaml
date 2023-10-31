@@ -41,4 +41,4 @@ KMER_PARAMETERS: "-k 6 -A"
 
 ## multiQC configuration ##
 #
-
+multiqc_config: "resources/multiQC_config.yaml"

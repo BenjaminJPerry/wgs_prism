@@ -7,6 +7,7 @@
 
 configfile: 'config/pipeline_config.yaml'
 
+
 import os
 import pandas as pd
 
@@ -21,125 +22,233 @@ onstart:
     print(f"Env TMPDIR = {os.environ.get('TMPDIR', '<n/a>')}")
     os.system('echo "  PYTHON VERSION: $(python --version)"')
     os.system('echo "  CONDA VERSION: $(conda --version)"')
-    print("Found: ")
 
 
-# wildcard_constraints:
-#     samples="\w+"
+wildcard_constraints: sample = "(?!Undetermined).+"
 
-# Global variables
+### Global variables ###
+# config dictionary values to be defined on running snakemake with --config flag
+kraken_in_root = os.path.join(config["OUT_ROOT"], "SampleSheet/bclconvert")
+kraken_in_samples = os.path.join(config["OUT_ROOT"], "SampleSheet/bclconvert/{sample}.fastq.gz")
+
+(SAMPLES,) = glob_wildcards( os.path.join(kraken_in_root, "{sample,(?!Undetermined).*}.fastq.gz") )
+
+kmer_out_root = os.path.join(config["OUT_ROOT"], "SampleSheet/kraken_analysis")
+
+# Path and file name construction for rule downsample_fastq
+sampling_rate = str(config["SAMPLE_RATE"])
+downsample_out_samples_root = os.path.join(config["OUT_ROOT"], "SampleSheet/kmer_run/fastq_sample")
+downsample_out_samples = "{sample}.fastq.gz" + "." + "s" + sampling_rate + "." + "fastq.gz"
+downsample_out_samples_path = os.path.join(downsample_out_samples_root, downsample_out_samples)
+
+downsample_log_files = "logs/2.2.1_downsample_fastq.{sample}.s" + sampling_rate + "." + "log"
+downsample_logs_path = os.path.join(config["OUT_ROOT"], downsample_log_files)
+
+downsample_benchmark_files = "benchmarks/downsample_fastq.{sample}.s" + sampling_rate + "." + "txt"
+downsample_benchmark_path = os.path.join(config["OUT_ROOT"], downsample_benchmark_files)
 
 
-# FIDs, = glob_wildcards('results/01_cutadapt/{samples}.fastq.gz')
+# Path and file names for rule provision_k2_index
+k2_index_url # prebuilt from JHU
+
+k2_index_path = # resources
+
+k2_provision_out_log_files = "logs/2.3.1_provision_k2_index" + ".log"
+k2_provision_out_logs_path = os.path.join(config["OUT_ROOT"], k2_provision_out_log_files)
+
+k2_provision_out_benchmark_files = "benchmarks/run_provision_k2_index" + ".txt"
+k2_provision_out_benchmark_path = os.path.join(config["OUT_ROOT"], k2_provision_out_benchmark_files)
 
 
-rule all:
+# Path and file name construction for rule run_kmer_prism
+kmer_prism_root = os.path.join(config["OUT_ROOT"], "SampleSheet/kmer_run/kmer_analysis")
+kmer_prism_out_samples_frequency = kmer_fastq_to_fasta_out_samples + "." + "kmer_prism" + "." + "frequency.txt"
+kmer_prism_out_samples_pickle = kmer_fastq_to_fasta_out_samples + "." + "kmerdist" + "." + "pickle"
+
+kmer_prism_out_samples_frequency_path = os.path.join(kmer_prism_root, kmer_prism_out_samples_frequency)
+kmer_prism_out_samples_pickle_path = os.path.join(kmer_prism_root, kmer_prism_out_samples_pickle)
+
+kmer_prism_out_log_files = "logs/2.2.3_run_kmer_prism.pickle.{sample}" + ".log"
+kmer_prism_out_logs_path = os.path.join(config["OUT_ROOT"], kmer_prism_out_log_files)
+
+kmer_prism_out_benchmark_files = "benchmarks/run_kmer_prism.pickle.{sample}" + ".txt"
+kmer_prism_out_benchmark_path = os.path.join(config["OUT_ROOT"], kmer_fastq_to_fasta_benchmark_files)
+
+
+# Beging Snakemake rule definitions
+rule targets:
     input:
-        'results/00_QC/seqkit.report.KDTrim.txt',
-     
+        kmer_zipfian_plot_path,
+        kmer_entropy_plot_path,
+        kmer_zipfian_comparison_plot_path,
+        kmer_zipfian_distances_path
 
 
-rule get_samplesheet:
-
-
-rule bclconvert:
+rule downsample_fastq:
     input:
-        "results/01_cutadapt/{samples}.fastq.gz",
+        kmer_in_samples,
     output:
-        temp("results/01_readMasking/{samples}.sana.fastq.gz"),
+        temp(downsample_out_samples_path)
     log:
-        "logs/sana/sana.{samples}.log"
+        downsample_logs_path
     conda:
-        "seqkit"
+        "envs/seqkit.yaml"
     benchmark:
-        "benchmarks/sana.{samples}.log"
+        downsample_benchmark_path
     threads: 8
     resources:
-        mem_gb = lambda wildcards, attempt: 4 + ((attempt - 1) * 4),
-        time = lambda wildcards, attempt: 8 + ((attempt - 1) * 10),
-        partition='compute',
+        mem_gb = lambda wildcards, attempt: 8 + ((attempt - 1) * 32),
+        time = lambda wildcards, attempt: 60 + ((attempt - 1) * 120),
     shell:
-        "seqkit sana "
-        "-j {threads} "
-        "{input} "
-        "| gzip --fast -c > {output} 2> {log} "
+        """ 
+        seqkit sample -s 1953 -p .0002 --threads {threads} {input} -o {output} > {log} 2>&1
+
+        """ 
 
 
-checkpoint seqkitRaw:
+rule provision_k2_index:
     input:
-        expand('results/01_readMasking/{samples}.sana.fastq.gz', samples = FIDs),
+        k2_index_url
     output:
-        'results/00_QC/seqkit.report.raw.txt'
-    benchmark:
-        'benchmarks/seqkitRaw.txt'
-    #container:
-    #    'docker://quay.io/biocontainers/seqkit:2.2.0--h9ee0642_0' 
-    conda:
-        #'env/seqkit.yaml'
-        'seqkit'
-    threads: 32
-    resources:
-        mem_gb = lambda wildcards, attempt: 4 + ((attempt - 1) * 4),
-        time = lambda wildcards, attempt: 30 + ((attempt - 1) * 60),
-        partition="compute"
-    shell:
-        'seqkit stats -j {threads} -a {input} > {output} '
-
-
-# STANDARD READ FILTERING AND QC RULES
-rule bbduk:
-    input:
-        reads = 'results/01_readMasking/{samples}.sana.fastq.gz',
-    output:
-        bbdukReads = temp('results/01_readMasking/{samples}.bbduk.fastq.gz')
+        kmer_fastq_to_fasta_out_samples_path
     log:
-        'logs/bbduk/{samples}.bbduk.log'
+        kmer_fastq_to_fasta_out_logs_path
     conda:
-        'bbduk'
+        "envs/seqkit.yaml"
+    benchmark:
+        kmer_fastq_to_fasta_benchmark_path
+    threads: 12
+    resources:
+        mem_gb = lambda wildcards, attempt: 8 + ((attempt - 1) * 32),
+        time = lambda wildcards, attempt: 60 + ((attempt - 1) * 120),
+    shell:
+        """ 
+        seqkit fq2fa {input} -o {output} > {log} 2>&1
+
+        """    
+
+
+rule run_kmer_prism:
+    input:
+        kmer_fastq_to_fasta_out_samples_path,
+    output:
+        txt = kmer_prism_out_samples_frequency_path,
+        pickle = kmer_prism_out_samples_pickle_path,
+    log:
+        kmer_prism_out_logs_path
+    conda:
+        "envs/biopython.yaml"
+    benchmark:
+        kmer_prism_out_benchmark_path
     threads: 8
     resources:
-        mem_gb = lambda wildcards, attempt: 2 + ((attempt - 1) * 4),
-        time = lambda wildcards, attempt: 8 + ((attempt - 1) * 10),
-        partition='compute',
-    shell:
-        'bbduk.sh '
-        'threads={threads} '
-        'in={input.reads} '
-        'entropy=0.3 '
-        'entropywindow=50 '
-        'trimpolygright=5 '
-        'qtrim=r '
-        'trimq=20 '
-        'out={output.bbdukReads} '
-        '2>&1 | tee {log}'
+        mem_gb = lambda wildcards, attempt: 8 + ((attempt - 1) * 32),
+        time = lambda wildcards, attempt: 60 + ((attempt - 1) * 120),
+    shell:   
+        """ 
+    
+        workflow/scripts/kmer_prism.py -f fasta -p {threads} -k 6 -A -b {kmer_prism_root} -o {output.txt} {input} > {log} 2>&1
+
+        success_landmark={output.pickle}
+
+        if [ ! -f $success_landmark ]
+        then
+            echo "error: kmer_prism.py did not generate the expected output file {output.pickle} "
+            exit 1
+        else
+            exit 0
+        fi
+
+        """
 
 
-
-def get_seqkitMaskingBBDukReads_passing_samples(wildcards, minReads=min_reads):
-    file = checkpoints.seqkitRaw.get().output[0]
-    qc_stats = pd.read_csv(file, delimiter = "\s+")
-    qc_stats["num_seqs"] = qc_stats["num_seqs"].str.replace(",", "").astype(int)
-    qc_passed = qc_stats.loc[qc_stats["num_seqs"].astype(int) > minReads]
-    passed = qc_passed['file'].str.split("/").str[-1].str.split(".").str[0].tolist()
-    return expand("results/01_readMasking/{samples}.bbduk.fastq.gz", samples = passed)
-
-
-rule seqkitMaskingBBDukReads:
+rule aggregate_kmer_spectra:
     input:
-        bbdukReads = get_seqkitMaskingBBDukReads_passing_samples,
+        pickles = expand(kmer_prism_out_samples_pickle_path, sample = SAMPLES),
+        fastas = expand(kmer_fastq_to_fasta_out_samples_path, sample = SAMPLES),
     output:
-        'results/00_QC/seqkit.report.bbduk.txt'
-    benchmark:
-        'benchmarks/seqkitMaskingBBDukReads.txt'
-    #container:
-    #    'docker://quay.io/biocontainers/seqkit:2.2.0--h9ee0642_0'
+        summary_plus = kmer_agg_summary_plus_path,
+        frequency_plus = kmer_agg_frequency_plus_path,
+        summary = kmer_agg_summary_path,
+        frequency = kmer_agg_frequency_path,
+        plot_data = kmer_agg_plot_data_path
+    log:
+        kmer_agg_out_logs_path
     conda:
-        #'env/seqkit.yaml'
-        'seqkit'
-    threads: 32
+        'envs/biopython.yaml'
+    benchmark:
+        kmer_agg_out_benchmark_path
+    threads: 8
     resources:
-        mem_gb = lambda wildcards, attempt: 4 + ((attempt - 1) * 4),
-        time = lambda wildcards, attempt: 90 + ((attempt - 1) * 30),
-        partition='compute',
+        mem_gb = lambda wildcards, attempt: 8 + ((attempt - 1) * 32),
+        time = lambda wildcards, attempt: 60 + ((attempt - 1) * 120),
     shell:
-        'seqkit stats -j {threads} -a {input.bbdukReads} > {output} '
+        """ 
+
+        # below uses the .kmerdist.pickle distribution files to make the final spectra
+        # (note that the -k 6 arg here is not actually used , as the distributions have already been done by the make step)
+
+        rm -f {output.summary_plus}
+        workflow/scripts/kmer_prism.py -p {threads} -k 6 -t zipfian -o {output.summary_plus} -b {kmer_prism_root} {input.fastas} >> {log} 2>&1
+        if [ -s {output.summary_plus}]
+        then
+            echo "error: kmer_prism.py did not aggregate spectra into {output.summary_plus} " | tee >> {log}
+            exit 1
+        fi
+
+        rm -f {output.frequency_plus}
+        workflow/scripts/kmer_prism.py -p {threads} -k 6 -t frequency -o {output.frequency_plus} -b {kmer_prism_root} {input.fastas} >> {log} 2>&1
+        if [ -s {output.frequency_plus}]
+        then
+            echo "error: kmer_prism.py did not aggregate spectra into {output.frequency_plus} " | tee >> {log}
+            exit 1
+        fi
+
+        rm -f {output.summary}
+        workflow/scripts/kmer_prism.py -p {threads} -k 6 -a CGAT -t zipfian -o {output.summary} -b {kmer_prism_root} {input.fastas} >> {log} 2>&1
+        if [ -s {output.summary}]
+        then
+            echo "error: kmer_prism.py did not aggregate spectra into {output.summary} " | tee >> {log}
+            exit 1
+        fi
+
+        rm -f  {output.frequency}
+        workflow/scripts/kmer_prism.py -p {threads} -k 6 -a CGAT -t frequency -o {output.frequency} -b {kmer_prism_root} {input.fastas} >> {log} 2>&1
+        if [ -s {output.frequency}]
+        then
+            echo "error: kmer_prism.py did not aggregate spectra into {output.frequency} " | tee >> {log}
+            exit 1
+        fi
+
+        cp -s {output.summary} {output.plot_data}
+        """
+
+
+
+rule plot_kmer_spectra:
+    input: 
+        plot_data = kmer_agg_plot_data_path,
+    output:
+        kmer_zipfian_plot = kmer_zipfian_plot_path, 
+        kmer_entropy_plot = kmer_entropy_plot_path, 
+        kmer_zipfian_comparison_plot = kmer_zipfian_comparison_plot_path,
+        kmer_zipfian_distances = kmer_zipfian_distances_path,
+    log:
+        plot_kmer_spectra_log_path
+    conda:
+        'envs/bioconductor.yaml'
+    benchmark:
+        plot_kmer_spectra_benchmark_path
+    threads: 2
+    resources:
+        mem_gb = lambda wildcards, attempt: 8 + ((attempt - 1) * 32),
+        time = lambda wildcards, attempt: 60 + ((attempt - 1) * 120),
+    shell:
+        """
+
+        Rscript --vanilla --verbose workflow/scripts/kmer_plots.r datafolder={kmer_prism_root} > {log} 2>&1
+
+        sleep 10
+
+        """
+

@@ -21,125 +21,71 @@ onstart:
     print(f"Env TMPDIR = {os.environ.get('TMPDIR', '<n/a>')}")
     os.system('echo "  PYTHON VERSION: $(python --version)"')
     os.system('echo "  CONDA VERSION: $(conda --version)"')
-    print("Found: ")
 
 
 # wildcard_constraints:
 #     samples="\w+"
 
 # Global variables
+# config dictionary values to be defined on running snakemake with --config flag
+
+# logs and reports for multiQC
+# BCLConvert Reports
+bclconvert_reports_dir = os.path.join(config["OUT_ROOT"], "SampleSheet/bclconvert/Reports")
+# FastQC Reports
+fastqc_reports_dir = os.path.join(config["OUT_ROOT"], "SampleSheet/fastqc_run/fastqc")
+# kmer_prism.py Reports
+kmer_agg_plot_data_dir = os.path.join(config["OUT_ROOT"], "SampleSheet")
+
+multiQC_config = config["multiqc_config"]
 
 
-# FIDs, = glob_wildcards('results/01_cutadapt/{samples}.fastq.gz')
 
-
-rule all:
+rule targets:
     input:
-        'results/00_QC/seqkit.report.KDTrim.txt',
-     
+        fastq_complete_path,
+        top_unknown_path
 
 
-rule get_samplesheet:
-
-
-rule bclconvert:
+rule run_bclconvert:
     input:
-        "results/01_cutadapt/{samples}.fastq.gz",
+        run_in = bclconvert_in_path,
+        sample_sheet = sample_sheet_path,
     output:
-        temp("results/01_readMasking/{samples}.sana.fastq.gz"),
+        bclconvert_out = directory(bclconvert_out_path),
+        fastq_complete = fastq_complete_path,
+        top_unknown = top_unknown_path
     log:
-        "logs/sana/sana.{samples}.log"
-    conda:
-        "seqkit"
+        bclconvert_log
+    singularity:
+        "docker://nfcore/bclconvert:3.9.3"
     benchmark:
-        "benchmarks/sana.{samples}.log"
-    threads: 8
+        bclconvert_benchmark
+    threads: 24
     resources:
-        mem_gb = lambda wildcards, attempt: 4 + ((attempt - 1) * 4),
-        time = lambda wildcards, attempt: 8 + ((attempt - 1) * 10),
-        partition='compute',
+        mem_gb = lambda wildcards, attempt: 24 + ((attempt - 1) * 32),
+        time = lambda wildcards, attempt: 120 + ((attempt - 1) * 120),
     shell:
-        "seqkit sana "
-        "-j {threads} "
-        "{input} "
-        "| gzip --fast -c > {output} 2> {log} "
+        """
+        
+        # run bcl-convert
+        # report version 
+        
+        echo "bcl-convert version in use:"
+        touch {log}
 
+        bcl-convert -V 
+        
+        bcl-convert --force --bcl-input-directory {input.run_in} --sample-sheet {input.sample_sheet} --output-directory {output.bclconvert_out} > {log} 2>&1
 
-checkpoint seqkitRaw:
-    input:
-        expand('results/01_readMasking/{samples}.sana.fastq.gz', samples = FIDs),
-    output:
-        'results/00_QC/seqkit.report.raw.txt'
-    benchmark:
-        'benchmarks/seqkitRaw.txt'
-    #container:
-    #    'docker://quay.io/biocontainers/seqkit:2.2.0--h9ee0642_0' 
-    conda:
-        #'env/seqkit.yaml'
-        'seqkit'
-    threads: 32
-    resources:
-        mem_gb = lambda wildcards, attempt: 4 + ((attempt - 1) * 4),
-        time = lambda wildcards, attempt: 30 + ((attempt - 1) * 60),
-        partition="compute"
-    shell:
-        'seqkit stats -j {threads} -a {input} > {output} '
-
-
-# STANDARD READ FILTERING AND QC RULES
-rule bbduk:
-    input:
-        reads = 'results/01_readMasking/{samples}.sana.fastq.gz',
-    output:
-        bbdukReads = temp('results/01_readMasking/{samples}.bbduk.fastq.gz')
-    log:
-        'logs/bbduk/{samples}.bbduk.log'
-    conda:
-        'bbduk'
-    threads: 8
-    resources:
-        mem_gb = lambda wildcards, attempt: 2 + ((attempt - 1) * 4),
-        time = lambda wildcards, attempt: 8 + ((attempt - 1) * 10),
-        partition='compute',
-    shell:
-        'bbduk.sh '
-        'threads={threads} '
-        'in={input.reads} '
-        'entropy=0.3 '
-        'entropywindow=50 '
-        'trimpolygright=5 '
-        'qtrim=r '
-        'trimq=20 '
-        'out={output.bbdukReads} '
-        '2>&1 | tee {log}'
-
-
-
-def get_seqkitMaskingBBDukReads_passing_samples(wildcards, minReads=min_reads):
-    file = checkpoints.seqkitRaw.get().output[0]
-    qc_stats = pd.read_csv(file, delimiter = "\s+")
-    qc_stats["num_seqs"] = qc_stats["num_seqs"].str.replace(",", "").astype(int)
-    qc_passed = qc_stats.loc[qc_stats["num_seqs"].astype(int) > minReads]
-    passed = qc_passed['file'].str.split("/").str[-1].str.split(".").str[0].tolist()
-    return expand("results/01_readMasking/{samples}.bbduk.fastq.gz", samples = passed)
-
-
-rule seqkitMaskingBBDukReads:
-    input:
-        bbdukReads = get_seqkitMaskingBBDukReads_passing_samples,
-    output:
-        'results/00_QC/seqkit.report.bbduk.txt'
-    benchmark:
-        'benchmarks/seqkitMaskingBBDukReads.txt'
-    #container:
-    #    'docker://quay.io/biocontainers/seqkit:2.2.0--h9ee0642_0'
-    conda:
-        #'env/seqkit.yaml'
-        'seqkit'
-    threads: 32
-    resources:
-        mem_gb = lambda wildcards, attempt: 4 + ((attempt - 1) * 4),
-        time = lambda wildcards, attempt: 90 + ((attempt - 1) * 30),
-        partition='compute',
-    shell:
-        'seqkit stats -j {threads} -a {input.bbdukReads} > {output} '
+        if [ $? != 0 ]
+        then
+            echo "error: bclconvert of {input.sample_sheet} - returned an error code."
+            exit 1
+        else
+            touch {output.fastq_complete}
+            exit 0
+        fi
+        
+        """
+        
