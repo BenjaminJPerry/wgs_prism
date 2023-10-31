@@ -25,8 +25,7 @@ onstart:
 
 wildcard_constraints: sample = "(?!Undetermined).+"
 
-# Global variables
-
+### Global variables ###
 # config dictionary values to be defined on running snakemake with --config flag
 kmer_in_root = os.path.join(config["OUT_ROOT"], "SampleSheet/bclconvert")
 kmer_in_samples = os.path.join(config["OUT_ROOT"], "SampleSheet/bclconvert/{sample}.fastq.gz")
@@ -34,8 +33,6 @@ kmer_in_samples = os.path.join(config["OUT_ROOT"], "SampleSheet/bclconvert/{samp
 (SAMPLES,) = glob_wildcards( os.path.join(kmer_in_root, "{sample,(?!Undetermined).*}.fastq.gz") )
 
 kmer_out_root = os.path.join(config["OUT_ROOT"], "SampleSheet/kmer_analysis")
-
-
 
 # Path and file name construction for rule downsample_fastq
 sampling_rate = str(config["SAMPLE_RATE"])
@@ -63,6 +60,7 @@ kmer_fastq_to_fasta_out_logs_path = os.path.join(config["OUT_ROOT"], kmer_fastq_
 
 kmer_fastq_to_fasta_benchmark_files = "benchmarks/kmer_fastq_to_fasta.{sample}.s" + sampling_rate + "." + "txt"
 kmer_fastq_to_fasta_benchmark_path = os.path.join(config["OUT_ROOT"], kmer_fastq_to_fasta_benchmark_files)
+
 
 # Path and file name construction for rule run_kmer_prism
 kmer_prism_root = os.path.join(config["OUT_ROOT"], "SampleSheet/kmer_run/kmer_analysis")
@@ -103,8 +101,6 @@ kmer_agg_out_benchmark_path = os.path.join(config["OUT_ROOT"], kmer_agg_out_benc
 
 
 # Path and file name construction for rule aggregate_kmer_spectra
-kmer_agg_plot_data_dir = os.path.join(config["OUT_ROOT"], "SampleSheet/kmer_run/kmer_analysis")
-
 kmer_zipfian_plot = "kmer_zipfian.jpeg"
 kmer_zipfian_plot_path = os.path.join(kmer_agg_plot_data_dir, kmer_zipfian_plot)
 
@@ -124,7 +120,6 @@ plot_kmer_spectra_benchmark = "benchmarks/run_plot_kmer_spectra.txt"
 plot_kmer_spectra_benchmark_path = os.path.join(config["OUT_ROOT"], plot_kmer_spectra_benchmark)
 
 
-
 # Beging Snakemake rule definitions
 rule targets:
     input:
@@ -132,7 +127,6 @@ rule targets:
         kmer_entropy_plot_path,
         kmer_zipfian_comparison_plot_path,
         kmer_zipfian_distances_path
-
 
 
 rule downsample_fastq:
@@ -279,7 +273,6 @@ rule aggregate_kmer_spectra:
 rule plot_kmer_spectra:
     input: 
         plot_data = kmer_agg_plot_data_path,
-        plot_data_dir = kmer_agg_plot_data_dir,
     output:
         kmer_zipfian_plot = kmer_zipfian_plot_path, 
         kmer_entropy_plot = kmer_entropy_plot_path, 
