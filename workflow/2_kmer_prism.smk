@@ -7,6 +7,7 @@
 
 configfile: 'config/pipeline_config.yaml'
 
+
 import os
 import pandas as pd
 
@@ -33,6 +34,7 @@ kmer_in_samples = os.path.join(config["OUT_ROOT"], "SampleSheet/bclconvert/{samp
 (SAMPLES,) = glob_wildcards( os.path.join(kmer_in_root, "{sample,(?!Undetermined).*}.fastq.gz") )
 
 kmer_out_root = os.path.join(config["OUT_ROOT"], "SampleSheet/kmer_analysis")
+
 
 # Path and file name construction for rule downsample_fastq
 sampling_rate = str(config["SAMPLE_RATE"])
