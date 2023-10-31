@@ -23,12 +23,6 @@ module_order:
       name: "FastQC Reports (Raw Sequence)"
       info: "This section of the report shows FastQC results for the raw fastq data."
 
-sp:
-  kmer_prism_heatmap:
-    fn: "*kmer_entropy.jpg"
-  kmer_prism_zipfian:
-    fn: "*kmer_zipfian.jpg"
-
 custom_data:
   order:
     - kmer_prism_heatmap
@@ -41,3 +35,9 @@ custom_data:
     id: "  kmer_prism_zipfian"
     file_format: "jpg"
     section_name: "Zipfian Plots of Kmer Content."
+
+sp:
+  kmer_prism_heatmap:
+    fn: "*kmer_entropy.jpg"
+  kmer_prism_zipfian:
+    fn: "*kmer_zipfian.jpg"
