@@ -254,47 +254,54 @@ rule aggregate_kmer_spectra:
 
 
 
-# rule plot_kmer_spectra:
-#     input:
-#         fastq = fastqc_in_samples
-#     output:
-#         zip = fastqc_out_samples_zips,
-#         html = fastqc_out_samples_htmls
-#     log:
-#         fastqc_log
-#     conda:
-#         'envs/biopython.yaml'
-#     benchmark:
-#         fastqc_benchmark
-#     threads: 12
-#     resources:
-#         mem_gb = lambda wildcards, attempt: 8 + ((attempt - 1) * 32),
-#         time = lambda wildcards, attempt: 60 + ((attempt - 1) * 120),
-#     shell:
-#         """ 
-#         for version in "" "_plus" ; do
-#             rm -f $OUT_DIR/kmer_summary.txt
-#             cp -s $OUT_DIR/kmer_summary${version}.${parameters_moniker}.txt $OUT_DIR/kmer_summary.txt
-#             tardis.py 
-#                     --hpctype $HPC_TYPE 
-#                     -d $OUT_DIR 
-#                     --shell-include-file configure_bioconductor_env.src 
-#                     Rscript --vanilla 
-#                         $OUT_DIR/kmer_plots.r datafolder=$OUT_DIR >> $OUT_DIR/kmer_prism.log 2>&1
-            
-#             for output in kmer_entropy kmer_zipfian_comparisons kmer_zipfian zipfian_distances; do
-#                 if [ -f $OUT_DIR/${output}.jpg ]; then
-#                     mv $OUT_DIR/${output}.jpg $OUT_DIR/${output}${version}.${parameters_moniker}.jpg
-#                 fi
-#             done
-            
-#             for output in heatmap_sample_clusters  zipfian_distances_fit ; do
-#                 if [ -f $OUT_DIR/${output}.txt ]; then
-#                     mv $OUT_DIR/${output}.txt $OUT_DIR/${output}${version}.${parameters_moniker}.txt
-#                 fi
-#             done
+rule plot_kmer_spectra:
+    input:
+        plot_data = kmer_agg_plot_data_path
+    output:
+        zip = fastqc_out_samples_zips,
+        html = fastqc_out_samples_htmls
+    log:
+        fastqc_log
+    conda:
+        'envs/biopython.yaml'
+    benchmark:
+        fastqc_benchmark
+    threads: 12
+    resources:
+        mem_gb = lambda wildcards, attempt: 8 + ((attempt - 1) * 32),
+        time = lambda wildcards, attempt: 60 + ((attempt - 1) * 120),
+    shell:
+        #""" 
+        for version in "" "_plus" ; do
 
-#         done
+            rm -f $OUT_DIR/kmer_summary.txt
+            cp -s $OUT_DIR/kmer_summary${version}.${parameters_moniker}.txt $OUT_DIR/kmer_summary.txt
+
+            tardis.py 
+                    --hpctype $HPC_TYPE 
+                    -d $OUT_DIR 
+                    --shell-include-file configure_bioconductor_env.src 
+                    Rscript --vanilla 
+                        $OUT_DIR/kmer_plots.r datafolder=$OUT_DIR >> $OUT_DIR/kmer_prism.log 2>&1
+            
+            for output in kmer_entropy kmer_zipfian_comparisons kmer_zipfian zipfian_distances; do
+                if [ -f $OUT_DIR/${output}.jpg ]; then
+
+                    mv $OUT_DIR/${output}.jpg $OUT_DIR/${output}${version}.${parameters_moniker}.jpg
+
+                fi
+            done
+            
+            for output in heatmap_sample_clusters  zipfian_distances_fit ; do
+
+                if [ -f $OUT_DIR/${output}.txt ]; then
+
+                    mv $OUT_DIR/${output}.txt $OUT_DIR/${output}${version}.${parameters_moniker}.txt
+                    
+                fi
+            done
+
+        done
 
 
 #         """

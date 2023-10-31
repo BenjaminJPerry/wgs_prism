@@ -236,7 +236,7 @@ draw_entropy_heatmap <- function(datamatrix, output_folder, heatmap_image_file, 
      trace = "none", breaks = 0 + 15/9*seq(0,9),
      col = cm , key=FALSE, density.info="none", 
      keysize=1.0, margin=c(11,20), cexRow=1.5, cexCol=1.5, 
-     lmat=rbind(  c(4,3,0 ), c(2, 1, 0) ), lwid=c(.7, 1.7, .6 ), lhei=c(.5, 3) , labRow = rowLabels)
+     lmat=rbind(  c(4,3,0 ), c(2, 1, 0) ), lwid=c(.7, 1.7, .6 ), lhei=c(.5, 3) , labRow = NULL)
 
    dev.off()
 
@@ -263,7 +263,7 @@ draw_entropy_heatmap <- function(datamatrix, output_folder, heatmap_image_file, 
        trace = "none", breaks = min(datamatrix) + (max(datamatrix)-min(datamatrix))/9*seq(0,9), 
        col = cm , key=FALSE, density.info="none", 
        keysize=1.0, margin=c(80,60), cexRow=1.3, cexCol=1.3, 
-       lmat=rbind(  c(4,3,0 ), c(2, 1, 0) ), lwid=c(.2, .8, 0 ), lhei=c(.5, 3) , labRow = rowLabels, labCol=colLabels)
+       lmat=rbind(  c(4,3,0 ), c(2, 1, 0) ), lwid=c(.2, .8, 0 ), lhei=c(.5, 3) , labRow = NULL, labCol=colLabels)
    dev.off()
 
    write.table(colnames(datamatrix)[hm$colInd[1:length(hm$colInd)]] , file="samplenames_ordered_as_heatmap.txt",row.names=TRUE,sep="\t") 
