@@ -95,15 +95,37 @@ kmer_agg_frequency_path  = os.path.join(kmer_prism_root, kmer_agg_frequency)
 kmer_agg_plot_data = "kmer_summary.txt"
 kmer_agg_plot_data_path  = os.path.join(kmer_prism_root, kmer_agg_plot_data)
 
-kmer_agg_out_log_files = "logs/2.2.4_run_aggregate_kmer_spectra" + ".log"
+kmer_agg_out_log_files = "logs/2.2.4_run_aggregate_kmer_spectra.log"
 kmer_agg_out_logs_path = os.path.join(config["OUT_ROOT"], kmer_agg_out_log_files)
 
-kmer_agg_out_benchmark_files = "benchmarks/run_aggregate_kmer_spectra" + ".txt"
+kmer_agg_out_benchmark_files = "benchmarks/run_aggregate_kmer_spectra.txt"
 kmer_agg_out_benchmark_path = os.path.join(config["OUT_ROOT"], kmer_agg_out_benchmark_files)
 
 
-# Beging Snakemake rule definitions
+# Path and file name construction for rule aggregate_kmer_spectra
+kmer_agg_plot_data_dir = os.path.join(config["OUT_ROOT"], "SampleSheet/kmer_run/kmer_analysis")
 
+kmer_zipfian_plot = "kmer_zipfian.jpeg"
+kmer_zipfian_plot_path = os.path.join(kmer_agg_plot_data_dir, kmer_zipfian_plot)
+
+kmer_entropy_plot = "kmer_entropy.jpg"
+kmer_entropy_plot_path = = os.path.join(kmer_agg_plot_data_dir, kmer_entropy_plot)
+
+kmer_zipfian_comparison_plot = "kmer_zipfian_comparisons.jpg"
+kmer_zipfian_comparison_plot_path = = os.path.join(kmer_agg_plot_data_dir, kmer_zipfian_comparison_plot)
+
+kmer_zipfian_distances = "zipfian_distances.jpeg"
+kmer_zipfian_distances_path = = os.path.join(kmer_agg_plot_data_dir, kmer_zipfian_distances)
+
+plot_kmer_spectra_log = "logs/2.2.4_run_aggregate_kmer_spectra.log"
+plot_kmer_spectra_log_path = os.path.join(config["OUT_ROOT"], plot_kmer_spectra_log)
+
+plot_kmer_spectra_benchmark = "benchmarks/run_plot_kmer_spectra.txt"
+plot_kmer_spectra_benchmark_path = os.path.join(config["OUT_ROOT"], plot_kmer_spectra_benchmark)
+
+
+
+# Beging Snakemake rule definitions
 rule targets:
     input:
         kmer_agg_summary_plus_path,
@@ -159,7 +181,8 @@ rule fastq_to_fasta:
 
 rule run_kmer_prism:
     input:
-        kmer_fastq_to_fasta_out_samples_path
+        kmer_fastq_to_fasta_out_samples_path,
+        kmer_prism_py = "workflow/scripts/kmer_prism.py", # having as input triggers rerun on code updated
     output:
         txt = kmer_prism_out_samples_frequency_path,
         pickle = kmer_prism_out_samples_pickle_path
@@ -176,7 +199,7 @@ rule run_kmer_prism:
     shell:   
         """ 
     
-        workflow/scripts/kmer_prism.py -f fasta -p {threads} -k 6 -A -b {kmer_prism_root} -o {output.txt} {input} > {log} 2>&1
+        {input.kmer_prism_py} -f fasta -p {threads} -k 6 -A -b {kmer_prism_root} -o {output.txt} {input} > {log} 2>&1
 
         success_landmark={output.pickle}
 
@@ -195,6 +218,7 @@ rule aggregate_kmer_spectra:
     input:
         pickles = expand(kmer_prism_out_samples_pickle_path, sample = SAMPLES),
         fastas = expand(kmer_fastq_to_fasta_out_samples_path, sample = SAMPLES),
+        kmer_prism_py = "workflow/scripts/kmer_prism.py", # having as input triggers rerun on code updated
     output:
         summary_plus = kmer_agg_summary_plus_path,
         frequency_plus = kmer_agg_frequency_plus_path,
@@ -218,7 +242,7 @@ rule aggregate_kmer_spectra:
         # (note that the -k 6 arg here is not actually used , as the distributions have already been done by the make step)
 
         rm -f {output.summary_plus}
-        workflow/scripts/kmer_prism.py -p {threads} -k 6 -t zipfian -o {output.summary_plus} -b {kmer_prism_root} {input.fastas} >> {log} 2>&1
+        {input.kmer_prism_py} -p {threads} -k 6 -t zipfian -o {output.summary_plus} -b {kmer_prism_root} {input.fastas} >> {log} 2>&1
         if [ -s {output.summary_plus}]
         then
             echo "error: kmer_prism.py did not aggregate spectra into {output.summary_plus} " | tee >> {log}
@@ -226,7 +250,7 @@ rule aggregate_kmer_spectra:
         fi
 
         rm -f {output.frequency_plus}
-        workflow/scripts/kmer_prism.py -p {threads} -k 6 -t frequency -o {output.frequency_plus} -b {kmer_prism_root} {input.fastas} >> {log} 2>&1
+        {input.kmer_prism_py} -p {threads} -k 6 -t frequency -o {output.frequency_plus} -b {kmer_prism_root} {input.fastas} >> {log} 2>&1
         if [ -s {output.frequency_plus}]
         then
             echo "error: kmer_prism.py did not aggregate spectra into {output.frequency_plus} " | tee >> {log}
@@ -234,7 +258,7 @@ rule aggregate_kmer_spectra:
         fi
 
         rm -f {output.summary}
-        workflow/scripts/kmer_prism.py -p {threads} -k 6 -a CGAT -t zipfian -o {output.summary} -b {kmer_prism_root} {input.fastas} >> {log} 2>&1
+        {input.kmer_prism_py} -p {threads} -k 6 -a CGAT -t zipfian -o {output.summary} -b {kmer_prism_root} {input.fastas} >> {log} 2>&1
         if [ -s {output.summary}]
         then
             echo "error: kmer_prism.py did not aggregate spectra into {output.summary} " | tee >> {log}
@@ -242,7 +266,7 @@ rule aggregate_kmer_spectra:
         fi
 
         rm -f  {output.frequency}
-        workflow/scripts/kmer_prism.py -p {threads} -k 6 -a CGAT -t frequency -o {output.frequency} -b {kmer_prism_root} {input.fastas} >> {log} 2>&1
+        {input.kmer_prism_py} -p {threads} -k 6 -a CGAT -t frequency -o {output.frequency} -b {kmer_prism_root} {input.fastas} >> {log} 2>&1
         if [ -s {output.frequency}]
         then
             echo "error: kmer_prism.py did not aggregate spectra into {output.frequency} " | tee >> {log}
@@ -255,55 +279,29 @@ rule aggregate_kmer_spectra:
 
 
 rule plot_kmer_spectra:
-    input:
-        plot_data = kmer_agg_plot_data_path
+    input: 
+        plot_data = kmer_agg_plot_data_path,
+        plot_data_dir = kmer_agg_plot_data_dir,
+        kmer_plots_r = "workflow/scripts/kmer_plots.r", # having as input triggers rerun on code updated
     output:
-        zip = fastqc_out_samples_zips,
-        html = fastqc_out_samples_htmls
+        kmer_zipfian_plot = kmer_zipfian_plot_path, 
+        kmer_entropy_plot = kmer_entropy_plot_path, 
+        kmer_zipfian_comparison_plot = kmer_zipfian_comparison_plot_path,
+        kmer_zipfian_distances = kmer_zipfian_distances_path,
     log:
-        fastqc_log
+        plot_kmer_spectra_log_path
     conda:
-        'envs/biopython.yaml'
+        'envs/bioconductor.yaml'
     benchmark:
-        fastqc_benchmark
-    threads: 12
+        plot_kmer_spectra_benchmark_path
+    threads: 2
     resources:
         mem_gb = lambda wildcards, attempt: 8 + ((attempt - 1) * 32),
         time = lambda wildcards, attempt: 60 + ((attempt - 1) * 120),
     shell:
-        #""" 
-        for version in "" "_plus" ; do
+        """
 
-            rm -f $OUT_DIR/kmer_summary.txt
-            cp -s $OUT_DIR/kmer_summary${version}.${parameters_moniker}.txt $OUT_DIR/kmer_summary.txt
+        Rscript --vanilla {input.kmer_plots_r} datafolder={input.plot_data_dir}
 
-            tardis.py 
-                    --hpctype $HPC_TYPE 
-                    -d $OUT_DIR 
-                    --shell-include-file configure_bioconductor_env.src 
-                    Rscript --vanilla 
-                        $OUT_DIR/kmer_plots.r datafolder=$OUT_DIR >> $OUT_DIR/kmer_prism.log 2>&1
-            
-            for output in kmer_entropy kmer_zipfian_comparisons kmer_zipfian zipfian_distances; do
-                if [ -f $OUT_DIR/${output}.jpg ]; then
-
-                    mv $OUT_DIR/${output}.jpg $OUT_DIR/${output}${version}.${parameters_moniker}.jpg
-
-                fi
-            done
-            
-            for output in heatmap_sample_clusters  zipfian_distances_fit ; do
-
-                if [ -f $OUT_DIR/${output}.txt ]; then
-
-                    mv $OUT_DIR/${output}.txt $OUT_DIR/${output}${version}.${parameters_moniker}.txt
-                    
-                fi
-            done
-
-        done
-
-
-#         """
-
+        """
 
