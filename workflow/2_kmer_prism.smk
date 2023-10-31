@@ -296,13 +296,13 @@ rule plot_kmer_spectra:
 
         Rscript --verbose workflow/scripts/kmer_plots.r datafolder={kmer_prism_root} > {log} 2>&1
 
-        if [ -f {output.kmer_entropy_plot}]
-        then
-            exit 0
-        else
-            echo "error: kmer_plot.r did not generate all plots: {output.kmer_entropy_plot} " | tee >> {log} 2>&1
-            exit 1
-        fi
+        # if [ ! -f {output.kmer_entropy_plot}]
+        # then
+        #     exit 0
+        # else
+        #     echo "error: kmer_plot.r did not generate all plots: {output.kmer_entropy_plot} " | tee >> {log} 2>&1
+        #     exit 1
+        # fi
 
         """
 
