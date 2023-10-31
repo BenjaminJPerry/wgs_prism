@@ -296,5 +296,13 @@ rule plot_kmer_spectra:
 
         Rscript --vanilla workflow/scripts/kmer_plots.r datafolder={kmer_prism_root}
 
+        if [ -s {output.kmer_zipfian_distances}]
+        then
+            echo "error: kmer_plot.r did not generate all plots: {output.kmer_zipfian_distances} " | tee >> {log}
+            exit 1
+        else
+            exit 0
+        fi
+
         """
 
