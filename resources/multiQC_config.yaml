@@ -23,10 +23,12 @@ module_order:
       name: "FastQC Reports (Raw Sequence)"
       info: "This section of the report shows FastQC results for the raw fastq data."
 
-custom_data:
+custom_content:
   order:
     - kmer_prism_heatmap
     - kmer_prism_zipfian
+
+custom_data:
   kmer_prism_heatmap:
     id: "kmer_prism_heatmap"
     file_format: "jpg"
