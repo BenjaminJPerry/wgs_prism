@@ -184,7 +184,7 @@ rule run_kmer_prism:
         kmer_fastq_to_fasta_out_samples_path,
     output:
         txt = kmer_prism_out_samples_frequency_path,
-        pickle = kmer_prism_out_samples_pickle_path
+        pickle = kmer_prism_out_samples_pickle_path,
     log:
         kmer_prism_out_logs_path
     conda:
@@ -298,7 +298,7 @@ rule plot_kmer_spectra:
     shell:
         """
 
-        Rscript --vanilla workflow/scripts/kmer_plots.r datafolder={input.plot_data_dir}
+        Rscript --vanilla workflow/scripts/kmer_plots.r datafolder={kmer_prism_root}
 
         """
 
