@@ -298,13 +298,5 @@ rule plot_kmer_spectra:
 
         sleep 10
 
-        if [ -f {output.kmer_zipfian_distances}]
-        then
-            exit 0
-        else
-            echo "error: kmer_plot.r did not generate all plots: {output.kmer_zipfian_distances} " | tee >> {log} 2>&1
-            exit 1
-        fi
-
         """
 
