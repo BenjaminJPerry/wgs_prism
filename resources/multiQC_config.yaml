@@ -8,7 +8,8 @@ report_header_info:
   - Contact E-mail: "ben.perry@agresearch.co.nz"
   - Application Type: "wgs_prism2"
   - Project Type: "non-GBS Sequence Produciton"
-  - Sequencing Platform: "NovaSeq 6000"
+
+ignore_images: false
 
 top_modules:
   - "bclconvert"
@@ -21,17 +22,20 @@ module_order:
   - fastqc:
       name: "FastQC Reports (Raw Sequence)"
       info: "This section of the report shows FastQC results for the raw fastq data."
-  - kmer_prism:
+  - custom_content:
       name: "kmer_prism.py Summary Plots"
       info: "This section of the report shows kmer_prism.py summaries of down-sampled fastq data."
 
 sp:
-  kmer_prism:
-    fn: "*.jpg"
-ignore_images: false
+  kmer_prism_heatmap:
+    fn: "*kmer_entropy.jpg"
+  kmer_prism_zipfian:
+    fn: "*kmer_zipfian.jpg"
 
 custom_data:
-  kmer_prism:
+  kmer_prism_heatmap:
     file_format: "jpg"
-
-
+  section_name: "Summary of kmer entropy across samples:"
+  kmer_prism_zipfian:
+    file_format: "jpg"
+  section_name: "Zipfian plots of kmers within samples:"
