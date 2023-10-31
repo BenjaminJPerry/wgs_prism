@@ -294,7 +294,7 @@ rule plot_kmer_spectra:
     shell:
         """
 
-        Rscript --vanilla workflow/scripts/kmer_plots.r datafolder={kmer_prism_root} > {log} 2>&1
+        Rscript --verbose workflow/scripts/kmer_plots.r datafolder={kmer_prism_root} > {log} 2>&1
 
         if [ -f {output.kmer_entropy_plot}]
         then
