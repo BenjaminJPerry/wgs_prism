@@ -101,6 +101,7 @@ kmer_agg_out_benchmark_path = os.path.join(config["OUT_ROOT"], kmer_agg_out_benc
 
 
 # Path and file name construction for rule aggregate_kmer_spectra
+kmer_agg_plot_data_dir = os.path.join(config["OUT_ROOT"], "SampleSheet/kmer_run/kmer_analysis")
 kmer_zipfian_plot = "kmer_zipfian.jpeg"
 kmer_zipfian_plot_path = os.path.join(kmer_agg_plot_data_dir, kmer_zipfian_plot)
 
