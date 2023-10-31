@@ -25,12 +25,13 @@ module_order:
       name: "kmer_prism.py Summary Plots"
       info: "This section of the report shows kmer_prism.py summaries of down-sampled fastq data."
 
-custom_data:
-  kmer_prism:
-    section_name: "kmer_prism.py Summary Plots"
-
 sp:
   kmer_prism:
-    fn: "*/kmer_analysis/*jpg"
+    fn: "*.jpg"
 ignore_images: false
+
+custom_data:
+  kmer_prism:
+    file_format: "jpg"
+
 

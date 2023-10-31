@@ -298,5 +298,7 @@ rule plot_kmer_spectra:
 
         sleep 10
 
+        rm kmer_binning.txt.*
+
         """
 
