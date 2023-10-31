@@ -107,10 +107,10 @@ kmer_agg_plot_data_dir = os.path.join(config["OUT_ROOT"], "SampleSheet/kmer_run/
 kmer_zipfian_plot = "kmer_zipfian.jpeg"
 kmer_zipfian_plot_path = os.path.join(kmer_agg_plot_data_dir, kmer_zipfian_plot)
 
-kmer_entropy_plot = "kmer_entropy.jpg"
+kmer_entropy_plot = "kmer_entropy.jpeg"
 kmer_entropy_plot_path = os.path.join(kmer_agg_plot_data_dir, kmer_entropy_plot)
 
-kmer_zipfian_comparison_plot = "kmer_zipfian_comparisons.jpg"
+kmer_zipfian_comparison_plot = "kmer_zipfian_comparisons.jpeg"
 kmer_zipfian_comparison_plot_path =os.path.join(kmer_agg_plot_data_dir, kmer_zipfian_comparison_plot)
 
 kmer_zipfian_distances = "zipfian_distances.jpeg"
