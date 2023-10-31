@@ -294,7 +294,7 @@ rule plot_kmer_spectra:
     shell:
         """
 
-        Rscript --verbose workflow/scripts/kmer_plots.r datafolder={kmer_prism_root} > {log} 2>&1
+        Rscript --vanilla --verbose workflow/scripts/kmer_plots.r datafolder={kmer_prism_root} > {log} 2>&1
 
         sleep 10
 
