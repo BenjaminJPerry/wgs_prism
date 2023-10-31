@@ -296,9 +296,9 @@ rule plot_kmer_spectra:
 
         Rscript --vanilla workflow/scripts/kmer_plots.r datafolder={kmer_prism_root} | tee >> {log} 2>&1
 
-        if [ -s {output.kmer_zipfian_distances}]
+        if [ -s {output.kmer_entropy_plot}]
         then
-            echo "error: kmer_plot.r did not generate all plots: {output.kmer_zipfian_distances} " | tee >> {log} 2>&1
+            echo "error: kmer_plot.r did not generate all plots: {output.kmer_entropy_plot} " | tee >> {log} 2>&1
             exit 1
         else
             exit 0

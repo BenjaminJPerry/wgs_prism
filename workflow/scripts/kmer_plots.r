@@ -457,7 +457,7 @@ main <- function() {
 
 
 mydata<-main()
-
+quit()
 
 
 
