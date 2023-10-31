@@ -182,7 +182,6 @@ rule fastq_to_fasta:
 rule run_kmer_prism:
     input:
         kmer_fastq_to_fasta_out_samples_path,
-        kmer_prism_py = "workflow/scripts/kmer_prism.py", # having as input triggers rerun on code updated
     output:
         txt = kmer_prism_out_samples_frequency_path,
         pickle = kmer_prism_out_samples_pickle_path
@@ -199,7 +198,7 @@ rule run_kmer_prism:
     shell:   
         """ 
     
-        {input.kmer_prism_py} -f fasta -p {threads} -k 6 -A -b {kmer_prism_root} -o {output.txt} {input} > {log} 2>&1
+        workflow/scripts/kmer_prism.py -f fasta -p {threads} -k 6 -A -b {kmer_prism_root} -o {output.txt} {input} > {log} 2>&1
 
         success_landmark={output.pickle}
 
@@ -218,7 +217,6 @@ rule aggregate_kmer_spectra:
     input:
         pickles = expand(kmer_prism_out_samples_pickle_path, sample = SAMPLES),
         fastas = expand(kmer_fastq_to_fasta_out_samples_path, sample = SAMPLES),
-        kmer_prism_py = "workflow/scripts/kmer_prism.py", # having as input triggers rerun on code updated
     output:
         summary_plus = kmer_agg_summary_plus_path,
         frequency_plus = kmer_agg_frequency_plus_path,
@@ -242,7 +240,7 @@ rule aggregate_kmer_spectra:
         # (note that the -k 6 arg here is not actually used , as the distributions have already been done by the make step)
 
         rm -f {output.summary_plus}
-        {input.kmer_prism_py} -p {threads} -k 6 -t zipfian -o {output.summary_plus} -b {kmer_prism_root} {input.fastas} >> {log} 2>&1
+        workflow/scripts/kmer_prism.py -p {threads} -k 6 -t zipfian -o {output.summary_plus} -b {kmer_prism_root} {input.fastas} >> {log} 2>&1
         if [ -s {output.summary_plus}]
         then
             echo "error: kmer_prism.py did not aggregate spectra into {output.summary_plus} " | tee >> {log}
@@ -250,7 +248,7 @@ rule aggregate_kmer_spectra:
         fi
 
         rm -f {output.frequency_plus}
-        {input.kmer_prism_py} -p {threads} -k 6 -t frequency -o {output.frequency_plus} -b {kmer_prism_root} {input.fastas} >> {log} 2>&1
+        workflow/scripts/kmer_prism.py -p {threads} -k 6 -t frequency -o {output.frequency_plus} -b {kmer_prism_root} {input.fastas} >> {log} 2>&1
         if [ -s {output.frequency_plus}]
         then
             echo "error: kmer_prism.py did not aggregate spectra into {output.frequency_plus} " | tee >> {log}
@@ -258,7 +256,7 @@ rule aggregate_kmer_spectra:
         fi
 
         rm -f {output.summary}
-        {input.kmer_prism_py} -p {threads} -k 6 -a CGAT -t zipfian -o {output.summary} -b {kmer_prism_root} {input.fastas} >> {log} 2>&1
+        workflow/scripts/kmer_prism.py -p {threads} -k 6 -a CGAT -t zipfian -o {output.summary} -b {kmer_prism_root} {input.fastas} >> {log} 2>&1
         if [ -s {output.summary}]
         then
             echo "error: kmer_prism.py did not aggregate spectra into {output.summary} " | tee >> {log}
@@ -266,7 +264,7 @@ rule aggregate_kmer_spectra:
         fi
 
         rm -f  {output.frequency}
-        {input.kmer_prism_py} -p {threads} -k 6 -a CGAT -t frequency -o {output.frequency} -b {kmer_prism_root} {input.fastas} >> {log} 2>&1
+        workflow/scripts/kmer_prism.py -p {threads} -k 6 -a CGAT -t frequency -o {output.frequency} -b {kmer_prism_root} {input.fastas} >> {log} 2>&1
         if [ -s {output.frequency}]
         then
             echo "error: kmer_prism.py did not aggregate spectra into {output.frequency} " | tee >> {log}
@@ -282,7 +280,6 @@ rule plot_kmer_spectra:
     input: 
         plot_data = kmer_agg_plot_data_path,
         plot_data_dir = kmer_agg_plot_data_dir,
-        kmer_plots_r = "workflow/scripts/kmer_plots.r", # having as input triggers rerun on code updated
     output:
         kmer_zipfian_plot = kmer_zipfian_plot_path, 
         kmer_entropy_plot = kmer_entropy_plot_path, 
@@ -301,7 +298,7 @@ rule plot_kmer_spectra:
     shell:
         """
 
-        Rscript --vanilla {input.kmer_plots_r} datafolder={input.plot_data_dir}
+        Rscript --vanilla workflow/scripts/kmer_plots.r datafolder={input.plot_data_dir}
 
         """
 
