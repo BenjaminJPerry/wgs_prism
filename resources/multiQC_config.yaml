@@ -22,9 +22,6 @@ module_order:
   - fastqc:
       name: "FastQC Reports (Raw Sequence)"
       info: "This section of the report shows FastQC results for the raw fastq data."
-  - custom_content:
-      name: "kmer_prism.py Summary Plots"
-      info: "This section of the report shows kmer_prism.py summaries of down-sampled fastq data."
 
 sp:
   kmer_prism_heatmap:
@@ -33,9 +30,14 @@ sp:
     fn: "*kmer_zipfian.jpg"
 
 custom_data:
+  order:
+    - kmer_prism_heatmap
+    - kmer_prism_zipfian
   kmer_prism_heatmap:
+    id: "kmer_prism_heatmap"
     file_format: "jpg"
-  section_name: "Summary of kmer entropy across samples:"
+    section_name: "Summary of Kmer Entropy Across Samples."
   kmer_prism_zipfian:
+    id: "  kmer_prism_zipfian"
     file_format: "jpg"
-  section_name: "Zipfian plots of kmers within samples:"
+    section_name: "Zipfian Plots of Kmer Content."
