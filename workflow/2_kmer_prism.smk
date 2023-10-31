@@ -112,10 +112,10 @@ kmer_entropy_plot = "kmer_entropy.jpg"
 kmer_entropy_plot_path = os.path.join(kmer_agg_plot_data_dir, kmer_entropy_plot)
 
 kmer_zipfian_comparison_plot = "kmer_zipfian_comparisons.jpg"
-kmer_zipfian_comparison_plot_path = = os.path.join(kmer_agg_plot_data_dir, kmer_zipfian_comparison_plot)
+kmer_zipfian_comparison_plot_path =os.path.join(kmer_agg_plot_data_dir, kmer_zipfian_comparison_plot)
 
 kmer_zipfian_distances = "zipfian_distances.jpeg"
-kmer_zipfian_distances_path = = os.path.join(kmer_agg_plot_data_dir, kmer_zipfian_distances)
+kmer_zipfian_distances_path = os.path.join(kmer_agg_plot_data_dir, kmer_zipfian_distances)
 
 plot_kmer_spectra_log = "logs/2.2.4_run_aggregate_kmer_spectra.log"
 plot_kmer_spectra_log_path = os.path.join(config["OUT_ROOT"], plot_kmer_spectra_log)
