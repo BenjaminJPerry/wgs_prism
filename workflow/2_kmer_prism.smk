@@ -109,7 +109,7 @@ kmer_zipfian_plot = "kmer_zipfian.jpeg"
 kmer_zipfian_plot_path = os.path.join(kmer_agg_plot_data_dir, kmer_zipfian_plot)
 
 kmer_entropy_plot = "kmer_entropy.jpg"
-kmer_entropy_plot_path = = os.path.join(kmer_agg_plot_data_dir, kmer_entropy_plot)
+kmer_entropy_plot_path = os.path.join(kmer_agg_plot_data_dir, kmer_entropy_plot)
 
 kmer_zipfian_comparison_plot = "kmer_zipfian_comparisons.jpg"
 kmer_zipfian_comparison_plot_path = = os.path.join(kmer_agg_plot_data_dir, kmer_zipfian_comparison_plot)
@@ -128,11 +128,11 @@ plot_kmer_spectra_benchmark_path = os.path.join(config["OUT_ROOT"], plot_kmer_sp
 # Beging Snakemake rule definitions
 rule targets:
     input:
-        kmer_agg_summary_plus_path,
-        kmer_agg_frequency_plus_path,
-        kmer_agg_summary_path,
-        kmer_agg_frequency_path,
-        kmer_agg_plot_data_path
+        kmer_zipfian_plot_path,
+        kmer_entropy_plot_path,
+        kmer_zipfian_comparison_plot_path,
+        kmer_zipfian_distances_path
+
 
 
 rule downsample_fastq:
