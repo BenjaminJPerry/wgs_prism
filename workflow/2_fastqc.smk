@@ -38,7 +38,7 @@ fastqc_out_samples_zips = os.path.join(config["OUT_ROOT"], "SampleSheet/fastqc_r
 fastqc_out_samples_htmls = os.path.join(config["OUT_ROOT"], "SampleSheet/fastqc_run/fastqc/{sample}_fastqc.html")
 
 fastqc_log = os.path.join(config["OUT_ROOT"], "logs/2.1_run_fastqc.{sample}.log")
-fastqc_benchmark = os.path.join(config["OUT_ROOT"], "benchmarks/run_fastqc.{sample}.log")
+fastqc_benchmark = os.path.join(config["OUT_ROOT"], "benchmarks/run_fastqc.{sample}.txt")
 
 
 rule targets:
@@ -59,9 +59,9 @@ rule run_fastqc:
         'docker://biocontainers/fastqc:v0.11.9_cv8'
     benchmark:
         fastqc_benchmark
-    threads: 12
+    threads: 24
     resources:
-        mem_gb = lambda wildcards, attempt: 8 + ((attempt - 1) * 32),
+        mem_gb = lambda wildcards, attempt: 16 + ((attempt - 1) * 32),
         time = lambda w: config["fastqc_walltime"],
     shell:
         """ 

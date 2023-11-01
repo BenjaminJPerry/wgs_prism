@@ -34,13 +34,16 @@ function read_answer_with_default() {
    if [ $INTERACTIVE == yes ]; then
       read answer
       echo "User response: $answer"
+      echo
       if [ -z "$answer" ]; then
          answer=$@
          echo "Default response: $answer"
+         echo
       fi
    else
       answer=$@
       echo "Default response: $answer"
+      echo
    fi
 }
 
@@ -302,19 +305,18 @@ function find_barcodes() {
       "
    else
       echo "
-   The following unknown barcode combinations from bclconvert contain a code matching a code or its reverse complement in SampleSheet.csv:
+the following unknown barcode combinations from bclconvert contain a code matching a code or its reverse complement in SampleSheet.csv:
       "
       more $OUTPUT_ROOT/SampleSheet/bclconvert/Reports/found_codes 
       echo "
 
-   The above list of unknown barcode combinations where at least one code matches a code or its reverse complement in the sample-sheet, is saved in $OUTPUT_ROOT/SampleSheet/bclconvert/Reports/found_codes
+the above list of unknown barcode combinations where at least one code matches a code or its reverse complement in the sample-sheet, is saved in $OUTPUT_ROOT/SampleSheet/bclconvert/Reports/found_codes
   
-   (to summarise the barcodes in the sample-sheet, use 
+to summarise the barcodes in the sample-sheet, use:
 
-    gquery -t barcodes -v -p reverse $OUTPUT_ROOT/SampleSheet.csv
+   gquery -t barcodes -v -p reverse $OUTPUT_ROOT/SampleSheet.csv
  
-   )
-      "
+"
    fi
 }
 
@@ -328,9 +330,9 @@ function review_enriched_seqs() {
    CUSTOM_ADAPTERS_FILES=/dataset/gseq_processing/active/bin/gquery/database/t_BarcodePlates.csv
    CUSTOM_CONTAMINANTS_FILES=""
 
-   echo "running cat $ADAPTERS_FILE $CONTAMINANTS_FILE $CUSTOM_ADAPTERS_FILES $CUSTOM_CONTAMINANTS_FILES | $GBS_PRISM_BIN/reconcile_contaminants.py $OUTPUT_ROOT/logs/*run_kmer_prism.pickle* | head -30 ...."
+   echo "running cat $ADAPTERS_FILE $CONTAMINANTS_FILE $CUSTOM_ADAPTERS_FILES $CUSTOM_CONTAMINANTS_FILES | $GBS_PRISM_BIN/reconcile_contaminants.py $OUTPUT_ROOT/logs/2.2.3_run_kmer_prism.pickle* | head -30 ...."
 
-   cat $ADAPTERS_FILE $CONTAMINANTS_FILE $CUSTOM_ADAPTERS_FILES $CUSTOM_CONTAMINANTS_FILES | $GBS_PRISM_BIN/reconcile_contaminants.py $OUTPUT_ROOT/logs/*run_kmer_prism.pickle* | head -30
+   cat $ADAPTERS_FILE $CONTAMINANTS_FILE $CUSTOM_ADAPTERS_FILES $CUSTOM_CONTAMINANTS_FILES | $GBS_PRISM_BIN/reconcile_contaminants.py $OUTPUT_ROOT/logs/2.2.3_run_kmer_prism.pickle* | head -30
 
 }
 
@@ -408,7 +410,7 @@ Starting kmer_prism.py...
 "
    echo "snakemake --profile config/slurm/legacy --snakefile workflow/2_kmer_prism.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN "
    source activate snakemake
-   snakemake --profile config/slurm/legacy --snakefile workflow/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN | tee $OUTPUT_ROOT/logs/fastqc.smk.log
+   snakemake --profile config/slurm/legacy --snakefile workflow/2_kmer_prism.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN | tee $OUTPUT_ROOT/logs/fastqc.smk.log
    conda deactivate
 
 
@@ -417,7 +419,7 @@ Starting kmer_prism.py...
 #       echo "
 # about to run kraken2 using:
 
-# snakemake --profile config/slurm/legacy --snakefile workflow/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN 
+# snakemake --profile config/slurm/legacy --snakefile workflow/TODO.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN 
 
 # OK ? (y/n, default=y)
 # "
@@ -431,9 +433,9 @@ Starting kmer_prism.py...
 # Starting kraken2...
 
 #    "
-#    echo "snakemake --profile config/slurm/legacy --snakefile workflow/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN " | tee > $OUTPUT_ROOT/logs/bclconvert.smk.log
+#    echo "snakemake --profile config/slurm/legacy --snakefile workflow/TODO.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN " | tee > $OUTPUT_ROOT/logs/bclconvert.smk.log
 #    source activate snakemake
-#    snakemake --profile config/slurm/legacy --snakefile workflow/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN > $OUTPUT_ROOT/logs/fastqc.smk.log
+#    snakemake --profile config/slurm/legacy --snakefile workflow/TODO.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN > $OUTPUT_ROOT/logs/fastqc.smk.log
 #    conda deactivate
 
 
@@ -464,7 +466,7 @@ Starting MultiQC...
 }
 
 function run_dedupe() {
-   ls $OUTPUT_ROOT/SampleSheet/bclconvert/*.fastq.gz | grep -vi undetermined > $OUTPUT_ROOT/SampleSheet/files_to_dedupe.txt
+   ls $OUTPUT_ROOT/SampleSheet/bclconvert/*.fastq.gz | grep -vi Undetermined > $OUTPUT_ROOT/SampleSheet/files_to_dedupe.txt
 
    echo "
    About to start dedupe using : 
@@ -645,21 +647,26 @@ please specify the full path to the q/c output folder (or just press ENTER to us
 
 "
    ls -lR $OUTPUT_ROOT/SampleSheet/bclconvert 2>/dev/null | grep "fastq.gz"   > /dev/null 2>&1 
-   if [ $? != 0 ]; then
-      echo "could not find fastq data under $OUTPUT_ROOT/SampleSheet/bclconvert 
+   if [ $? != 0 ]
+   then
+      echo "could not find fastq.gz data in $OUTPUT_ROOT/SampleSheet/bclconvert.
 
-(If you just want to run downstream q/c, CTRL-C here and create symlinks to your data in 
+if you just want to run downstream q/c, CTRL-C now and create symlinks to your data in:
+
 $OUTPUT_ROOT/SampleSheet/bclconvert 
-- e.g. 
-mkdir -p $OUTPUT_ROOT/SampleSheet/bclconvert
 
 . . . but you probably want to run bclconvert  - OK to run that ? (y/n, default=y)"
       read_answer_with_default y 
       if [ "$answer" != "y" ]; then
          echo "OK continuing..."
+         echo
       else
          run_bclconvert 
       fi
+   else
+      echo "found fastq.gz data: "
+      ls -lR $OUTPUT_ROOT/SampleSheet/bclconvert | grep "fastq.gz"
+
    fi
 
 
@@ -676,7 +683,7 @@ do you want to look for barcodes in the unknown barcodes report (in both orienta
 
 
    ####### check whether we can find lane q/c landmark - if not confirm 
-   echo "checking for fastqc results (looking for landmarks $OUTPUT_ROOT/SampleSheet/fastqc_run/fastqc/*.html...
+   echo "checking for multiQC summary report ...
 
 "
    ls $OUTPUT_ROOT/SampleSheet/fastqc_run/fastqc/*.html  > /dev/null 2>&1
@@ -698,7 +705,6 @@ do you want to look for barcodes in the unknown barcodes report (in both orienta
 
    ####### kmer analysis hopefully available - see if we want to review the enriched sequences it assembles 
    echo "
-
 do you want to review the enriched seqs kmer analysis assembled that are known to the fastqc adapters file ? (y/n, default=y)
 
    "
@@ -717,7 +723,7 @@ checking for deduped data (looking for $OUTPUT_ROOT/SampleSheet/dedupe/*.fastq.g
 "
    ls $OUTPUT_ROOT/SampleSheet/dedupe/*.fastq.gz > /dev/null 2>&1
    if [ $? != 0 ]; then
-      echo "could not find deduped fastq files (i.e. $OUTPUT_ROOT/SampleSheet/dedupe/*.fastq.gz) so looks like dedupe is needed - OK to run that ? (y/n, default=y)"
+      echo "could not find deduped fastq files (i.e. $OUTPUT_ROOT/SampleSheet/dedupe/*.fastq.gz) so looks like dedupe is needed - OK to run that ? (y/n, default=n)"
       read_answer_with_default n
       if [ "$answer" != "y" ]; then
          echo "OK not running dedupe"
