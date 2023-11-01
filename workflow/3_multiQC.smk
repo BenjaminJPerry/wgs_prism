@@ -37,13 +37,17 @@ fastqc_reports_dir = os.path.join(config["OUT_ROOT"], "SampleSheet/fastqc_run/fa
 # kmer_prism.py Reports
 kmer_reports_dir = os.path.join(config["OUT_ROOT"], "SampleSheet/kmer_run/kmer_analysis")
 
-multiqc_config = config["multiqc_config"]
 multiqc_report_file = run_name + ".multiqc.html"
-multiqc_data_dir = os.path.join(config["OUT_ROOT"], "multiqc")
 multiqc_report_path = os.path.join(config["OUT_ROOT"], "multiqc", multiqc_report_file)
+multiqc_data_dir = os.path.join(config["OUT_ROOT"], "multiqc", "multiqc_data")
 
-multiqc_log = 
-multiqc_benchmark = 
+
+multiqc_log = "logs/3.0.0_run_multiqc.log"
+multiqc_log_path = os.path.join(config["OUT_ROOT"], multiqc_log)
+
+multiqc_benchmark = "benchmarks/run_multiqc.txt"
+multiqc_benchmark_path = os.path.join(config["OUT_ROOT"], multiqc_benchmark)
+
 
 rule targets:
     input:
@@ -58,15 +62,15 @@ rule run_multiqc:
         report = multiqc_report_path,
         data = directory(multiqc_data_dir),
     log:
-        multiqc_log
+        multiqc_log_path
     conda:
         "multiqc"
     benchmark:
-        multiqc_benchmark
-    threads: 24
+        multiqc_benchmark_path
+    threads: 2
     resources:
-        mem_gb = lambda wildcards, attempt: 24 + ((attempt - 1) * 32),
-        time = lambda wildcards, attempt: 120 + ((attempt - 1) * 120),
+        mem_gb = lambda wildcards, attempt: 8 + ((attempt - 1) * 8),
+        time = lambda wildcards, attempt: 30 + ((attempt - 1) * 30),
     params:
         multiqc_config = config["multiqc_config"]
     shell:
