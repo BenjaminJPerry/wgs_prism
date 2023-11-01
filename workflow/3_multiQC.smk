@@ -28,47 +28,51 @@ onstart:
 
 # Global variables
 # config dictionary values to be defined on running snakemake with --config flag
-
+run_name = config["RUN"]
 # logs and reports for multiQC
 # BCLConvert Reports
 bclconvert_reports_dir = os.path.join(config["OUT_ROOT"], "SampleSheet/bclconvert/Reports")
 # FastQC Reports
 fastqc_reports_dir = os.path.join(config["OUT_ROOT"], "SampleSheet/fastqc_run/fastqc")
 # kmer_prism.py Reports
-kmer_agg_plot_data_dir = os.path.join(config["OUT_ROOT"], "SampleSheet")
+kmer_reports_dir = os.path.join(config["OUT_ROOT"], "SampleSheet/kmer_run/kmer_analysis")
 
-multiQC_config = config["multiqc_config"]
+multiqc_config = config["multiqc_config"]
+multiqc_report_file = run_name + ".multiqc.html"
+multiqc_data_dir = os.path.join(config["OUT_ROOT"], "multiqc")
+multiqc_report_path = os.path.join(config["OUT_ROOT"], "multiqc", multiqc_report_file)
 
-
+multiqc_log = 
+multiqc_benchmark = 
 
 rule targets:
     input:
-        fastq_complete_path,
-        top_unknown_path
+        multiqc_report_path
 
-
-rule run_bclconvert:
+rule run_multiqc:
     input:
-        run_in = bclconvert_in_path,
-        sample_sheet = sample_sheet_path,
+        bclconvert_in = bclconvert_reports_dir,
+        fastqc_in = fastqc_reports_dir,
+        kmer_in = kmer_reports_dir
     output:
-        bclconvert_out = directory(bclconvert_out_path),
-        fastq_complete = fastq_complete_path,
-        top_unknown = top_unknown_path
+        report = multiqc_report_path,
+        data = directory(multiqc_data_dir),
     log:
-        bclconvert_log
-    singularity:
-        "docker://nfcore/bclconvert:3.9.3"
+        multiqc_log
+    conda:
+        "multiqc"
     benchmark:
-        bclconvert_benchmark
+        multiqc_benchmark
     threads: 24
     resources:
         mem_gb = lambda wildcards, attempt: 24 + ((attempt - 1) * 32),
         time = lambda wildcards, attempt: 120 + ((attempt - 1) * 120),
+    params:
+        multiqc_config = config["multiqc_config"]
     shell:
         """
         
-        
+        multiqc --outdir --filename {output.report} --force -c {params.multiqc_config} --data-dir {output.data} --data-format tsv {input.bclconvert_in} {input.fastqc_in} {input.kmer_in} > {log} 2>&1
         
         """
         
