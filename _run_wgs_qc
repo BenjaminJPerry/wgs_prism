@@ -533,7 +533,7 @@ function get_run_opts() {
    SNP_ENGINE=tassel        # the only one supported at this point
 
    SEQ_ROOT=/dataset/2023_illumina_sequencing_c/active
-   SEQ_BCLCONVERT_ROOT=/dataset/2023_illumina_sequencing_c/scratch/postprocessing/illumina/novaseq
+   SEQ_BCLCONVERT_ROOT=/dataset/2023_illumina_sequencing_c/scratch/postprocessing/illumina/test
    mkdir -p $SEQ_BCLCONVERT_ROOT
 
 

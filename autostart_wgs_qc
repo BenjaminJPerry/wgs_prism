@@ -47,9 +47,7 @@ function get_pipeline() {
    wgs_version=$1
    RUN=$2 
 
-   export GBS_PRISM_BIN=/dataset/gseq_processing/active/bin/gbs_prism
-   export WGS_PRISM_BIN=/dataset/gseq_processing/active/bin/wgs_prism
-   export SEQ_PRISMS_BIN=$WGS_PRISM_BIN/seq_prisms
+   export WGS_PRISM_BIN=/home/perrybe/wgs_prism2
 
    cd $WGS_PRISM_BIN
 
@@ -70,6 +68,7 @@ function get_pipeline() {
       send_mail
       exec ./_run_wgs_qc -r $RUN $wgs_version 
    fi
+   
 }
 
 function send_mail() {
