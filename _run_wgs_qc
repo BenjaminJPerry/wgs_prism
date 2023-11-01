@@ -330,9 +330,9 @@ function review_enriched_seqs() {
    CUSTOM_ADAPTERS_FILES=/dataset/gseq_processing/active/bin/gquery/database/t_BarcodePlates.csv
    CUSTOM_CONTAMINANTS_FILES=""
 
-   echo "running cat $ADAPTERS_FILE $CONTAMINANTS_FILE $CUSTOM_ADAPTERS_FILES $CUSTOM_CONTAMINANTS_FILES | $GBS_PRISM_BIN/reconcile_contaminants.py $OUTPUT_ROOT/logs/2.2.3_run_kmer_prism.pickle* | head -30 ...."
+   echo "running cat $ADAPTERS_FILE $CONTAMINANTS_FILE $CUSTOM_ADAPTERS_FILES $CUSTOM_CONTAMINANTS_FILES | $GBS_PRISM_BIN/workflow/scripts/reconcile_contaminants.py $OUTPUT_ROOT/logs/2.2.3_run_kmer_prism.pickle* | head -30 ...."
 
-   cat $ADAPTERS_FILE $CONTAMINANTS_FILE $CUSTOM_ADAPTERS_FILES $CUSTOM_CONTAMINANTS_FILES | $GBS_PRISM_BIN/reconcile_contaminants.py $OUTPUT_ROOT/logs/2.2.3_run_kmer_prism.pickle* | head -30
+   cat $ADAPTERS_FILE $CONTAMINANTS_FILE $CUSTOM_ADAPTERS_FILES $CUSTOM_CONTAMINANTS_FILES | $GBS_PRISM_BIN/workflow/scripts/reconcile_contaminants.py $OUTPUT_ROOT/logs/2.2.3_run_kmer_prism.pickle* | head -30
 
 }
 
