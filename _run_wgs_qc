@@ -700,9 +700,9 @@ do you want to look for barcodes in the unknown barcodes report (in both orienta
 
    ####### kmer analysis hopefully available - see if we want to review the enriched sequences it assembles 
    echo "
-do you want to review the enriched seqs kmer analysis assembled that are known to the fastqc adapters file ? (y/n, default=y)
+do you want to review the enriched seqs kmer analysis assembled that are known to the fastqc adapters file ? (y/n, default=n)
    "
-   read_answer_with_default n #TODO fix this, seems broken and can't sort it out
+   read_answer_with_default n #BJP TODO fix this, seems broken and can't sort it out
    if [ "$answer" == "y" ]; then
       echo "(listing will also be saved to $OUTPUT_ROOT/SampleSheet/review_enriched_seqs.log)"
       review_enriched_seqs | tee  $OUTPUT_ROOT/SampleSheet/review_enriched_seqs.log
