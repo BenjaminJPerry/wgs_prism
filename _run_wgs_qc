@@ -642,7 +642,7 @@ please specify the full path to the q/c output folder (or just press ENTER to us
    done
 
 
-   ####### check whether we can find sequence data - if not confirm  bclconvert is needed 
+####### check whether we can find sequence data - if not confirm  bclconvert is needed 
    echo "checking sequence data (looking under  $OUTPUT_ROOT)....
 
 "
@@ -670,25 +670,25 @@ $OUTPUT_ROOT/SampleSheet/bclconvert
    fi
 
 
-   ####### found sequence data - see if we want to debug barcodes
+####### found sequence data - see if we want to debug barcodes
    echo "
 
-do you want to look for barcodes in the unknown barcodes report (in both orientations) ? (y/n, default=y)
+do you want to look for barcodes in the unknown barcodes report (in both orientations) ? (y/n, default=n)
 
    "
-   read_answer_with_default y
+   read_answer_with_default n
    if [ "$answer" == "y" ]; then
       find_barcodes 
    fi
 
 
    ####### check whether we can find lane q/c landmark - if not confirm 
-   echo "checking for multiQC summary report ...
+   echo "checking for MultiQC summary report ...
 
 "
-   ls $OUTPUT_ROOT/SampleSheet/fastqc_run/fastqc/*.html  > /dev/null 2>&1
+   ls $OUTPUT_ROOT/SampleSheet/multic*.html  > /dev/null 2>&1
    if [ $? != 0 ]; then 
-      echo "could not find all lane q/c landmarks so looks like lane q/c is needed - OK to run that ? (y/n, default=y)"
+      echo "could not find MultiQC summary report - OK to run lane q/c ? (y/n, default=y)"
       read_answer_with_default y
       if [ "$answer" != "y" ]; then
          echo "OK continuing..."
@@ -698,17 +698,11 @@ do you want to look for barcodes in the unknown barcodes report (in both orienta
    fi
 
 
-
-
-
-
-
    ####### kmer analysis hopefully available - see if we want to review the enriched sequences it assembles 
    echo "
 do you want to review the enriched seqs kmer analysis assembled that are known to the fastqc adapters file ? (y/n, default=y)
-
    "
-   read_answer_with_default y
+   read_answer_with_default n #TODO fix this, seems broken and can't sort it out
    if [ "$answer" == "y" ]; then
       echo "(listing will also be saved to $OUTPUT_ROOT/SampleSheet/review_enriched_seqs.log)"
       review_enriched_seqs | tee  $OUTPUT_ROOT/SampleSheet/review_enriched_seqs.log
