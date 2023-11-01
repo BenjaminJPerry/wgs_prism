@@ -9,7 +9,7 @@ import os
 import re
 import itertools 
 
-#sys.path.append('/dataset/gseq_processing/active/bin/gquery')  # hack until gquery is packaged and has an installer  
+sys.path.append('/dataset/gseq_processing/active/bin/gquery')  # hack until gquery is packaged and has an installer  
 
 def get_options():
     description = """
