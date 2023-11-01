@@ -38,8 +38,8 @@ fastqc_reports_dir = os.path.join(config["OUT_ROOT"], "SampleSheet/fastqc_run/fa
 kmer_reports_dir = os.path.join(config["OUT_ROOT"], "SampleSheet/kmer_run/kmer_analysis")
 
 multiqc_report_file = run_name + ".multiqc.html"
-multiqc_report_path = os.path.join(config["OUT_ROOT"], "multiqc", multiqc_report_file)
-multiqc_data_dir = os.path.join(config["OUT_ROOT"], "multiqc", "multiqc_data")
+multiqc_report_path = os.path.join(config["OUT_ROOT"], "SampleSheet", "multiqc", multiqc_report_file)
+multiqc_data_dir = os.path.join(config["OUT_ROOT"], "SampleSheet", "multiqc", "multiqc_data")
 
 
 multiqc_log = "logs/3.0.0_run_multiqc.log"
