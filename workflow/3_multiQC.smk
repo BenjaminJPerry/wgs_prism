@@ -40,7 +40,7 @@ kmer_reports_dir = os.path.join(config["OUT_ROOT"], "SampleSheet/kmer_run/kmer_a
 multiqc_report_file = run_name + ".multiqc.html"
 multiqc_report_path = os.path.join(config["OUT_ROOT"], "SampleSheet", "multiqc", multiqc_report_file)
 
-multiqc_data_dir = run_name + ".multiqc_data"
+multiqc_data_dir = "multiqc_data"
 multiqc_data_dir_path = os.path.join(config["OUT_ROOT"], "SampleSheet", "multiqc", multiqc_data_dir)
 
 
@@ -62,7 +62,6 @@ rule run_multiqc:
         kmer_in = kmer_reports_dir
     output:
         report = multiqc_report_path,
-        data = directory(multiqc_data_dir),
     log:
         multiqc_log_path
     conda:
@@ -78,7 +77,7 @@ rule run_multiqc:
     shell:
         """
         
-        multiqc --outdir {output.data} --filename {output.report} --force -c {params.multiqc_config} --data-dir --data-format tsv {input.bclconvert_in} {input.fastqc_in} {input.kmer_in} > {log} 2>&1
+        multiqc --outdir {multiqc_data_dir_path} --filename {output.report} --force -c {params.multiqc_config} --data-dir --data-format tsv {input.bclconvert_in} {input.fastqc_in} {input.kmer_in} > {log} 2>&1
         
         """
         
