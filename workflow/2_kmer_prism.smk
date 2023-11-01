@@ -149,7 +149,7 @@ rule downsample_fastq:
         time = lambda wildcards, attempt: 60 + ((attempt - 1) * 120),
     shell:
         """ 
-        seqkit sample -s 1953 -p .0002 --threads {threads} {input} -o {output} > {log} 2>&1
+        seqkit sample -s 1953 -p {sampling_rate} --threads {threads} {input} -o {output} > {log} 2>&1
 
         """ 
 

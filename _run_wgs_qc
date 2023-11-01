@@ -442,7 +442,7 @@ Starting kmer_prism.py...
       echo "
 about to run MultiQC using:
 
-snakemake --profile config/slurm/legacy --snakefile workflow/3_multiqc.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN 
+snakemake --profile config/slurm/legacy --snakefile workflow/3_multiQC.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN 
 
 OK ? (y/n, default=y)
 "
@@ -456,9 +456,9 @@ OK ? (y/n, default=y)
 Starting MultiQC...
 
    "
-   echo "snakemake --profile config/slurm/legacy --snakefile workflow/3_multiqc.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN" 
+   echo "snakemake --profile config/slurm/legacy --snakefile workflow/3_multiQC.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN" 
    source activate snakemake
-   snakemake --profile config/slurm/legacy --snakefile workflow/3_multiqc.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN | tee $OUTPUT_ROOT/logs/multiqc.smk.log
+   snakemake --profile config/slurm/legacy --snakefile workflow/3_multiQC.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN | tee $OUTPUT_ROOT/logs/multiqc.smk.log
    conda deactivate
 
 }
