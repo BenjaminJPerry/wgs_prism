@@ -39,7 +39,9 @@ kmer_reports_dir = os.path.join(config["OUT_ROOT"], "SampleSheet/kmer_run/kmer_a
 
 multiqc_report_file = run_name + ".multiqc.html"
 multiqc_report_path = os.path.join(config["OUT_ROOT"], "SampleSheet", "multiqc", multiqc_report_file)
-multiqc_data_dir = os.path.join(config["OUT_ROOT"], "SampleSheet", "multiqc", "multiqc_data")
+
+multiqc_data_dir = run_name + ".multiqc_data"
+multiqc_data_dir_path = os.path.join(config["OUT_ROOT"], "SampleSheet", "multiqc", multiqc_data_dir)
 
 
 multiqc_log = "logs/3.0.0_run_multiqc.log"
