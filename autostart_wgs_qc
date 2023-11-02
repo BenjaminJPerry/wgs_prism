@@ -47,7 +47,7 @@ function get_pipeline() {
    wgs_version=$1
    RUN=$2 
 
-   export WGS_PRISM_BIN=/home/perrybe/wgs_prism2
+   export WGS_PRISM_BIN=/agr/persist/projects/2023_sequence_production/wgs_prism2
 
    cd $WGS_PRISM_BIN
 
