@@ -4,11 +4,12 @@
 #
 
 export SEQ_PRISMS_BIN=/dataset/gseq_processing/active/bin/wgs_prism/seq_prisms 
-#temp for testing
-export WGS_PRISM_BIN=/home/perrybe/wgs_prism2
+
+
+export WGS_PRISM_BIN=/home/perrybe/wgs_prism2 #TODO Updated after testing
 export GBS_PRISM_BIN=/dataset/gseq_processing/active/bin/gbs_prism
 
-BCLCONVERT_NODE=invbfopp10.agresearch.co.nz   # iramohio-01
+#BCLCONVERT_NODE=invbfopp10.agresearch.co.nz   # iramohio-01
 
 ADAPTERS_FILE=/stash/miniconda3/envs/bifo-essential/opt/fastqc-0.11.8/Configuration/adapter_list.txt # use the fastqc one
 CONTAMINANTS_FILE=/stash/miniconda3/envs/bifo-essential/opt/fastqc-0.11.8/Configuration/contaminant_list.txt  # use the fastqc one
@@ -20,508 +21,8 @@ CUSTOM_CONTAMINANTS_FILES=""
 # default walltime for fastqc in minutes
 FASTQC_WALL=120
 
-# For conda integration
-source activate /home/perrybe/conda-envs/snakemake
-
-function send_mail() {
-   message="$1"
-   echo "sending mail"
-   echo "" | mutt -s "$message" vanstijnt , mccullocha, bairdh, perrybe, andersonr, andrewsa, henryh, frenchm, hicklandm
-}
-
-
-function read_answer_with_default() {
-   if [ $INTERACTIVE == yes ]; then
-      read answer
-      echo "User response: $answer"
-      echo
-      if [ -z "$answer" ]; then
-         answer=$@
-         echo "Default response: $answer"
-         echo
-      fi
-   else
-      answer=$@
-      echo "Default response: $answer"
-      echo
-   fi
-}
-
-function more_with_default() {
-   if [ $INTERACTIVE == yes ]; then
-      more $1
-   else
-      cat $1
-   fi
-}
-
-function get_opts() {
-   INTERACTIVE=no
-   INTERACTIVE_OPT=""
-   ARGRUN=""
-   help_text="
-This script is called by run_wgs_qc (or non-interactively by a cron job).
-Usage :\n
-"
-   while getopts ":hir:" opt; do
-   case $opt in
-       h)
-         echo -e $help_text
-         exit 0
-         ;;
-       i)
-         INTERACTIVE=yes
-         INTERACTIVE_OPT="-i"
-         ;;
-       r)
-         ARGRUN=$OPTARG
-         ;;
-       \?)
-         echo "Invalid option: -$OPTARG" >&2
-         exit 1
-         ;;
-       :)
-         echo "Option -$OPTARG requires an argument." >&2
-         exit 1
-         ;;
-     esac
-   done
-
-   shift $((OPTIND-1))
-
-   wgs_version=$1
-}
-
-
-
-function run_bclconvert() {
-   # Depricated test, bcl-convert now run on nodes
-   # if [ $HOSTNAME != $BCLCONVERT_NODE ]; then
-   #    echo "Sorry you need to be logged on to iramohio-01 to run bclconvert."
-   #    exit 1
-   # fi
-
-   echo "
-
-Checking run is completed (i.e. looking for $SEQ_ROOT/$RUN/RTAComplete.txt).
-
-"
-   if [ ! -f $SEQ_ROOT/$RUN/RTAComplete.txt ]; then
-      echo "warning: landmark file $SEQ_ROOT/$RUN/RTAComplete.txt does not exist => this run has not completed sequencing (or uploading?) - are you SURE you want to continue !? (y/n default n)"
-      read_answer_with_default n
-      if [ $answer != "y" ]; then
-         echo "OK quitting."
-         exit 1
-      else
-         echo "OK will continue but note that output may be incomplete."
-      fi
-   fi
-
-   bclconvert_phrase="" # not currently used - previously used to pass in bcl2fastq options 
-   samplesheet_to_fastqnames_phrase=""
-
-   # set up for bclconvert run
-   mkdir -p $OUTPUT_ROOT/SampleSheet
-   mkdir -p $OUTPUT_ROOT/logs
-
-   if [ ! -d $OUTPUT_ROOT/SampleSheet ]; then
-      echo "error: could not create bclconvert output folder $OUTPUT_ROOT/SampleSheet -- quitting."
-      exit 1
-   fi
-
-   ####### ensure sample sheet used for bclconvert contains header, and includes specification of adapter
-   # (but allow user to customise )
-   #
-   if [ ! -f $OUTPUT_ROOT/SampleSheet.csv ]; then
-      cat $SAMPLE_SHEET | $WGS_PRISM_BIN/workflow/scripts/add_sample_sheet_header.py -H  $WGS_PRISM_BIN/resources/sample_sheet_header.csv  > $OUTPUT_ROOT/SampleSheet.csv
-   fi
-
-   echo "
-Will use sample sheet $OUTPUT_ROOT/SampleSheet.csv as follows  -- please review: 
-
-***** Some points to note *****
-*
-* The sample sheet has been minimally checked and filtered by $WGS_PRISM_BIN/workflow/scripts/add_sample_sheet_header.py - e.g. setting Adapter1 updated to AdapterRead1.
-* The following common requirements are not checked. (If you need to include these or other settings, just answer "n" to the next prompt, and 
-* manually edit $OUTPUT_ROOT/SampleSheet.csv)
-*
-* - if this is a paired end run, you will need to also add AdapterRead2 setting
-* - if you need to specify more than one adapter, they all go on the same line concatenated with +
-* - you may sometimes need to demultiplex in multiple passes, each with different utilisation of cycles  - e.g.
-* [Settings]
-* OverrideCycles,N1Y150;I10;I10;N1Y150
-* OverrideCycles,Y101;I8N11;I8;Y101,,,,,,,,
-* OverrideCycles,Y151;I8N2;I8;Y151,,,,,,,,
-* OverrideCycles,Y101;I10;I8N2,,,,,,,,
-*
-* - Trimming T-overhang options for the Illumina Stranded mRNA and Illumina Stranded Total RNA workflows
-*   Ref https://support.illumina.com/bulletins/2020/06/trimming-t-overhang-options-for-the-illumina-rna-library-prep-wo.html
-*   But note that Read1StartFromCycle is deprecated, instead use OverrideCycles. For example if RunInfo.xml has 
-*   <Read Number=1 NumCycles=151 IsIndexedRead=N/>
-*   <Read Number=2 NumCycles=10 IsIndexedRead=Y/>
-*   <Read Number=3 NumCycles=10 IsIndexedRead=Y/>
-*   <Read Number=4 NumCycles=151 IsIndexedRead=N/>
-*   Then to trim overhang, use 
-* [Settings]
-* OverrideCycles,N1Y150;I10;I10;N1Y150
-*
-* - UMI demultiplexing : ref https://knowledge.illumina.com/software/on-premises-software/software-on-premises-software-reference_material-list/000007337
-* An example for handling mixed UMI-index reads :  
-* [Settings],,,,,,,,,
-* AdapterRead1,CTGTCTCTTATACACATCT,,,,,,,,
-* AdapterRead2,CTGTCTCTTATACACATCT,,,,,,,,
-* OverrideCycles,Y101;I8U11;I8;Y101,,,,,,,,
-* CreateFastqForIndexReads,1,,,,,,,,
-* TrimUMI,0,,,,,,,,
-*
-* (if the indexes are supplied with N masking for the UMI, remove those)
-*
-*******************************
-
-"
-
-   echo "Press Enter to review sample sheet:"
-   read_answer_with_default ""
-
-   vim $OUTPUT_ROOT/SampleSheet.csv
-   echo "
-If this is OK ? answer y (or just press enter):
-   "
-   read_answer_with_default y
-   if [ $answer != "y" ]; then
-      echo "
-OK quitting.
-
-(please edit $OUTPUT_ROOT/SampleSheet.csv and try again)"
-      exit 1
-   fi 
-
-   
-   ###### ensure output folder does not exist
-   if [ -d $OUTPUT_ROOT/SampleSheet/bclconvert ]; then
-      echo "
-error: $OUTPUT_ROOT/SampleSheet/bclconvert already exists - please clean up and retry."
-      exit 1
-   fi
-
-   # remove the make target if it exists
-   rm -f $OUTPUT_ROOT/SampleSheet/SampleSheet.csv.bclconvert
-
-   # echo "about to run bclconvert using:
-   # $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a bclconvert $run_info_phrase -I $SEQ_ROOT/$RUN -B \"$bclconvert_phrase\" -Q \"$samplesheet_to_fastqnames_phrase\" -O $OUTPUT_ROOT/SampleSheet $OUTPUT_ROOT/SampleSheet.csv  > $OUTPUT_ROOT/SampleSheet/bclconvert.log  2>&1
-   # OK ? (y/n, default=y)
-   # "
-
-   echo "
-About to run bclconvert using:
-
-snakemake --profile config/slurm/legacy --snakefile workflow/1_bclconvert.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN
-
-OK ? (y/n, default=y):
-"
-
-   read_answer_with_default  y
-   if [ $answer != "y" ]; then
-      echo "OK quitting."
-      exit 1
-   fi
-   echo "
-Starting bclconvert...
-
-"
-   echo "snakemake --profile config/slurm/legacy --snakefile workflow/1_bclconvert.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN "
-   source activate snakemake
-   snakemake --profile config/slurm/legacy --snakefile workflow/1_bclconvert.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN > $OUTPUT_ROOT/logs/bclconvert.smk.log
-   conda deactivate
-
-   if [ $? != 0 ]; then
-
-      # bad code but might ignore that if we have sequence data
-      ls -lR $OUTPUT_ROOT/SampleSheet/bclconvert 2>/dev/null | grep "fastq.gz"   > /dev/null 2>&1
-
-      if [ $? == 0 ]; then
-         echo "warning: bclconvert exit code was non-zero, but it did generate fastq data. "
-      else
-         if [ $INTERACTIVE != yes ]; then
-            send_mail "Sorry bclconvert for $RUN exited with an error code and no fastq data was generated."
-         fi
-         echo "error: bclconvert exit code was non-zero and no sequence data generated. "
-         echo "(suggest check $OUTPUT_ROOT/SampleSheet/bcl-convert.log)"
-         exit 1
-      fi
-
-      echo "
-
-bcl-convert has finished but received a non-zero exit code, though did generate fastq data so might be OK. 
-
-Do you want to continue ? (y/n, default = y):
-"
-      read_answer_with_default y 
-      if [ $answer != "y" ]; then
-         echo "OK quitting"
-         exit 1
-      fi
-   fi
-   
-
-   if [ $INTERACTIVE != yes ]; then
-      send_mail "(bclconvert for $RUN has completed - fastq data is now available)"
-   fi
-
-   echo "
-
-bclconvert completed.
-
-   "
-}
-
-function find_barcodes() {
-   # get the number of barcodes
-   num_barcodes=`gquery -t barcodes -p dump $OUTPUT_ROOT/SampleSheet.csv 2>/dev/null | wc -w`
-   echo "reviewing $num_barcodes barcodes and reverse complements in sample sheet . . . (press enter to continue)
-
-   "
-   read_answer_with_default x
-   
-   gquery -t barcodes -v -p reverse $OUTPUT_ROOT/SampleSheet.csv 2>/dev/null | more  
-
-   echo "
-   
-
-   looking for the above in unknown barcodes report . . . . (press enter to continue)
-   "
-   read_answer_with_default x
-
-   rm -f $OUTPUT_ROOT/SampleSheet/bclconvert/Reports/found_codes.tmp
-   for code in `gquery -t barcodes -p dump $OUTPUT_ROOT/SampleSheet.csv 2>/dev/null`; do 
-      grep -H $code $OUTPUT_ROOT/SampleSheet/bclconvert/Reports/Top_Unknown_Barcodes.csv >> $OUTPUT_ROOT/SampleSheet/bclconvert/Reports/found_codes.tmp 
-   done
-   sort -u -t, -n -r -k6,6 $OUTPUT_ROOT/SampleSheet/bclconvert/Reports/found_codes.tmp | head -$num_barcodes > $OUTPUT_ROOT/SampleSheet/bclconvert/Reports/found_codes
-   rm -f $OUTPUT_ROOT/SampleSheet/bclconvert/Reports/found_codes.tmp
-
-   num_found=`cat $OUTPUT_ROOT/SampleSheet/bclconvert/Reports/found_codes | wc -l`
-   if [ $num_found == "0" ]; then
-      echo "sorry no codes in the unknown codes report match anything obvious in SampleSheet.csv (i.e. codes or their reverse complement)
-      "
-   else
-      echo "
-the following unknown barcode combinations from bclconvert contain a code matching a code or its reverse complement in SampleSheet.csv:
-      "
-      more $OUTPUT_ROOT/SampleSheet/bclconvert/Reports/found_codes 
-      echo "
-
-the above list of unknown barcode combinations where at least one code matches a code or its reverse complement in the sample-sheet, is saved in $OUTPUT_ROOT/SampleSheet/bclconvert/Reports/found_codes
-  
-to summarise the barcodes in the sample-sheet, use:
-
-   gquery -t barcodes -v -p reverse $OUTPUT_ROOT/SampleSheet.csv
- 
-"
-   fi
-}
-
-
-function review_enriched_seqs() {
-
-   ADAPTERS_FILE=/stash/miniconda3/envs/bifo-essential/opt/fastqc-0.11.8/Configuration/adapter_list.txt # use the fastqc one
-   CONTAMINANTS_FILE=/stash/miniconda3/envs/bifo-essential/opt/fastqc-0.11.8/Configuration/contaminant_list.txt  # use the fastqc one
-
-   # custom files includes Ag GBS barcode file and potentially others
-   CUSTOM_ADAPTERS_FILES=/dataset/gseq_processing/active/bin/gquery/database/t_BarcodePlates.csv
-   CUSTOM_CONTAMINANTS_FILES=""
-
-   echo "running cat $ADAPTERS_FILE $CONTAMINANTS_FILE $CUSTOM_ADAPTERS_FILES $CUSTOM_CONTAMINANTS_FILES | $GBS_PRISM_BIN/workflow/scripts/reconcile_contaminants.py $OUTPUT_ROOT/logs/2.2.3_run_kmer_prism.pickle* | head -30 ...."
-
-   cat $ADAPTERS_FILE $CONTAMINANTS_FILE $CUSTOM_ADAPTERS_FILES $CUSTOM_CONTAMINANTS_FILES | $GBS_PRISM_BIN/workflow/scripts/reconcile_contaminants.py $OUTPUT_ROOT/logs/2.2.3_run_kmer_prism.pickle* | head -30
-
-}
-
-
-function run_lane_qc() {
-#    while [ 1 ] ; do
-#       echo "
-# Please enter how long to allow for fastqc - or just press enter to accept default ( $FASTQC_WALL minutes ): 
-# "
-#       read_answer_with_default $FASTQC_WALL
-#       FASTQC_WALL=$answer
-#       python -c "print int('$FASTQC_WALL')" >/dev/null 2>&1
-#       if [ $? != 0 ]; then
-#          echo "error: looks like time requested ( $FASTQC_WALL ) is not a number."
-#       else
-#          break
-#       fi
-#    done
-
-   echo "
-
-Finding sequence files for fastqc.
-"
-   mkdir -p $OUTPUT_ROOT/SampleSheet
-   mkdir -p $OUTPUT_ROOT/logs
-   find $OUTPUT_ROOT/SampleSheet/bclconvert -name "*.fastq.gz" -size +1000c -print | grep -vi Undetermined > $OUTPUT_ROOT/SampleSheet/sequence_files.txt
-   return_code=$?
-
-   find $OUTPUT_ROOT/SampleSheet/bclconvert -name "*.fastq.gz" -type l -print | grep -vi Undetermined >> $OUTPUT_ROOT/SampleSheet/sequence_files.txt
-   
-   if [[ ( $return_code != 0 ) && (  $? != 0 ) ]]; then
-      echo "error: oops could not find any .fastq.gz files ( or links to fastq files) under $OUTPUT_ROOT/SampleSheet/bclconvert - quiting."
-      exit 1
-   fi  
-
-### fastqc rule ###
-
-      echo "
-About to run fastqc using:
-
-snakemake --profile config/slurm/legacy --snakefile workflow/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN 
-
-OK ? (y/n, default=y):
-"
-
-   read_answer_with_default  y
-   if [ $answer != "y" ]; then
-      echo "OK quitting."
-      exit 1
-   fi
-   echo "
-Starting fastqc...
-"
-   echo "snakemake --profile config/slurm/legacy --snakefile workflow/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN "
-   source activate snakemake
-   snakemake --profile config/slurm/legacy --snakefile workflow/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN | tee $OUTPUT_ROOT/logs/fastqc.smk.log
-   conda deactivate
-
-### kmer_prism.py rule ###
-
-      echo "about to run kmer_prism.py using:
-
-snakemake --profile config/slurm/legacy --snakefile workflow/2_kmer_prism.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN 
-
-OK ? (y/n, default=y)
-"
-
-   read_answer_with_default  y
-   if [ $answer != "y" ]; then
-      echo "OK quitting."
-      exit 1
-   fi
-   echo "
-Starting kmer_prism.py...
-"
-   echo "snakemake --profile config/slurm/legacy --snakefile workflow/2_kmer_prism.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN "
-   source activate snakemake
-   snakemake --profile config/slurm/legacy --snakefile workflow/2_kmer_prism.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN | tee $OUTPUT_ROOT/logs/fastqc.smk.log
-   conda deactivate
-
-
-### kraken2 rule ###
-
-#       echo "
-# about to run kraken2 using:
-
-# snakemake --profile config/slurm/legacy --snakefile workflow/TODO.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN 
-
-# OK ? (y/n, default=y)
-# "
-
-#    read_answer_with_default  y
-#    if [ $answer != "y" ]; then
-#       echo "OK quitting"
-#       exit 1
-#    fi
-#    echo "
-# Starting kraken2...
-
-#    "
-#    echo "snakemake --profile config/slurm/legacy --snakefile workflow/TODO.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN " | tee > $OUTPUT_ROOT/logs/bclconvert.smk.log
-#    source activate snakemake
-#    snakemake --profile config/slurm/legacy --snakefile workflow/TODO.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN > $OUTPUT_ROOT/logs/fastqc.smk.log
-#    conda deactivate
-
-
-### MultiQC rule ###
-
-      echo "
-about to run MultiQC using:
-
-snakemake --profile config/slurm/legacy --snakefile workflow/3_multiQC.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN 
-
-OK ? (y/n, default=y)
-"
-
-   read_answer_with_default  y
-   if [ $answer != "y" ]; then
-      echo "OK quitting"
-      exit 1
-   fi
-   echo "
-Starting MultiQC...
-
-   "
-   echo "snakemake --profile config/slurm/legacy --snakefile workflow/3_multiQC.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN" 
-   source activate snakemake
-   snakemake --profile config/slurm/legacy --snakefile workflow/3_multiQC.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN | tee $OUTPUT_ROOT/logs/multiqc.smk.log
-   conda deactivate
-
-}
-
-function run_dedupe() {
-   ls $OUTPUT_ROOT/SampleSheet/bclconvert/*.fastq.gz | grep -vi Undetermined > $OUTPUT_ROOT/SampleSheet/files_to_dedupe.txt
-
-   echo "
-   About to start dedupe using : 
-
-   $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a dedupe -D \"dedupe optical dupedist=15000 subs=0\" -T /dataset/gseq_processing/itmp/illumina -O $OUTPUT_ROOT/SampleSheet \`cat $OUTPUT_ROOT/SampleSheet/files_to_dedupe.txt\`  > $OUTPUT_ROOT/SampleSheet/dedupe.log 2>&1
-
-OK ? (y/n, default=y)
-   "
-   read_answer_with_default y
-   if [ $answer != "y" ]; then
-      echo "OK quitting"
-      exit 1
-   fi
-   echo "
-
-   running dedupe
-
-   "
-   echo "
-   export SEQ_PRISMS_BIN=/dataset/gseq_processing/active/bin/wgs_prism/seq_prisms
-   export WGS_PRISM_BIN=/dataset/gseq_processing/active/bin/wgs_prism
-
-   $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a dedupe -D \"dedupe optical dupedist=15000 subs=0\" -T /dataset/gseq_processing/itmp/illumina -O $OUTPUT_ROOT/SampleSheet \`cat $OUTPUT_ROOT/SampleSheet/files_to_dedupe.txt\`  > $OUTPUT_ROOT/SampleSheet/dedupe.log 2>&1
-   " > $OUTPUT_ROOT/SampleSheet/restart_dedupe.src
-
-   echo "
-
-   running dedupe (to restart or rerun this step , you can 
-  
-   source $OUTPUT_ROOT/SampleSheet/restart_dedupe.src
-
-   -this should take about an hour 
-   "
-   $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a dedupe -D "dedupe optical dupedist=15000 subs=0" -T /dataset/gseq_processing/itmp/illumina -O $OUTPUT_ROOT/SampleSheet `cat $OUTPUT_ROOT/SampleSheet/files_to_dedupe.txt`  > $OUTPUT_ROOT/SampleSheet/dedupe.log 2>&1
-
-   if [ $? != 0 ]; then
-
-      if [ $INTERACTIVE != yes ]; then
-         send_mail "sorry dedupe for $RUN exited with an error code"
-      fi
-
-      echo "
-
-      dedupe has finished but received a non zero process exit code from sequencing_qc_prism - do
-      you want to continue ? (y/n, default = n)
-      "
-      read_answer_with_default n
-      if [ $answer != "y" ]; then
-         echo "OK quitting"
-         exit 1
-      fi
-   fi
-
-}
-
+# snakemake variables
+SMK_CONFIG_DIR="config/slurm/legacy"
 
 function get_run_opts() {
 
@@ -545,7 +46,7 @@ function get_run_opts() {
    ####### get and check RUN
    while [ 1 ] ; do
       echo "
-please give the full name of wgs run you would like to process (e.g. 210712_A01439_0006_AHC7MJDRXY (novaseq) 
+please give the full name of wgs run you would like to process ( e.g. 210712_A01439_0006_AHC7MJDRXY (novaseq) ):
 
 "
       read_answer_with_default $ARGRUN
@@ -596,7 +97,8 @@ please give the full name of wgs run you would like to process (e.g. 210712_A014
       run_info_phrase="-i $wgs_ROOT/$RUN/RunInfo.xml"
    fi
 
-   ####### find the sample sheet  - e.g. could be HNFW2DRXY.csv or SampleSheet.csv
+####### find the sample sheet  - e.g. could be HNFW2DRXY.csv or SampleSheet.csv
+
    SAMPLE_SHEET=$SEQ_ROOT/$RUN/SampleSheet.csv
    if [ ! -f $SAMPLE_SHEET ]; then
       SAMPLE_SHEET=`ls $SEQ_ROOT/$RUN/*.csv 2>/dev/null`  
@@ -727,6 +229,509 @@ checking for deduped data (looking for $OUTPUT_ROOT/SampleSheet/dedupe/*.fastq.g
    fi
 
 }
+
+function send_mail() {
+   message="$1"
+   echo "sending mail"
+   echo "" | mutt -s "$message" vanstijnt , mccullocha, bairdh, perrybe, andersonr, andrewsa, henryh, frenchm, hicklandm
+}
+
+
+function read_answer_with_default() {
+   if [ $INTERACTIVE == yes ]; then
+      read answer
+      echo "User response: $answer"
+      echo
+      if [ -z "$answer" ]; then
+         answer=$@
+         echo "Default response: $answer"
+         echo
+      fi
+   else
+      answer=$@
+      echo "Default response: $answer"
+      echo
+   fi
+}
+
+function more_with_default() {
+   if [ $INTERACTIVE == yes ]; then
+      more $1
+   else
+      cat $1
+   fi
+}
+
+function get_opts() {
+   INTERACTIVE=no
+   INTERACTIVE_OPT=""
+   ARGRUN=""
+   help_text="
+This script is called by run_wgs_qc (or non-interactively by a cron job).
+Usage :\n
+"
+   while getopts ":hir:" opt; do
+   case $opt in
+       h)
+         echo -e $help_text
+         exit 0
+         ;;
+       i)
+         INTERACTIVE=yes
+         INTERACTIVE_OPT="-i"
+         ;;
+       r)
+         ARGRUN=$OPTARG
+         ;;
+       \?)
+         echo "Invalid option: -$OPTARG" >&2
+         exit 1
+         ;;
+       :)
+         echo "Option -$OPTARG requires an argument." >&2
+         exit 1
+         ;;
+     esac
+   done
+
+   shift $((OPTIND-1))
+
+   wgs_version=$1
+}
+
+
+
+function run_bclconvert() {
+
+   # Depricated test, bcl-convert now run on nodes
+   # if [ $HOSTNAME != $BCLCONVERT_NODE ]; then
+   #    echo "Sorry you need to be logged on to iramohio-01 to run bclconvert."
+   #    exit 1
+   # fi
+
+   echo "
+
+Checking run is completed (i.e. looking for $SEQ_ROOT/$RUN/RTAComplete.txt).
+
+"
+   if [ ! -f $SEQ_ROOT/$RUN/RTAComplete.txt ]; then
+      echo "warning: landmark file $SEQ_ROOT/$RUN/RTAComplete.txt does not exist => this run has not completed sequencing (or uploading?) - are you SURE you want to continue !? (y/n default n)"
+      read_answer_with_default n
+      if [ $answer != "y" ]; then
+         echo "OK quitting."
+         exit 1
+      else
+         echo "OK will continue but note that output may be incomplete."
+      fi
+   fi
+
+   bclconvert_phrase="" # not currently used - previously used to pass in bcl2fastq options 
+   samplesheet_to_fastqnames_phrase=""
+
+   # set up for bclconvert run
+   mkdir -p $OUTPUT_ROOT/SampleSheet
+   mkdir -p $OUTPUT_ROOT/logs
+
+   if [ ! -d $OUTPUT_ROOT/SampleSheet ]; then
+      echo "error: could not create bclconvert output folder $OUTPUT_ROOT/SampleSheet -- quitting."
+      exit 1
+   fi
+
+   ####### ensure sample sheet used for bclconvert contains header, and includes specification of adapter
+   # (but allow user to customise )
+   #
+   if [ ! -f $OUTPUT_ROOT/SampleSheet.csv ]; then
+      cat $SAMPLE_SHEET | $WGS_PRISM_BIN/workflow/scripts/add_sample_sheet_header.py -H  $WGS_PRISM_BIN/resources/sample_sheet_header.csv  > $OUTPUT_ROOT/SampleSheet.csv
+   fi
+
+   echo "
+Will use sample sheet $OUTPUT_ROOT/SampleSheet.csv as follows  -- please review: 
+
+***** Some points to note *****
+*
+* The sample sheet has been minimally checked and filtered by $WGS_PRISM_BIN/workflow/scripts/add_sample_sheet_header.py - e.g. setting Adapter1 updated to AdapterRead1.
+* The following common requirements are not checked. (If you need to include these or other settings, just answer "n" to the next prompt, and 
+* manually edit $OUTPUT_ROOT/SampleSheet.csv)
+*
+* - if this is a paired end run, you will need to also add AdapterRead2 setting
+* - if you need to specify more than one adapter, they all go on the same line concatenated with +
+* - you may sometimes need to demultiplex in multiple passes, each with different utilisation of cycles  - e.g.
+* [Settings]
+* OverrideCycles,N1Y150;I10;I10;N1Y150
+* OverrideCycles,Y101;I8N11;I8;Y101,,,,,,,,
+* OverrideCycles,Y151;I8N2;I8;Y151,,,,,,,,
+* OverrideCycles,Y101;I10;I8N2,,,,,,,,
+*
+* - Trimming T-overhang options for the Illumina Stranded mRNA and Illumina Stranded Total RNA workflows
+*   Ref https://support.illumina.com/bulletins/2020/06/trimming-t-overhang-options-for-the-illumina-rna-library-prep-wo.html
+*   But note that Read1StartFromCycle is deprecated, instead use OverrideCycles. For example if RunInfo.xml has 
+*   <Read Number=1 NumCycles=151 IsIndexedRead=N/>
+*   <Read Number=2 NumCycles=10 IsIndexedRead=Y/>
+*   <Read Number=3 NumCycles=10 IsIndexedRead=Y/>
+*   <Read Number=4 NumCycles=151 IsIndexedRead=N/>
+*   Then to trim overhang, use 
+* [Settings]
+* OverrideCycles,N1Y150;I10;I10;N1Y150
+*
+* - UMI demultiplexing : ref https://knowledge.illumina.com/software/on-premises-software/software-on-premises-software-reference_material-list/000007337
+* An example for handling mixed UMI-index reads :  
+* [Settings],,,,,,,,,
+* AdapterRead1,CTGTCTCTTATACACATCT,,,,,,,,
+* AdapterRead2,CTGTCTCTTATACACATCT,,,,,,,,
+* OverrideCycles,Y101;I8U11;I8;Y101,,,,,,,,
+* CreateFastqForIndexReads,1,,,,,,,,
+* TrimUMI,0,,,,,,,,
+*
+* (if the indexes are supplied with N masking for the UMI, remove those)
+*
+*******************************
+
+"
+
+   echo "Press Enter to review sample sheet:"
+   read_answer_with_default ""
+
+   vim $OUTPUT_ROOT/SampleSheet.csv
+   echo "
+If this is OK ? answer y (or just press enter):
+   "
+   read_answer_with_default y
+   if [ $answer != "y" ]; then
+      echo "
+OK quitting.
+
+(please edit $OUTPUT_ROOT/SampleSheet.csv and try again)"
+      exit 1
+   fi 
+
+   
+   ###### ensure output folder does not exist
+   if [ -d $OUTPUT_ROOT/SampleSheet/bclconvert ]; then
+      echo "
+error: $OUTPUT_ROOT/SampleSheet/bclconvert already exists - please clean up and retry."
+      exit 1
+   fi
+
+   # remove the make target if it exists
+   rm -f $OUTPUT_ROOT/SampleSheet/SampleSheet.csv.bclconvert
+
+   # echo "about to run bclconvert using:
+   # $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a bclconvert $run_info_phrase -I $SEQ_ROOT/$RUN -B \"$bclconvert_phrase\" -Q \"$samplesheet_to_fastqnames_phrase\" -O $OUTPUT_ROOT/SampleSheet $OUTPUT_ROOT/SampleSheet.csv  > $OUTPUT_ROOT/SampleSheet/bclconvert.log  2>&1
+   # OK ? (y/n, default=y)
+   # "
+
+   echo "
+About to run bclconvert using:
+
+snakemake --profile $SMK_CONFIG_DIR --snakefile workflow/1_bclconvert.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN
+
+OK ? (y/n, default=y):
+"
+
+   read_answer_with_default  y
+   if [ $answer != "y" ]; then
+      echo "OK quitting."
+      exit 1
+   fi
+   echo "
+Starting bclconvert...
+
+"
+   echo "snakemake --profile $SMK_CONFIG_DIR --snakefile workflow/1_bclconvert.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN "
+   source activate snakemake
+   snakemake --profile $SMK_CONFIG_DIR --snakefile workflow/1_bclconvert.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN > $OUTPUT_ROOT/logs/bclconvert.smk.log
+   conda deactivate
+
+   if [ $? != 0 ]
+   then
+
+      # bad code but might ignore that if we have sequence data
+      ls -lR $OUTPUT_ROOT/SampleSheet/bclconvert 2>/dev/null | grep "fastq.gz"   > /dev/null 2>&1
+
+      if [ $? == 0 ]; then
+         echo "warning: bclconvert exit code was non-zero, but it did generate fastq data. "
+      else
+         if [ $INTERACTIVE != yes ]; then
+            send_mail "Sorry bclconvert for $RUN exited with an error code and no fastq data was generated."
+         fi
+         echo "error: bclconvert exit code was non-zero and no sequence data generated. "
+         echo "(suggest check $OUTPUT_ROOT/SampleSheet/bcl-convert.log)"
+         exit 1
+      fi
+
+      echo "
+
+bcl-convert has finished but received a non-zero exit code, though did generate fastq data so might be OK. 
+
+Do you want to continue ? (y/n, default = y):
+"
+      read_answer_with_default y 
+      if [ $answer != "y" ]; then
+         echo "OK quitting"
+         exit 1
+      fi
+
+   fi
+   
+
+   if [ $INTERACTIVE != yes ]; then
+      send_mail "(bclconvert for $RUN has completed - fastq data is now available)"
+   fi
+
+   echo "
+
+bclconvert completed.
+
+   "
+}
+
+function find_barcodes() {
+   # get the number of barcodes
+   num_barcodes=`gquery -t barcodes -p dump $OUTPUT_ROOT/SampleSheet.csv 2>/dev/null | wc -w`
+   echo "reviewing $num_barcodes barcodes and reverse complements in sample sheet . . . (press enter to continue)
+
+   "
+   read_answer_with_default x
+   
+   gquery -t barcodes -v -p reverse $OUTPUT_ROOT/SampleSheet.csv 2>/dev/null | more  
+
+   echo "
+   
+
+   looking for the above in unknown barcodes report . . . . (press enter to continue)
+   "
+   read_answer_with_default x
+
+   rm -f $OUTPUT_ROOT/SampleSheet/bclconvert/Reports/found_codes.tmp
+   for code in `gquery -t barcodes -p dump $OUTPUT_ROOT/SampleSheet.csv 2>/dev/null`; do 
+      grep -H $code $OUTPUT_ROOT/SampleSheet/bclconvert/Reports/Top_Unknown_Barcodes.csv >> $OUTPUT_ROOT/SampleSheet/bclconvert/Reports/found_codes.tmp 
+   done
+   sort -u -t, -n -r -k6,6 $OUTPUT_ROOT/SampleSheet/bclconvert/Reports/found_codes.tmp | head -$num_barcodes > $OUTPUT_ROOT/SampleSheet/bclconvert/Reports/found_codes
+   rm -f $OUTPUT_ROOT/SampleSheet/bclconvert/Reports/found_codes.tmp
+
+   num_found=`cat $OUTPUT_ROOT/SampleSheet/bclconvert/Reports/found_codes | wc -l`
+   if [ $num_found == "0" ]; then
+      echo "sorry no codes in the unknown codes report match anything obvious in SampleSheet.csv (i.e. codes or their reverse complement)
+      "
+   else
+      echo "
+the following unknown barcode combinations from bclconvert contain a code matching a code or its reverse complement in SampleSheet.csv:
+      "
+      more $OUTPUT_ROOT/SampleSheet/bclconvert/Reports/found_codes 
+      echo "
+
+the above list of unknown barcode combinations where at least one code matches a code or its reverse complement in the sample-sheet, is saved in $OUTPUT_ROOT/SampleSheet/bclconvert/Reports/found_codes
+  
+to summarise the barcodes in the sample-sheet, use:
+
+   gquery -t barcodes -v -p reverse $OUTPUT_ROOT/SampleSheet.csv
+ 
+"
+   fi
+}
+
+
+function review_enriched_seqs() {
+
+   ADAPTERS_FILE=/stash/miniconda3/envs/bifo-essential/opt/fastqc-0.11.8/Configuration/adapter_list.txt # use the fastqc one
+   CONTAMINANTS_FILE=/stash/miniconda3/envs/bifo-essential/opt/fastqc-0.11.8/Configuration/contaminant_list.txt  # use the fastqc one
+
+   # custom files includes Ag GBS barcode file and potentially others
+   CUSTOM_ADAPTERS_FILES=/dataset/gseq_processing/active/bin/gquery/database/t_BarcodePlates.csv
+   CUSTOM_CONTAMINANTS_FILES=""
+
+   echo "running cat $ADAPTERS_FILE $CONTAMINANTS_FILE $CUSTOM_ADAPTERS_FILES $CUSTOM_CONTAMINANTS_FILES | $GBS_PRISM_BIN/workflow/scripts/reconcile_contaminants.py $OUTPUT_ROOT/logs/2.2.3_run_kmer_prism.pickle* | head -30 ...."
+
+   cat $ADAPTERS_FILE $CONTAMINANTS_FILE $CUSTOM_ADAPTERS_FILES $CUSTOM_CONTAMINANTS_FILES | $GBS_PRISM_BIN/workflow/scripts/reconcile_contaminants.py $OUTPUT_ROOT/logs/2.2.3_run_kmer_prism.pickle* | head -30
+
+}
+
+
+function run_lane_qc() {
+#    while [ 1 ] ; do
+#       echo "
+# Please enter how long to allow for fastqc - or just press enter to accept default ( $FASTQC_WALL minutes ): 
+# "
+#       read_answer_with_default $FASTQC_WALL
+#       FASTQC_WALL=$answer
+#       python -c "print int('$FASTQC_WALL')" >/dev/null 2>&1
+#       if [ $? != 0 ]; then
+#          echo "error: looks like time requested ( $FASTQC_WALL ) is not a number."
+#       else
+#          break
+#       fi
+#    done
+
+   echo "
+
+Finding sequence files for fastqc.
+"
+   mkdir -p $OUTPUT_ROOT/SampleSheet
+   mkdir -p $OUTPUT_ROOT/logs
+   find $OUTPUT_ROOT/SampleSheet/bclconvert -name "*.fastq.gz" -size +1000c -print | grep -vi Undetermined > $OUTPUT_ROOT/SampleSheet/sequence_files.txt
+   return_code=$?
+
+   find $OUTPUT_ROOT/SampleSheet/bclconvert -name "*.fastq.gz" -type l -print | grep -vi Undetermined >> $OUTPUT_ROOT/SampleSheet/sequence_files.txt
+   
+   if [[ ( $return_code != 0 ) && (  $? != 0 ) ]]; then
+      echo "error: oops could not find any .fastq.gz files ( or links to fastq files) under $OUTPUT_ROOT/SampleSheet/bclconvert - quiting."
+      exit 1
+   fi  
+
+### fastqc rule ###
+
+      echo "
+About to run fastqc using:
+
+snakemake --profile $SMK_CONFIG_DIR --snakefile workflow/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN 
+
+OK ? (y/n, default=y):
+"
+
+   read_answer_with_default  y
+   if [ $answer != "y" ]; then
+      echo "OK quitting."
+      exit 1
+   fi
+   echo "
+Starting fastqc...
+"
+   echo "snakemake --profile $SMK_CONFIG_DIR --snakefile workflow/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN "
+   source activate snakemake
+   snakemake --profile $SMK_CONFIG_DIR --snakefile workflow/2_fastqc.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN | tee $OUTPUT_ROOT/logs/fastqc.smk.log
+   conda deactivate
+
+### kmer_prism.py rule ###
+
+      echo "about to run kmer_prism.py using:
+
+snakemake --profile $SMK_CONFIG_DIR --snakefile workflow/2_kmer_prism.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN 
+
+OK ? (y/n, default=y)
+"
+
+   read_answer_with_default  y
+   if [ $answer != "y" ]; then
+      echo "OK quitting."
+      exit 1
+   fi
+   echo "
+Starting kmer_prism.py...
+"
+   echo "snakemake --profile $SMK_CONFIG_DIR --snakefile workflow/2_kmer_prism.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN "
+   source activate snakemake
+   snakemake --profile $SMK_CONFIG_DIR --snakefile workflow/2_kmer_prism.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN | tee $OUTPUT_ROOT/logs/fastqc.smk.log
+   conda deactivate
+
+
+### kraken2 rule ###
+
+#       echo "
+# about to run kraken2 using:
+
+# snakemake --profile $SMK_CONFIG_DIR --snakefile workflow/TODO.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN 
+
+# OK ? (y/n, default=y)
+# "
+
+#    read_answer_with_default  y
+#    if [ $answer != "y" ]; then
+#       echo "OK quitting"
+#       exit 1
+#    fi
+#    echo "
+# Starting kraken2...
+
+#    "
+#    echo "snakemake --profile $SMK_CONFIG_DIR --snakefile workflow/TODO.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN " | tee > $OUTPUT_ROOT/logs/bclconvert.smk.log
+#    source activate snakemake
+#    snakemake --profile $SMK_CONFIG_DIR --snakefile workflow/TODO.smk --config fastqc_walltime=$FASTQC_WALL OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN > $OUTPUT_ROOT/logs/fastqc.smk.log
+#    conda deactivate
+
+
+### MultiQC rule ###
+
+      echo "
+about to run MultiQC using:
+
+snakemake --profile $SMK_CONFIG_DIR --snakefile workflow/3_multiQC.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN 
+
+OK ? (y/n, default=y)
+"
+
+   read_answer_with_default  y
+   if [ $answer != "y" ]; then
+      echo "OK quitting"
+      exit 1
+   fi
+   echo "
+Starting MultiQC...
+
+   "
+   echo "snakemake --profile $SMK_CONFIG_DIR --snakefile workflow/3_multiQC.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN" 
+   source activate snakemake
+   snakemake --profile $SMK_CONFIG_DIR --snakefile workflow/3_multiQC.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN | tee $OUTPUT_ROOT/logs/multiqc.smk.log
+   conda deactivate
+
+}
+
+function run_dedupe() {
+   ls $OUTPUT_ROOT/SampleSheet/bclconvert/*.fastq.gz | grep -vi Undetermined > $OUTPUT_ROOT/SampleSheet/files_to_dedupe.txt
+
+   echo "
+   About to start dedupe using : 
+
+   $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a dedupe -D \"dedupe optical dupedist=15000 subs=0\" -T /dataset/gseq_processing/itmp/illumina -O $OUTPUT_ROOT/SampleSheet \`cat $OUTPUT_ROOT/SampleSheet/files_to_dedupe.txt\`  > $OUTPUT_ROOT/SampleSheet/dedupe.log 2>&1
+
+OK ? (y/n, default=y)
+   "
+   read_answer_with_default y
+   if [ $answer != "y" ]; then
+      echo "OK quitting"
+      exit 1
+   fi
+   echo "
+
+   running dedupe
+
+   "
+   echo "
+   export SEQ_PRISMS_BIN=/dataset/gseq_processing/active/bin/wgs_prism/seq_prisms
+   export WGS_PRISM_BIN=/dataset/gseq_processing/active/bin/wgs_prism
+
+   $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a dedupe -D \"dedupe optical dupedist=15000 subs=0\" -T /dataset/gseq_processing/itmp/illumina -O $OUTPUT_ROOT/SampleSheet \`cat $OUTPUT_ROOT/SampleSheet/files_to_dedupe.txt\`  > $OUTPUT_ROOT/SampleSheet/dedupe.log 2>&1
+   " > $OUTPUT_ROOT/SampleSheet/restart_dedupe.src
+
+   echo "
+
+   running dedupe (to restart or rerun this step , you can 
+  
+   source $OUTPUT_ROOT/SampleSheet/restart_dedupe.src
+
+   -this should take about an hour 
+   "
+   $SEQ_PRISMS_BIN/sequencing_qc_prism.sh -a dedupe -D "dedupe optical dupedist=15000 subs=0" -T /dataset/gseq_processing/itmp/illumina -O $OUTPUT_ROOT/SampleSheet `cat $OUTPUT_ROOT/SampleSheet/files_to_dedupe.txt`  > $OUTPUT_ROOT/SampleSheet/dedupe.log 2>&1
+
+   if [ $? != 0 ]; then
+
+      if [ $INTERACTIVE != yes ]; then
+         send_mail "sorry dedupe for $RUN exited with an error code"
+      fi
+
+      echo "
+
+      dedupe has finished but received a non zero process exit code from sequencing_qc_prism - do
+      you want to continue ? (y/n, default = n)
+      "
+      read_answer_with_default n
+      if [ $answer != "y" ]; then
+         echo "OK quitting"
+         exit 1
+      fi
+   fi
+
+}
+
 
 get_opts "$@"
 get_run_opts

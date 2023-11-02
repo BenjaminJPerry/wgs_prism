@@ -60,7 +60,7 @@ rule run_bclconvert:
         "docker://nfcore/bclconvert:3.9.3"
     benchmark:
         bclconvert_benchmark
-    threads: 24
+    threads: 36
     resources:
         mem_gb = lambda wildcards, attempt: 24 + ((attempt - 1) * 32),
         time = lambda wildcards, attempt: 120 + ((attempt - 1) * 120),
