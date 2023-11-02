@@ -15,7 +15,7 @@ default-resources:
   - account="2023_sequence_production"
   - partition=compute
   - time=120
-  - mem_gb=8
+  - mem_gb=48
 restart-times: 0
 local-cores: 6
 latency-wait: 6000

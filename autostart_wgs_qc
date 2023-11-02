@@ -79,13 +79,13 @@ function send_mail() {
 
 function get_run_folder() {
    #try novaseq
-   RUN_FOLDER=/dataset/2023_illumina_sequencing_c/active/$ARGRUN
+   RUN_FOLDER=/agr/persist/projects/2023_illumina_sequencing_d/$ARGRUN
    if [ ! -d $RUN_FOLDER ]; then
       # try iseq
-      RUN_FOLDER=/dataset/hiseq/active/$ARGRUN
+      RUN_FOLDER=/agr/persist/projects/2023_illumina_sequencing_d/$ARGRUN
       if [ ! -d $RUN_FOLDER ]; then 
          # try miseq
-         RUN_FOLDER=/dataset/miseq/active/$ARGRUN
+         RUN_FOLDER=/agr/persist/projects/2023_illumina_sequencing_d/$ARGRUN
          if [ ! -d $RUN_FOLDER ]; then
             echo "Sorry could not find run folder for $ARGRUN ! - giving up"
             exit 1

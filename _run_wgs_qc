@@ -436,6 +436,7 @@ Starting bclconvert...
 "
    echo "snakemake --profile $SMK_CONFIG_DIR --snakefile workflow/1_bclconvert.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN "
    source activate snakemake
+   export PATH=/agr/persist/apps/bin:$PATH
    snakemake --profile $SMK_CONFIG_DIR --snakefile workflow/1_bclconvert.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN > $OUTPUT_ROOT/logs/bclconvert.smk.log
    conda deactivate
 
@@ -545,20 +546,6 @@ function review_enriched_seqs() {
 
 
 function run_lane_qc() {
-#    while [ 1 ] ; do
-#       echo "
-# Please enter how long to allow for fastqc - or just press enter to accept default ( $FASTQC_WALL minutes ): 
-# "
-#       read_answer_with_default $FASTQC_WALL
-#       FASTQC_WALL=$answer
-#       python -c "print int('$FASTQC_WALL')" >/dev/null 2>&1
-#       if [ $? != 0 ]; then
-#          echo "error: looks like time requested ( $FASTQC_WALL ) is not a number."
-#       else
-#          break
-#       fi
-#    done
-
    echo "
 
 Finding sequence files for fastqc.

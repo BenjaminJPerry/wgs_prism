@@ -56,14 +56,12 @@ rule run_bclconvert:
         top_unknown = top_unknown_path
     log:
         bclconvert_log
-    singularity:
-        "docker://nfcore/bclconvert:3.9.3"
     benchmark:
         bclconvert_benchmark
     threads: 36
     resources:
-        mem_gb = lambda wildcards, attempt: 24 + ((attempt - 1) * 32),
-        time = lambda wildcards, attempt: 120 + ((attempt - 1) * 120),
+        mem_gb = lambda wildcards, attempt: 128 + ((attempt - 1) * 32),
+        time = lambda wildcards, attempt: 480 + ((attempt - 1) * 120),
     shell:
         """
         
