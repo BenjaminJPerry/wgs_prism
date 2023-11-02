@@ -1,15 +1,16 @@
 #!/bin/sh
 
 function get_pipeline() {
-   export SEQ_PRISMS_BIN=/dataset/gseq_processing/active/bin/wgs_prism/seq_prisms
-   export WGS_PRISM_BIN=/home/perrybe/wgs_prism2
+   
+   export WGS_PRISM_BIN=/home/perrybe/wgs_prism2 # TODO Updated on system configuration
    cd $WGS_PRISM_BIN
+   
    wgs_version=$1
 
    echo "preparing to run wgs qc pipeline version $wgs_version (press enter to continue)"
    read answer
    is_alpha=`echo $wgs_version | grep alpha`
-   if [ $is_alpha ]; then # reversed logis by removing !
+   if [ $is_alpha ]; then # reversed logic by removing !
       git checkout -q $wgs_version 
       if [ $? != 0 ]; then
          echo "unable to checkout pipeline version $wgs_version"

@@ -1,28 +1,26 @@
 #!/bin/sh
 #
-# master interactive script for processing a novaseq run through bclconvert , database imports and GBS analysis
+# master interactive script for processing a novaseq run through bclconvert 
 #
 
-export SEQ_PRISMS_BIN=/dataset/gseq_processing/active/bin/wgs_prism/seq_prisms 
-
-
 export WGS_PRISM_BIN=/home/perrybe/wgs_prism2 #TODO Updated after testing
-export GBS_PRISM_BIN=/dataset/gseq_processing/active/bin/gbs_prism
-
-#BCLCONVERT_NODE=invbfopp10.agresearch.co.nz   # iramohio-01
-
-ADAPTERS_FILE=/stash/miniconda3/envs/bifo-essential/opt/fastqc-0.11.8/Configuration/adapter_list.txt # use the fastqc one
-CONTAMINANTS_FILE=/stash/miniconda3/envs/bifo-essential/opt/fastqc-0.11.8/Configuration/contaminant_list.txt  # use the fastqc one
-
-# custom files includes Ag GBS barcode file and potentially others
-CUSTOM_ADAPTERS_FILES=/dataset/gseq_processing/active/bin/gquery/database/t_BarcodePlates.csv
-CUSTOM_CONTAMINANTS_FILES=""
-
+# snakemake variables
+SMK_CONFIG_DIR="config/slurm/legacy"
 # default walltime for fastqc in minutes
 FASTQC_WALL=120
 
-# snakemake variables
-SMK_CONFIG_DIR="config/slurm/legacy"
+
+### Currently deprecated ###
+export SEQ_PRISMS_BIN=/dataset/gseq_processing/active/bin/wgs_prism/seq_prisms 
+export GBS_PRISM_BIN=/dataset/gseq_processing/active/bin/gbs_prism
+#BCLCONVERT_NODE=invbfopp10.agresearch.co.nz   # iramohio-01
+ADAPTERS_FILE=/stash/miniconda3/envs/bifo-essential/opt/fastqc-0.11.8/Configuration/adapter_list.txt # use the fastqc one
+CONTAMINANTS_FILE=/stash/miniconda3/envs/bifo-essential/opt/fastqc-0.11.8/Configuration/contaminant_list.txt  # use the fastqc one
+# custom files includes Ag GBS barcode file and potentially others
+CUSTOM_ADAPTERS_FILES=/dataset/gseq_processing/active/bin/gquery/database/t_BarcodePlates.csv
+CUSTOM_CONTAMINANTS_FILES=""
+############################
+
 
 function get_run_opts() {
 
