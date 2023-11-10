@@ -31,7 +31,7 @@ function get_run_opts() {
    SNP_ENGINE=tassel        # the only one supported at this point
 
    SEQ_ROOT=/agr/persist/projects/2023_illumina_sequencing_d
-   SEQ_BCLCONVERT_ROOT=/agr/persist/projects/2023_illumina_sequencing_d/postprocessing/illumina/novaseq
+   SEQ_BCLCONVERT_ROOT=/agr/scratch/projects/2023_illumina_sequencing_d/postprocessing/illumina/novaseq
    mkdir -p $SEQ_BCLCONVERT_ROOT
 
 
@@ -59,7 +59,7 @@ please give the full name of wgs run you would like to process ( e.g. 210712_A01
          else 
             # try looking in other places - e.g. for iseq runs in /dataset/hiseq/active
             SEQ_ROOT=/agr/persist/projects/2023_illumina_sequencing_d
-            SEQ_BCLCONVERT_ROOT=/agr/persist/projects/2023_illumina_sequencing_d/postprocessing/illumina/iseq
+            SEQ_BCLCONVERT_ROOT=/agr/scratch/projects/2023_illumina_sequencing_d/postprocessing/illumina/iseq
             mkdir -p $SEQ_BCLCONVERT_ROOT
             if [ -d $SEQ_ROOT/$RUN ]; then
                platform=iseq
@@ -69,7 +69,7 @@ please give the full name of wgs run you would like to process ( e.g. 210712_A01
             else 
                # try miseq
                SEQ_ROOT=/agr/persist/projects/2023_illumina_sequencing_d
-               SEQ_BCLCONVERT_ROOT=/agr/persist/projects/2023_illumina_sequencing_d/postprocessing/illumina/miseq
+               SEQ_BCLCONVERT_ROOT=/agr/scratch/projects/2023_illumina_sequencing_d/postprocessing/illumina/miseq
                mkdir -p $SEQ_BCLCONVERT_ROOT
                if [ -d $SEQ_ROOT/$RUN ]; then
                   platform=miseq
@@ -79,7 +79,7 @@ please give the full name of wgs run you would like to process ( e.g. 210712_A01
                else
                   echo "sorry can't find $RUN under $SEQ_ROOT"
                   SEQ_ROOT=/agr/persist/projects/2023_illumina_sequencing_d
-                  SEQ_BCLCONVERT_ROOT=/agr/persist/projects/2023_illumina_sequencing_d/postprocessing/illumina/novaseq
+                  SEQ_BCLCONVERT_ROOT=/agr/scratch/projects/2023_illumina_sequencing_d/postprocessing/illumina/novaseq
                fi
             fi
          fi

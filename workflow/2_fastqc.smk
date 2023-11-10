@@ -55,8 +55,8 @@ rule run_fastqc:
         html = fastqc_out_samples_htmls
     log:
         fastqc_log
-    singularity:
-        'docker://biocontainers/fastqc:v0.11.9_cv8'
+    conda:
+        'envs/fastqc-0.12.1.yaml'
     benchmark:
         fastqc_benchmark
     threads: 24
