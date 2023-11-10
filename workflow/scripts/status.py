@@ -1,21 +1,22 @@
+# From Peter Maxwell @ NeSI 11-2023
 #!/usr/bin/env python
 import subprocess
 import sys
 
 jobid = sys.argv[1]
 
-output = str(subprocess.check_output("sacct -j %s --format State --noheader | head -1 | awk '{print $1}'" % jobid, shell=True).strip())
+try:
+    output = subprocess.check_output(["squeue", "-j", str(jobid), "--Format=state", "--states=ALL", "--noheader"], 
+            universal_newlines=True).strip().split()[0]
+except subprocess.CalledProcessError:
+    output = subprocess.check_output(["sacct", "-j", str(jobid), "--format=state", "--noheader"], 
+            universal_newlines=True).strip().split()[0]
 
-running_status=[ "PENDING", "CONFIGURING", "COMPLETING", "RUNNING", "SUSPENDED", "STOPPED", "SIGNALING", "RESIZING", "REQUEUED", "REQUEUE_HOLD", "REQUEUE_FED", "RESV_DEL_HOLD", "STAGE_OUT" ]
+failure_states = {"FAILED", "TIMEOUT", "OUT_OF_MEMORY", "DEADLINE", "CANCELLED"}
 
-failure_states=[ "FAILED", "PREEMPTED", "TIMEOUT", "SPECIAL_EXIT", "REVOKED", "OUT_OF_MEMORY", "NODE_FAIL", "DEADLINE", "CANCELLED", "BOOT_FAIL" ]
-
-if "COMPLETED" in output:
+if output == "COMPLETED":
     print("success")
-elif any(r in output for r in running_status):
-    print("running")
-elif any(r in output for r in failure_states):
+elif output in failure_states:
     print("failed")
 else:
     print("running")
-
