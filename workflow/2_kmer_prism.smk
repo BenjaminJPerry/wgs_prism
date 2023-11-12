@@ -179,7 +179,7 @@ checkpoint summary_QC_fasta:
     shell:
         """
         
-        seqkit stats -j {threads} -a {input.prinseqReads} > {output}
+        seqkit stats -j {threads} -a {input} > {output}
         
         """
 
