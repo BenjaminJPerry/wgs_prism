@@ -185,7 +185,7 @@ do you want to look for barcodes in the unknown barcodes report (in both orienta
    echo "checking for MultiQC summary report ...
 
 "
-   ls $OUTPUT_ROOT/SampleSheet/multic*.html  > /dev/null 2>&1
+   ls $OUTPUT_ROOT/SampleSheet/multiqc/*.multiqc.html  > /dev/null 2>&1
    if [ $? != 0 ]; then 
       echo "could not find MultiQC summary report - OK to run lane q/c ? (y/n, default=y)"
       read_answer_with_default y

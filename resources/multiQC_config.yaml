@@ -44,4 +44,4 @@ sp:
   kmer_prism_heatmap:
     fn: "*kmer_entropy.jpg"
   kmer_prism_zipfian:
-    fn: "*kmer_zipfian.jpg"
+    fn: "*kmer_zipfian_comparisons.jpg"
