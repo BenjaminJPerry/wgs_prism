@@ -225,7 +225,7 @@ def get_summary_QC_fasta_passing_pickles(wildcards, minReads = min_reads):
     qc_stats["num_seqs"] = qc_stats["num_seqs"].str.replace(",", "").astype(int)
     qc_passed = qc_stats.loc[qc_stats["num_seqs"].astype(int) > minReads]
     passed = qc_passed['file'].str.split("/").str[-1].str.split(".").str[0].tolist()
-    return expand(kmer_prism_out_samples_pickle_path, samples = passed)
+    return expand(kmer_prism_out_samples_pickle_path, sample = passed)
 
 
 def get_summary_QC_fasta_passing_fasta(wildcards, minReads = min_reads):
@@ -235,7 +235,7 @@ def get_summary_QC_fasta_passing_fasta(wildcards, minReads = min_reads):
     qc_stats["num_seqs"] = qc_stats["num_seqs"].str.replace(",", "").astype(int)
     qc_passed = qc_stats.loc[qc_stats["num_seqs"].astype(int) > minReads]
     passed = qc_passed['file'].str.split("/").str[-1].str.split(".").str[0].tolist()
-    return expand(kmer_fastq_to_fasta_out_samples_path, samples = passed)
+    return expand(kmer_fastq_to_fasta_out_samples_path, sample = passed)
 
 
 rule aggregate_kmer_spectra:
