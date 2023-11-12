@@ -32,6 +32,9 @@ fastqc_walltime: "4320"
 ## kmer_prism.py configuration defaults; passed via --config in practise ##
 #
 SAMPLE_RATE: ".005"
+
+MIN_READS: 10000
+
 KMER_PARAMETERS: "-k 6 -A"
 
 

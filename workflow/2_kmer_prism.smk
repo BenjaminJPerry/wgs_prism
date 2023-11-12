@@ -12,18 +12,6 @@ import os
 import pandas as pd
 
 
-# onstart:
-#     print(f"Working directory: {os.getcwd()}")
-#     print("TOOLS: ")
-#     os.system('echo "  bash: $(which bash)"')
-#     os.system('echo "  PYTHON: $(which python)"')
-#     os.system('echo "  CONDA: $(which conda)"')
-#     os.system('echo "  SNAKEMAKE: $(which snakemake)"')
-#     print(f"Env TMPDIR = {os.environ.get('TMPDIR', '<n/a>')}")
-#     os.system('echo "  PYTHON VERSION: $(python --version)"')
-#     os.system('echo "  CONDA VERSION: $(conda --version)"')
-
-
 wildcard_constraints: sample = "(?!Undetermined).+"
 
 ### Global variables ###
@@ -32,6 +20,7 @@ kmer_in_root = os.path.join(config["OUT_ROOT"], "SampleSheet/bclconvert")
 kmer_in_samples = os.path.join(config["OUT_ROOT"], "SampleSheet/bclconvert/{sample}.fastq.gz")
 
 (SAMPLES,) = glob_wildcards( os.path.join(kmer_in_root, "{sample,(?!Undetermined).*}.fastq.gz") )
+min_reads = config["MIN_READS"]
 
 kmer_out_root = os.path.join(config["OUT_ROOT"], "SampleSheet/kmer_analysis")
 
@@ -176,6 +165,25 @@ rule fastq_to_fasta:
         """    
 
 
+checkpoint summary_QC_fasta:
+    input:
+        expand(kmer_fastq_to_fasta_out_samples_path, sample = SAMPLE)
+    output:
+        "seqkit.downsample.summary.txt"
+    conda:
+        "envs/seqkit.yaml"
+    threads: 12
+    resources:
+        mem_gb = lambda wildcards, attempt: 8 + ((attempt - 1) * 24),
+        time = lambda wildcards, attempt: 30 + ((attempt - 1) * 60),
+    shell:
+        """
+        
+        seqkit stats -j {threads} -a {input.prinseqReads} > {output}
+        
+        """
+
+
 rule run_kmer_prism:
     input:
         kmer_fastq_to_fasta_out_samples_path,
@@ -210,10 +218,30 @@ rule run_kmer_prism:
         """
 
 
+def get_summary_QC_fasta_passing_pickles(wildcards, minReads = min_reads):
+    import pandas as pd
+    file = checkpoints.summary_QC_fasta.get().output[0]
+    qc_stats = pd.read_csv(file, delimiter = "\s+")
+    qc_stats["num_seqs"] = qc_stats["num_seqs"].str.replace(",", "").astype(int)
+    qc_passed = qc_stats.loc[qc_stats["num_seqs"].astype(int) > minReads]
+    passed = qc_passed['file'].str.split("/").str[-1].str.split(".").str[0].tolist()
+    return expand(kmer_prism_out_samples_pickle_path, samples = passed)
+
+
+def get_summary_QC_fasta_passing_fasta(wildcards, minReads = min_reads):
+    import pandas as pd
+    file = checkpoints.summary_QC_fasta.get().output[0]
+    qc_stats = pd.read_csv(file, delimiter = "\s+")
+    qc_stats["num_seqs"] = qc_stats["num_seqs"].str.replace(",", "").astype(int)
+    qc_passed = qc_stats.loc[qc_stats["num_seqs"].astype(int) > minReads]
+    passed = qc_passed['file'].str.split("/").str[-1].str.split(".").str[0].tolist()
+    return expand(kmer_fastq_to_fasta_out_samples_path, samples = passed)
+
+
 rule aggregate_kmer_spectra:
     input:
-        pickles = expand(kmer_prism_out_samples_pickle_path, sample = SAMPLES),
-        fastas = expand(kmer_fastq_to_fasta_out_samples_path, sample = SAMPLES),
+        pickles = get_summary_QC_fasta_passing_pickles,
+        fastas = get_summary_QC_fasta_passing_fasta
     output:
         summary_plus = kmer_agg_summary_plus_path,
         frequency_plus = kmer_agg_frequency_plus_path,
@@ -272,7 +300,6 @@ rule aggregate_kmer_spectra:
         """
 
 
-
 rule plot_kmer_spectra:
     input: 
         plot_data = kmer_agg_plot_data_path,
@@ -298,7 +325,7 @@ rule plot_kmer_spectra:
 
         sleep 10
 
-        rm kmer_binning.txt.*
+        rm ./kmer_binning.txt.*
 
         """
 
