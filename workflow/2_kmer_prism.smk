@@ -167,7 +167,7 @@ rule fastq_to_fasta:
 
 checkpoint summary_QC_fasta:
     input:
-        expand(kmer_fastq_to_fasta_out_samples_path, sample = SAMPLE)
+        expand(kmer_fastq_to_fasta_out_samples_path, sample = SAMPLES)
     output:
         "seqkit.downsample.summary.txt"
     conda:
