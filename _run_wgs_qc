@@ -194,6 +194,10 @@ do you want to look for barcodes in the unknown barcodes report (in both orienta
       else
          run_lane_qc
       fi
+   else
+      echo "found multiQC report: "
+      ls $OUTPUT_ROOT/SampleSheet/multiqc/*.multiqc.html
+      echo
    fi
 
 
