@@ -115,7 +115,6 @@ plot_kmer_spectra_benchmark_path = os.path.join(config["OUT_ROOT"], plot_kmer_sp
 # Beging Snakemake rule definitions
 rule targets:
     input:
-        kmer_zipfian_plot_path,
         kmer_entropy_plot_path,
         kmer_zipfian_comparison_plot_path,
         kmer_zipfian_distances_path
@@ -304,7 +303,7 @@ rule plot_kmer_spectra:
     input: 
         plot_data = kmer_agg_plot_data_path,
     output:
-        kmer_zipfian_plot = kmer_zipfian_plot_path, 
+        #kmer_zipfian_plot = kmer_zipfian_plot_path, 
         kmer_entropy_plot = kmer_entropy_plot_path, 
         kmer_zipfian_comparison_plot = kmer_zipfian_comparison_plot_path,
         kmer_zipfian_distances = kmer_zipfian_distances_path,
