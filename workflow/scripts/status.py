@@ -2,7 +2,8 @@
 
 import subprocess
 import sys
-
+# From Peter Maxwell @ NeSI 11-2023
+#
 jobid = sys.argv[1]
 
 try:
