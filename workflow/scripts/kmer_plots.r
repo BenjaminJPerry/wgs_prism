@@ -445,12 +445,12 @@ main <- function() {
       draw_missing_plot(heatmap_image_file, 800,200, "insufficient data")
    }
 
-   if ( my_ncol(mydata$entropy_data) > 1) {
-      draw_zipfian_plots(mydata, output_folder, zipfian_plot_image_file, zipfian_plots_per_row) 
-   }
-   else {
-      draw_missing_plot(zipfian_plot_image_file, 800,200, "insufficient data")
-   }
+   # if ( my_ncol(mydata$entropy_data) > 1) {
+   #    draw_zipfian_plots(mydata, output_folder, zipfian_plot_image_file, zipfian_plots_per_row) 
+   # }
+   # else {
+   #    draw_missing_plot(zipfian_plot_image_file, 800,200, "insufficient data")
+   # }
 
    return(mydata)
 }
