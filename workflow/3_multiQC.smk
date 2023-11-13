@@ -65,7 +65,7 @@ rule run_multiqc:
     log:
         multiqc_log_path
     conda:
-        "env/multiqc-1.17.yaml"
+        "envs/multiqc-1.17.yaml"
     benchmark:
         multiqc_benchmark_path
     threads: 2

@@ -1,5 +1,5 @@
-# From Peter Maxwell @ NeSI 11-2023
 #!/usr/bin/env python
+
 import subprocess
 import sys
 
