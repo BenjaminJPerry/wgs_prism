@@ -70,7 +70,7 @@ rule run_multiqc:
         multiqc_benchmark_path
     threads: 2
     resources:
-        mem_gb = lambda wildcards, attempt: 8 + ((attempt - 1) * 8),
+        mem_gb = lambda wildcards, attempt: 16 + ((attempt - 1) * 8),
         time = lambda wildcards, attempt: 30 + ((attempt - 1) * 30),
     params:
         multiqc_config = config["multiqc_config"]
