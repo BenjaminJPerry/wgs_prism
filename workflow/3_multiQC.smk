@@ -77,7 +77,7 @@ rule run_multiqc:
     shell:
         """
         
-        multiqc --outdir {multiqc_data_dir_path} --filename {output.report} --force -c {params.multiqc_config} --data-dir --data-format tsv {input.bclconvert_in} {input.fastqc_in} {input.kmer_in} > {log} 2>&1
+        multiqc --interactive --outdir {multiqc_data_dir_path} --filename {output.report} --force -c {params.multiqc_config} --data-dir --data-format tsv {input.bclconvert_in} {input.fastqc_in} {input.kmer_in} > {log} 2>&1
         
         """
         
