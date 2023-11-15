@@ -58,6 +58,8 @@ kmer_prism_root = os.path.join(config["OUT_ROOT"], "SampleSheet/kmer_run/kmer_an
 kmer_prism_out_samples_frequency = kmer_fastq_to_fasta_out_samples + "." + "kmer_prism" + "." + "frequency.txt"
 kmer_prism_out_samples_pickle = kmer_fastq_to_fasta_out_samples + "." + "kmerdist" + "." + "pickle"
 
+kmer_prism_summary_metrics = os.path.join(kmer_prism_root + "seqkit.downsample.summary.txt")
+
 kmer_prism_out_samples_frequency_path = os.path.join(kmer_prism_root, kmer_prism_out_samples_frequency)
 kmer_prism_out_samples_pickle_path = os.path.join(kmer_prism_root, kmer_prism_out_samples_pickle)
 
@@ -168,7 +170,7 @@ checkpoint summary_QC_fasta:
     input:
         expand(kmer_fastq_to_fasta_out_samples_path, sample = SAMPLES)
     output:
-        "seqkit.downsample.summary.txt"
+        kmer_prism_summary_metrics
     conda:
         "envs/seqkit.yaml"
     threads: 12
