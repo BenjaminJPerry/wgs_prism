@@ -54,13 +54,14 @@ function get_pipeline() {
    echo "running wgs qc pipeline version $wgs_version"
    is_alpha=`echo $wgs_version | grep alpha`
    if [ $is_alpha ]; then 
-      git checkout -q $wgs_version 
+      #git checkout -q $wgs_version 
+      echo
       if [ $? != 0 ]; then
          echo "unable to checkout pipeline version $wgs_version"
          exit 1
       fi
       echo "running exec ./_run_wgs_qc -r $RUN $wgs_version "
-      send_mail
+      #send_mail
       exec ./_run_wgs_qc -r $RUN $wgs_version 
    else
       echo "(no checkout for alpha versions, just running in current branch)"

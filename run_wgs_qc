@@ -11,7 +11,8 @@ function get_pipeline() {
    read answer
    is_alpha=`echo $wgs_version | grep alpha`
    if [ $is_alpha ]; then # reversed logic by removing !
-      git checkout -q $wgs_version 
+      # git checkout -q $wgs_version 
+      echo
       if [ $? != 0 ]; then
          echo "unable to checkout pipeline version $wgs_version"
          exit 1
