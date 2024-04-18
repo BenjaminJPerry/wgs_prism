@@ -13,7 +13,7 @@ cluster:
     --parsable
 default-resources:
   - account=perrybe
-  - partition=inv-iranui,inv-iranui-fast
+  - partition=inv-blade-g8,inv-blade-g8-fast,inv-iranui,inv-iranui-fast,inv-bigmem,inv-bigmem-fast
   - time=120
   - mem_gb=8
 restart-times: 0

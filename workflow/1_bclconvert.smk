@@ -56,6 +56,8 @@ rule run_bclconvert:
         top_unknown = top_unknown_path
     log:
         bclconvert_log
+    singularity:
+        "docker://nfcore/bclconvert:3.9.3"
     benchmark:
         bclconvert_benchmark
     threads: 36

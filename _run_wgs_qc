@@ -3,9 +3,9 @@
 # master interactive script for processing a novaseq run through bclconvert 
 #
 
-export WGS_PRISM_BIN=/agr/persist/projects/2023_sequence_production/wgs_prism2 #TODO Updated after testing
+export WGS_PRISM_BIN=~/wgs_prism2 #TODO Updated after testing
 # snakemake variables
-SMK_CONFIG_DIR="config/slurm/eRI"
+SMK_CONFIG_DIR="config/slurm/legacy"
 # default walltime for fastqc in minutes
 FASTQC_WALL=120
 
@@ -30,8 +30,8 @@ function get_run_opts() {
    OUT_ROOT=""
    SNP_ENGINE=tassel        # the only one supported at this point
 
-   SEQ_ROOT=/agr/persist/projects/2023_illumina_sequencing_d
-   SEQ_BCLCONVERT_ROOT=/agr/scratch/projects/2023_illumina_sequencing_d/postprocessing/illumina/novaseq
+   SEQ_ROOT=/dataset/2024_illumina_sequencing_d/active
+   SEQ_BCLCONVERT_ROOT=/dataset/2024_illumina_sequencing_d/scratch/postprocessing/illumina/novaseq
    mkdir -p $SEQ_BCLCONVERT_ROOT
 
 
@@ -58,8 +58,8 @@ please give the full name of wgs run you would like to process ( e.g. 210712_A01
             break
          else 
             # try looking in other places - e.g. for iseq runs in /dataset/hiseq/active
-            SEQ_ROOT=/agr/persist/projects/2023_illumina_sequencing_d
-            SEQ_BCLCONVERT_ROOT=/agr/scratch/projects/2023_illumina_sequencing_d/postprocessing/illumina/iseq
+            SEQ_ROOT=/dataset/2024_illumina_sequencing_d/active
+            SEQ_BCLCONVERT_ROOT=/dataset/2024_illumina_sequencing_d/scratch/postprocessing/illumina/iseq
             mkdir -p $SEQ_BCLCONVERT_ROOT
             if [ -d $SEQ_ROOT/$RUN ]; then
                platform=iseq
@@ -68,8 +68,8 @@ please give the full name of wgs run you would like to process ( e.g. 210712_A01
                break
             else 
                # try miseq
-               SEQ_ROOT=/agr/persist/projects/2023_illumina_sequencing_d
-               SEQ_BCLCONVERT_ROOT=/agr/scratch/projects/2023_illumina_sequencing_d/postprocessing/illumina/miseq
+               SEQ_ROOT=/dataset/2024_illumina_sequencing_d/active
+               SEQ_BCLCONVERT_ROOT=/dataset/2024_illumina_sequencing_d/scratch/postprocessing/illumina/iseq
                mkdir -p $SEQ_BCLCONVERT_ROOT
                if [ -d $SEQ_ROOT/$RUN ]; then
                   platform=miseq
@@ -78,8 +78,8 @@ please give the full name of wgs run you would like to process ( e.g. 210712_A01
                   break
                else
                   echo "sorry can't find $RUN under $SEQ_ROOT"
-                  SEQ_ROOT=/agr/persist/projects/2023_illumina_sequencing_d
-                  SEQ_BCLCONVERT_ROOT=/agr/scratch/projects/2023_illumina_sequencing_d/postprocessing/illumina/novaseq
+                  SEQ_ROOT=/dataset/2024_illumina_sequencing_d/active
+               	  SEQ_BCLCONVERT_ROOT=/dataset/2024_illumina_sequencing_d/scratch/postprocessing/illumina/iseq
                fi
             fi
          fi
@@ -440,7 +440,7 @@ Starting bclconvert...
 "
    echo "snakemake --profile $SMK_CONFIG_DIR --snakefile workflow/1_bclconvert.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN "
    source activate snakemake
-   export PATH=/agr/persist/apps/bin:$PATH
+   export PATH=/usr/bin/bcl-convert:$PATH
    snakemake --profile $SMK_CONFIG_DIR --snakefile workflow/1_bclconvert.smk --config OUT_ROOT=$OUTPUT_ROOT IN_ROOT=$SEQ_ROOT RUN=$RUN > $OUTPUT_ROOT/logs/bclconvert.smk.log
    conda deactivate
 

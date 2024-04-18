@@ -258,7 +258,7 @@ rule aggregate_kmer_spectra:
     threads: 8
     resources:
         mem_gb = lambda wildcards, attempt: 8 + ((attempt - 1) * 32),
-        time = lambda wildcards, attempt: 60 + ((attempt - 1) * 120),
+        time = lambda wildcards, attempt: 240 + ((attempt - 1) * 120),
     shell:
         """ 
 
@@ -312,13 +312,13 @@ rule plot_kmer_spectra:
     log:
         plot_kmer_spectra_log_path
     conda:
-        'envs/bioconductor.yaml'
+        'bioconductor'
     benchmark:
         plot_kmer_spectra_benchmark_path
     threads: 2
     resources:
-        mem_gb = lambda wildcards, attempt: 8 + ((attempt - 1) * 32),
-        time = lambda wildcards, attempt: 60 + ((attempt - 1) * 120),
+        mem_gb = lambda wildcards, attempt: 24 + ((attempt - 1) * 32),
+        time = lambda wildcards, attempt: 240 + ((attempt - 1) * 120),
     shell:
         """
 

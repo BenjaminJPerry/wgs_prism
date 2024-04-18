@@ -12,7 +12,7 @@ function read_answer_with_default() {
 function get_opts() {
    help_text="
 usage example (currently run in a screen session) :\n
-autostart_wgs_qc 230307_A01439_0152_AHVWF2DRX2 | tee /dataset/2023_illumina_sequencing_c/scratch/postprocessing/autostart_logs/230623_A01439_0188_AHFFGNDRX3.log \n
+autostart_wgs_qc 230307_A01439_0152_AHVWF2DRX2 | tee /dataset/2024_illumina_sequencing_d/scratch/postprocessing/autostart_logs/230623_A01439_0188_AHFFGNDRX3.log \n
 "
    while getopts ":h" opt; do
    case $opt in
@@ -47,7 +47,7 @@ function get_pipeline() {
    wgs_version=$1
    RUN=$2 
 
-   export WGS_PRISM_BIN=/agr/persist/projects/2023_sequence_production/wgs_prism2
+   export WGS_PRISM_BIN=~/wgs_prism2
 
    cd $WGS_PRISM_BIN
 
@@ -80,13 +80,13 @@ function send_mail() {
 
 function get_run_folder() {
    #try novaseq
-   RUN_FOLDER=/agr/persist/projects/2023_illumina_sequencing_d/$ARGRUN
+   RUN_FOLDER=/dataset/2024_illumina_sequencing_d/active/$ARGRUN
    if [ ! -d $RUN_FOLDER ]; then
       # try iseq
-      RUN_FOLDER=/agr/persist/projects/2023_illumina_sequencing_d/$ARGRUN
+      RUN_FOLDER=/dataset/2024_illumina_sequencing_d/active/$ARGRUN
       if [ ! -d $RUN_FOLDER ]; then 
          # try miseq
-         RUN_FOLDER=/agr/persist/projects/2023_illumina_sequencing_d/$ARGRUN
+         RUN_FOLDER=/dataset/2024_illumina_sequencing_d/active/$ARGRUN
          if [ ! -d $RUN_FOLDER ]; then
             echo "Sorry could not find run folder for $ARGRUN ! - giving up"
             exit 1

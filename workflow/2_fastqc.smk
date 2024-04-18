@@ -59,10 +59,11 @@ rule run_fastqc:
         'envs/fastqc-0.12.1.yaml'
     benchmark:
         fastqc_benchmark
-    threads: 24
+    threads: 12
     resources:
-        mem_gb = lambda wildcards, attempt: 16 + ((attempt - 1) * 32),
-        time = lambda w: config["fastqc_walltime"],
+        partition = "inv-blade-g8,inv-blade-g8-fast,inv-iranui,inv-iranui-fast,inv-bigmem,inv-bigmem-fast",
+        mem_gb = lambda wildcards, attempt: 8 + ((attempt - 1) * 32),
+        time = lambda wildcards, attempt: 120 + ((attempt - 1) * 120),
     shell:
         """ 
         

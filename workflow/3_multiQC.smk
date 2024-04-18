@@ -59,13 +59,13 @@ rule run_multiqc:
     input:
         bclconvert_in = bclconvert_reports_dir,
         fastqc_in = fastqc_reports_dir,
-        kmer_in = kmer_reports_dir
+        #kmer_in = kmer_reports_dir
     output:
         report = multiqc_report_path,
     log:
         multiqc_log_path
     conda:
-        "envs/multiqc-1.17.yaml"
+        "multiqc"
     benchmark:
         multiqc_benchmark_path
     threads: 2
@@ -76,8 +76,8 @@ rule run_multiqc:
         multiqc_config = config["multiqc_config"]
     shell:
         """
-        
-        multiqc --interactive --outdir {multiqc_data_dir_path} --filename {output.report} --force -c {params.multiqc_config} --data-dir --data-format tsv {input.bclconvert_in} {input.fastqc_in} {input.kmer_in} > {log} 2>&1
-        
+
+        multiqc --interactive --outdir {multiqc_data_dir_path} --filename {output.report} --force -c {params.multiqc_config} --data-dir --data-format tsv {input.bclconvert_in} {input.fastqc_in} > {log} 2>&1
         """
-        
+
+        # {input.kmer_in}
