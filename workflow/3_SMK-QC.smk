@@ -78,11 +78,11 @@ rule bbduk_read_trim:
         "ktrim=rl "
         "ktrim=r k=23 mink=11 hdist=1 tpe tbo "
         "rcomp=t " 
-        "trimpolygright=5 "
-        "trimpolya=5 "
+        "trimpolygright=0 "
+        "trimpolya=0 "
         "qtrim=rl "
         "trimq=10 "
-        "minlen=50 "
+        "minlen=0 "
         "out1={output.bbdukRead1} "
         "out2={output.bbdukRead2} "
         "2>&1 | tee {log} "
@@ -92,7 +92,8 @@ rule bowtie2_SILVA_alignment_read1:
     input:
         bbdukRead1 = "results/01_readMasking/{samples}_R1_bbduk.fastq.gz",
     output:
-        bowtie2_R1 = "results/00_SILVA/{samples}.DS.R1.bowtie2.log",
+        bowtie2_R1 = "results/02_SILVA/{samples}.DS.R1.bowtie2.log",
+        silva_R1 = "results/02_SILVA/{samples}_R1_bbduk_silva.fastq.gz",
     benchmark:
         "benchmarks/bowtie2_SILVA_alignment_read1.{samples}.txt"
     conda:
@@ -104,9 +105,9 @@ rule bowtie2_SILVA_alignment_read1:
         partition = "compute"
     shell:
         "bowtie2 "
-        "--very-fast "
         "-p {threads} "
         "-x /datasets/2024-silva-rrna/SILVA138.1 "
+        "--un {output.silva_R1} "
         "-U {input.bbdukRead1} "
         "1> /dev/null "
         "2> {output.bowtie2_R1} "
@@ -116,7 +117,8 @@ rule bowtie2_SILVA_alignment_read2:
     input:
         bbdukRead2 = "results/01_readMasking/{samples}_R2_bbduk.fastq.gz"
     output:
-        bowtie2_R2 = "results/00_SILVA/{samples}.DS.R2.bowtie2.log",
+        bowtie2_R2 = "results/02_SILVA/{samples}.DS.R2.bowtie2.log",
+        silva_R2 = "results/02_SILVA/{samples}_R2_bbduk_silva.fastq.gz",
     benchmark:
         "benchmarks/bowtie2_SILVA_alignment_read2.{samples}.txt"
     conda:
@@ -128,9 +130,9 @@ rule bowtie2_SILVA_alignment_read2:
         partition = "compute"
     shell:
         "bowtie2 "
-        "--very-fast "
         "-p {threads} "
         "-x /datasets/2024-silva-rrna/SILVA138.1 "
+        "--un {output.silva_R1} "
         "-U {input.bbdukRead2} "
         "1> /dev/null "
         "2> {output.bowtie2_R2} "
@@ -138,7 +140,7 @@ rule bowtie2_SILVA_alignment_read2:
 
 rule kraken2_read_composition_read1:
     input:
-        bbdukRead1 = "results/01_readMasking/{samples}_R1_bbduk.fastq.gz",
+        filtered_read1 = "results/02_SILVA/{samples}_R1_bbduk_silva.fastq.gz",
     output:
         k2Output = temp("results/00_kraken2/{samples}.DS.R1.nt.k2"),
         k2Report_R1 = "results/00_kraken2/{samples}.DS.R1.nt.report.kraken2",
@@ -162,13 +164,13 @@ rule kraken2_read_composition_read1:
         "--report {output.k2Report_R1} "
         "--report-minimizer-data "
         "--output {output.k2Output} "
-        "{input.bbdukRead1} "
+        "{input.filtered_read1} "
         "2>&1 | tee {log} "
 
 
 rule kraken2_read_composition_read2:
     input:
-        bbdukRead2 = "results/01_readMasking/{samples}_R2_bbduk.fastq.gz"
+        filtered_read2 = "results/02_SILVA/{samples}_R2_bbduk_silva.fastq.gz",
     output:
         k2Output = temp("results/00_kraken2/{samples}.DS.R2.nt.k2"),
         k2Report_R2 = "results/00_kraken2/{samples}.DS.R2.nt.report.kraken2",
@@ -192,7 +194,7 @@ rule kraken2_read_composition_read2:
         "--report {output.k2Report_R2} "
         "--report-minimizer-data "
         "--output {output.k2Output} "
-        " {input.bbdukRead2} "
+        " {input.filtered_read2} "
         "2>&1 | tee {log} "
 
 
@@ -238,12 +240,12 @@ rule fastqc_read2:
         "{input.read2}"
 
 
-rule fastqc_bbduk_read1: #TODO
+rule fastqc_filtered_read1: #TODO
     input:
-        bbdukRead1 = "results/01_readMasking/{samples}_R1_bbduk.fastq.gz",
+        filtered_read1 = "results/02_SILVA/{samples}_R1_bbduk_silva.fastq.gz",
     output:
-        html = "results/00_QC/fastqc/{samples}_R1_bbduk_fastqc.html",
-        zip = "results/00_QC/fastqc/{samples}_R1_bbduk_fastqc.zip"
+        html = "results/00_QC/fastqc/{samples}_R1_bbduk_silva_fastqc.html",
+        zip = "results/00_QC/fastqc/{samples}_R1_bbduk_silva_fastqc.zip"
     conda:
         "fastqc-0.12.1"
     threads: 4
@@ -256,15 +258,15 @@ rule fastqc_bbduk_read1: #TODO
         "-o results/00_QC/fastqc/ "
         "-q "
         "-t {threads} "
-        "{input.bbdukRead1}"
+        "{input.filtered_read1}"
 
 
-rule fastqc_bbduk_read2: #TODO
+rule fastqc_filtered_read2: #TODO
     input:
-        bbdukRead2 = "results/01_readMasking/{samples}_R2_bbduk.fastq.gz"
+        filtered_read2 = "results/02_SILVA/{samples}_R2_bbduk_silva.fastq.gz",
     output:
-        html = "results/00_QC/fastqc/{samples}_R2_bbduk_fastqc.html",
-        zip = "results/00_QC/fastqc/{samples}_R2_bbduk_fastqc.zip"
+        html = "results/00_QC/fastqc/{samples}_R2_bbduk_silva_fastqc.html",
+        zip = "results/00_QC/fastqc/{samples}_R2_bbduk_silva_fastqc.zip"
     conda:
         "fastqc-0.12.1"
     threads: 4
@@ -277,7 +279,7 @@ rule fastqc_bbduk_read2: #TODO
         "-o results/00_QC/fastqc/ "
         "-q "
         "-t {threads} "
-        "{input.bbdukRead2}"
+        "{input.filtered_read2}"
 
 
 rule multiQC_report:
@@ -294,8 +296,8 @@ rule multiQC_report:
         bowtie2_R2 = expand("results/00_SILVA/{samples}.DS.R2.bowtie2.log", samples = FIDs),
         kraken2_R1 = expand("results/00_kraken2/{samples}.DS.R1.nt.report.kraken2", samples = FIDs),
         kraken2_R2 = expand("results/00_kraken2/{samples}.DS.R2.nt.report.kraken2", samples = FIDs),
-        fastqc_bbduk_read1 = expand("results/00_QC/fastqc/{samples}_R1_bbduk_fastqc.zip", samples = FIDs), 
-        fastqc_bbduk_read2 = expand("results/00_QC/fastqc/{samples}_R2_bbduk_fastqc.zip", samples = FIDs), 
+        fastqc_filtered_read1 = expand("results/00_QC/fastqc/{samples}_R1_bbduk_silva_fastqc.zip", samples = FIDs), 
+        fastqc_filtered_read2 = expand("results/00_QC/fastqc/{samples}_R2_bbduk_silva_fastqc.zip", samples = FIDs), 
         multiQC_config = "resources/multiQC_config.yaml",
     output:
         multiQC ="results/Sequence_Production_and_QC_Report.multiqc.html"
@@ -325,8 +327,8 @@ rule multiQC_report:
         "{input.fastqc_read1} "
         "{input.fastqc_read2} "
         "{input.bbduk_log} "
-        "{input.fastqc_bbduk_read1} "
-        "{input.fastqc_bbduk_read2} "
+        "{input.fastqc_filtered_read1} "
+        "{input.fastqc_filtered_read2} "
         "{input.bowtie2_R1} "
         "{input.bowtie2_R2} "
         "{input.kraken2_R1} "
