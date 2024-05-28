@@ -284,7 +284,7 @@ rule fastqc_filtered_read2: #TODO
 
 rule genome_alignment_check_R1:
     input:
-        silva_R1 = "results/02_REF/{samples}_R1_bbduk_silva.fastq.gz",
+        silva_R1 = "results/02_SILVA/{samples}_R1_bbduk_silva.fastq.gz",
     output:
         bowtie2_genome = "results/02_REF/{samples}.DS.genome_alignment.bowtie2.R1.log",
     benchmark:
@@ -307,7 +307,7 @@ rule genome_alignment_check_R1:
 
 rule genome_alignment_check_R2:
     input:
-        silva_R2 = "results/02_REF/{samples}_R2_bbduk_silva.fastq.gz",
+        silva_R2 = "results/02_SILVA/{samples}_R2_bbduk_silva.fastq.gz",
     output:
         bowtie2_genome = "results/02_REF/{samples}.DS.genome_alignment.bowtie2.R2.log",
     benchmark:
