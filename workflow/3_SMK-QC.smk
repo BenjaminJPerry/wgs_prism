@@ -82,7 +82,7 @@ rule bbduk_read_trim:
         "trimpolya=0 "
         "qtrim=rl "
         "trimq=10 "
-        "minlen=0 "
+        "minlen=25 "
         "out1={output.bbdukRead1} "
         "out2={output.bbdukRead2} "
         "2>&1 | tee {log} "
