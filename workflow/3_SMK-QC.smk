@@ -293,7 +293,7 @@ rule genome_alignment_check_R1:
         "bowtie2-2.5.1"
     threads: 8
     resources:
-        mem_gb = lambda wildcards, attempt: 24 + ((attempt - 1) * 8),
+        mem_gb = lambda wildcards, attempt: 8 + ((attempt - 1) * 8),
         time = lambda wildcards, attempt: 10 + ((attempt - 1) * 30),
         partition = "compute"
     shell:
@@ -316,7 +316,7 @@ rule genome_alignment_check_R2:
         "bowtie2-2.5.1"
     threads: 8
     resources:
-        mem_gb = lambda wildcards, attempt: 24 + ((attempt - 1) * 8),
+        mem_gb = lambda wildcards, attempt: 8 + ((attempt - 1) * 8),
         time = lambda wildcards, attempt: 10 + ((attempt - 1) * 30),
         partition = "compute"
     shell:
@@ -358,7 +358,7 @@ rule multiQC_report:
     threads: 12
     resources:
         mem_gb = lambda wildcards, attempt: 24 + ((attempt - 1) * 2),
-        time = lambda wildcards, attempt: 30 + ((attempt - 1) * 15),
+        time = lambda wildcards, attempt: 60 + ((attempt - 1) * 15),
         partition="compute",
     shell:
         "multiqc "

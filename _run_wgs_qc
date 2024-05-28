@@ -23,12 +23,7 @@ CUSTOM_CONTAMINANTS_FILES=""
 
 function get_run_opts() {
 
-   DRY_RUN=no
-   DEBUG=no
-   HPC_TYPE=slurm
-   FILES=""
    OUT_ROOT=""
-   SNP_ENGINE=tassel        # the only one supported at this point
 
    SEQ_ROOT=/dataset/2024_illumina_sequencing_d/active
    SEQ_BCLCONVERT_ROOT=/dataset/2024_illumina_sequencing_d/scratch/postprocessing/illumina/novaseq
@@ -49,42 +44,10 @@ please give the full name of wgs run you would like to process ( e.g. 210712_A01
       read_answer_with_default $ARGRUN
       RUN=$answer
 
-      if [ ! -z "$RUN" ]; then 
-         platform="unknown"
-         if [ -d $SEQ_ROOT/$RUN ]; then 
-            platform=novaseq
-            wgs_ROOT=$SEQ_ROOT
-            BCLCONVERT_ROOT=$SEQ_BCLCONVERT_ROOT
-            break
-         else 
-            # try looking in other places - e.g. for iseq runs in /dataset/hiseq/active
-            SEQ_ROOT=/dataset/2024_illumina_sequencing_d/active
-            SEQ_BCLCONVERT_ROOT=/dataset/2024_illumina_sequencing_d/scratch/postprocessing/illumina/iseq
-            mkdir -p $SEQ_BCLCONVERT_ROOT
-            if [ -d $SEQ_ROOT/$RUN ]; then
-               platform=iseq
-               wgs_ROOT=$SEQ_ROOT
-               BCLCONVERT_ROOT=$SEQ_BCLCONVERT_ROOT
-               break
-            else 
-               # try miseq
-               SEQ_ROOT=/dataset/2024_illumina_sequencing_d/active
-               SEQ_BCLCONVERT_ROOT=/dataset/2024_illumina_sequencing_d/scratch/postprocessing/illumina/iseq
-               mkdir -p $SEQ_BCLCONVERT_ROOT
-               if [ -d $SEQ_ROOT/$RUN ]; then
-                  platform=miseq
-                  wgs_ROOT=$SEQ_ROOT
-                  BCLCONVERT_ROOT=$SEQ_BCLCONVERT_ROOT
-                  break
-               else
-                  echo "sorry can't find $RUN under $SEQ_ROOT"
-                  SEQ_ROOT=/dataset/2024_illumina_sequencing_d/active
-               	  SEQ_BCLCONVERT_ROOT=/dataset/2024_illumina_sequencing_d/scratch/postprocessing/illumina/iseq
-               fi
-            fi
-         fi
+      if [ -z "$SEQ_ROOT/$RUN" ]; then 
+            echo "sorry can't find $RUN under $SEQ_ROOT"
+            quit
       fi
-
    done
 
    echo "will process $wgs_ROOT/$RUN"
