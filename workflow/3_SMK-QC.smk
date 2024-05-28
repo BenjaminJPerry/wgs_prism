@@ -150,7 +150,7 @@ rule kraken2_read_composition_read1:
         "benchmarks/kraken2_read_composition.{samples}.txt"
     conda:
         "kraken2"
-    threads: 8
+    threads: 16
     resources:
         mem_gb = lambda wildcards, attempt: 714 + ((attempt - 1) * 20),
         time = lambda wildcards, attempt: 45 + ((attempt - 1) * 40),
@@ -180,7 +180,7 @@ rule kraken2_read_composition_read2:
         "benchmarks/kraken2_read_composition_read2.{samples}.txt"
     conda:
         "kraken2"
-    threads: 8
+    threads: 16
     resources:
         mem_gb = lambda wildcards, attempt: 714 + ((attempt - 1) * 20),
         time = lambda wildcards, attempt: 45 + ((attempt - 1) * 40),
