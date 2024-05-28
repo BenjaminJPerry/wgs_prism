@@ -93,7 +93,7 @@ rule bowtie2_SILVA_alignment_read1:
         bbdukRead1 = "results/01_readMasking/{samples}_R1_bbduk.fastq.gz",
     output:
         bowtie2_R1 = "results/02_SILVA/{samples}.DS.R1.bowtie2.log",
-        silva_R1 = "results/02_SILVA/{samples}_R1_bbduk_silva.fastq.gz",
+        silva_R1 = "results/02_SILVA/{samples}_R1_bbduk_silva.fastq",
     benchmark:
         "benchmarks/bowtie2_SILVA_alignment_read1.{samples}.txt"
     conda:
@@ -107,7 +107,7 @@ rule bowtie2_SILVA_alignment_read1:
         "bowtie2 "
         "-p {threads} "
         "-x /datasets/2024-silva-rrna/SILVA138.1 "
-        "--un-gz {output.silva_R1} "
+        "--un {output.silva_R1} "
         "-U {input.bbdukRead1} "
         "1> /dev/null "
         "2> {output.bowtie2_R1} "
@@ -118,7 +118,7 @@ rule bowtie2_SILVA_alignment_read2:
         bbdukRead2 = "results/01_readMasking/{samples}_R2_bbduk.fastq.gz"
     output:
         bowtie2_R2 = "results/02_SILVA/{samples}.DS.R2.bowtie2.log",
-        silva_R2 = "results/02_SILVA/{samples}_R2_bbduk_silva.fastq.gz",
+        silva_R2 = "results/02_SILVA/{samples}_R2_bbduk_silva.fastq",
     benchmark:
         "benchmarks/bowtie2_SILVA_alignment_read2.{samples}.txt"
     conda:
@@ -132,7 +132,7 @@ rule bowtie2_SILVA_alignment_read2:
         "bowtie2 "
         "-p {threads} "
         "-x /datasets/2024-silva-rrna/SILVA138.1 "
-        "--un-gz {output.silva_R2} "
+        "--un {output.silva_R2} "
         "-U {input.bbdukRead2} "
         "1> /dev/null "
         "2> {output.bowtie2_R2} "
@@ -140,7 +140,7 @@ rule bowtie2_SILVA_alignment_read2:
 
 rule kraken2_read_composition_read1:
     input:
-        filtered_read1 = "results/02_SILVA/{samples}_R1_bbduk_silva.fastq.gz",
+        filtered_read1 = "results/02_SILVA/{samples}_R1_bbduk_silva.fastq",
     output:
         k2Output = temp("results/00_kraken2/{samples}.DS.R1.nt.k2"),
         k2Report_R1 = "results/00_kraken2/{samples}.DS.R1.nt.report.kraken2",
@@ -158,7 +158,6 @@ rule kraken2_read_composition_read1:
     shell:
         "kraken2 "
         "--use-names "
-        "--gzip-compressed "
         "--db /datasets/2024-kraken2-indices/k2_nt_20231129 " 
         "-t {threads} "
         "--report {output.k2Report_R1} "
@@ -170,7 +169,7 @@ rule kraken2_read_composition_read1:
 
 rule kraken2_read_composition_read2:
     input:
-        filtered_read2 = "results/02_SILVA/{samples}_R2_bbduk_silva.fastq.gz",
+        filtered_read2 = "results/02_SILVA/{samples}_R2_bbduk_silva.fastq",
     output:
         k2Output = temp("results/00_kraken2/{samples}.DS.R2.nt.k2"),
         k2Report_R2 = "results/00_kraken2/{samples}.DS.R2.nt.report.kraken2",
@@ -188,7 +187,6 @@ rule kraken2_read_composition_read2:
     shell:
         "kraken2 "
         "--use-names "
-        "--gzip-compressed "
         "--db /datasets/2024-kraken2-indices/k2_nt_20231129 " 
         "-t {threads} "
         "--report {output.k2Report_R2} "
@@ -242,7 +240,7 @@ rule fastqc_read2:
 
 rule fastqc_filtered_read1: #TODO
     input:
-        filtered_read1 = "results/02_SILVA/{samples}_R1_bbduk_silva.fastq.gz",
+        filtered_read1 = "results/02_SILVA/{samples}_R1_bbduk_silva.fastq",
     output:
         html = "results/00_QC/fastqc/{samples}_R1_bbduk_silva_fastqc.html",
         zip = "results/00_QC/fastqc/{samples}_R1_bbduk_silva_fastqc.zip"
@@ -263,7 +261,7 @@ rule fastqc_filtered_read1: #TODO
 
 rule fastqc_filtered_read2: #TODO
     input:
-        filtered_read2 = "results/02_SILVA/{samples}_R2_bbduk_silva.fastq.gz",
+        filtered_read2 = "results/02_SILVA/{samples}_R2_bbduk_silva.fastq",
     output:
         html = "results/00_QC/fastqc/{samples}_R2_bbduk_silva_fastqc.html",
         zip = "results/00_QC/fastqc/{samples}_R2_bbduk_silva_fastqc.zip"
@@ -284,7 +282,7 @@ rule fastqc_filtered_read2: #TODO
 
 rule genome_alignment_check_R1:
     input:
-        silva_R1 = "results/02_SILVA/{samples}_R1_bbduk_silva.fastq.gz",
+        silva_R1 = "results/02_SILVA/{samples}_R1_bbduk_silva.fastq",
     output:
         bowtie2_genome = "results/02_REF/{samples}.DS.genome_alignment.bowtie2.R1.log",
     benchmark:
@@ -307,7 +305,7 @@ rule genome_alignment_check_R1:
 
 rule genome_alignment_check_R2:
     input:
-        silva_R2 = "results/02_SILVA/{samples}_R2_bbduk_silva.fastq.gz",
+        silva_R2 = "results/02_SILVA/{samples}_R2_bbduk_silva.fastq",
     output:
         bowtie2_genome = "results/02_REF/{samples}.DS.genome_alignment.bowtie2.R2.log",
     benchmark:
