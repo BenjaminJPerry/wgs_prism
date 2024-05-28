@@ -381,7 +381,8 @@ rule multiQC_report:
         "{input.bowtie2_R2} "
         "{input.kraken2_R1} "
         "{input.kraken2_R2} "
-        "{input.bowtie2_genome} "
+        "{input.bowtie2_genome_R1} "
+        "{input.bowtie2_genome_R2} "
         "2>&1 | tee {log}"
 
 
