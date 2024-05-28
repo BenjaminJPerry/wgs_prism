@@ -282,14 +282,13 @@ rule fastqc_filtered_read2: #TODO
         "{input.filtered_read2}"
 
 
-rule genome_alignment_check:
+rule genome_alignment_check_R1:
     input:
-        silva_R1 = "results/02_SILVA/{samples}_R1_bbduk_silva.fastq.gz",
-        silva_R2 = "results/02_SILVA/{samples}_R2_bbduk_silva.fastq.gz",
+        silva_R1 = "results/02_REF/{samples}_R1_bbduk_silva.fastq.gz",
     output:
-        bowtie2_genome = "results/02_SILVA/{samples}.DS.genome_alignment.bowtie2.log",
+        bowtie2_genome = "results/02_REF/{samples}.DS.genome_alignment.bowtie2.R1.log",
     benchmark:
-        "benchmarks/genome_alignment_check.{samples}.txt"
+        "benchmarks/genome_alignment_check.R1.{samples}.txt"
     conda:
         "bowtie2-2.5.1"
     threads: 8
@@ -301,8 +300,30 @@ rule genome_alignment_check:
         "bowtie2 "
         "-p {threads} "
         "-x resources/GRCh38 "
-        "-1 {input.silva_R1} "
-        "-2 {input.silva_R2} "
+        "-U {input.silva_R1} "
+        "1> /dev/null "
+        "2> {output.bowtie2_genome} "
+
+
+rule genome_alignment_check_R2:
+    input:
+        silva_R2 = "results/02_REF/{samples}_R2_bbduk_silva.fastq.gz",
+    output:
+        bowtie2_genome = "results/02_REF/{samples}.DS.genome_alignment.bowtie2.R2.log",
+    benchmark:
+        "benchmarks/genome_alignment_check.R2.{samples}.txt"
+    conda:
+        "bowtie2-2.5.1"
+    threads: 8
+    resources:
+        mem_gb = lambda wildcards, attempt: 24 + ((attempt - 1) * 8),
+        time = lambda wildcards, attempt: 10 + ((attempt - 1) * 30),
+        partition = "compute"
+    shell:
+        "bowtie2 "
+        "-p {threads} "
+        "-x resources/GRCh38 "
+        "-U {input.silva_R2} "
         "1> /dev/null "
         "2> {output.bowtie2_genome} "
 
@@ -321,7 +342,8 @@ rule multiQC_report:
         bowtie2_R2 = expand("results/02_SILVA/{samples}.DS.R2.bowtie2.log", samples = FIDs),
         kraken2_R1 = expand("results/00_kraken2/{samples}.DS.R1.nt.report.kraken2", samples = FIDs),
         kraken2_R2 = expand("results/00_kraken2/{samples}.DS.R2.nt.report.kraken2", samples = FIDs),
-        bowtie2_genome = expand("results/02_SILVA/{samples}.DS.genome_alignment.bowtie2.log", samples = FIDs),
+        bowtie2_genome_R1 = expand("results/02_REF/{samples}.DS.genome_alignment.bowtie2.R1.log", samples = FIDs),
+        bowtie2_genome_R2 = expand("results/02_REF/{samples}.DS.genome_alignment.bowtie2.R2.log", samples = FIDs),
         fastqc_filtered_read1 = expand("results/00_QC/fastqc/{samples}_R1_bbduk_silva_fastqc.zip", samples = FIDs), 
         fastqc_filtered_read2 = expand("results/00_QC/fastqc/{samples}_R2_bbduk_silva_fastqc.zip", samples = FIDs), 
         multiQC_config = "resources/multiQC_config.yaml",
