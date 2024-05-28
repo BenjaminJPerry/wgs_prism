@@ -34,7 +34,7 @@ module_order:
   - kraken
   - bowtie2:
       name: "Bowtie2 Alignment to GRCh38 "
-      path_filter: "*DS.genome_alignment.bowtie2.log"
+      path_filter: "*DS.genome_alignment.bowtie2.*.log"
 
 
 section_comments:
