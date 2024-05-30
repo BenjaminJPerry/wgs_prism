@@ -27,14 +27,14 @@ module_order:
       name: "FastQC of bbduk Trimmed Reads"
       anchor: "fastqc_trimmed"
       path_filters:
-        - "*bbduk_fastqc*"
+        - "*bbduk_silva_fastqc*"
   - bowtie2:
       name: "Bowtie2 Alignment to SILVA138 Ribosomal rRNA Database"
       path_filter: "*.DS.R*.bowtie2.log"
-  - kraken
   - bowtie2:
       name: "Bowtie2 Alignment to GRCh38 "
       path_filter: "*DS.genome_alignment.bowtie2.*.log"
+  - kraken
 
 
 section_comments:
