@@ -141,8 +141,8 @@ rule kraken2_read_composition_read1:
     input:
         filtered_read1 = "results/02_SILVA/{samples}_R1_bbduk_silva.fastq",
     output:
-        k2Output = temp("results/00_kraken2/{samples}.DS.R1.nt.k2"),
-        k2Report_R1 = "results/00_kraken2/{samples}.DS.R1.nt.report.kraken2",
+        k2Output = temp("results/03_kraken2/{samples}.DS.R1.nt.k2"),
+        k2Report_R1 = "results/03_kraken2/{samples}.DS.R1.nt.report.kraken2",
     log:
         "logs/kraken2/kraken2_read_composition.{samples}.NCBI-nt.log",
     benchmark:
@@ -170,8 +170,8 @@ rule kraken2_read_composition_read2:
     input:
         filtered_read2 = "results/02_SILVA/{samples}_R2_bbduk_silva.fastq",
     output:
-        k2Output = temp("results/00_kraken2/{samples}.DS.R2.nt.k2"),
-        k2Report_R2 = "results/00_kraken2/{samples}.DS.R2.nt.report.kraken2",
+        k2Output = temp("results/03_kraken2/{samples}.DS.R2.nt.k2"),
+        k2Report_R2 = "results/03_kraken2/{samples}.DS.R2.nt.report.kraken2",
     log:
         "logs/kraken2/kraken2_read_composition_read2.{samples}.NCBI-nt.log",
     benchmark:
@@ -337,8 +337,8 @@ rule multiQC_report:
         bbduk_log = expand("logs/bbduk/{samples}.bbduk.log", samples = FIDs),
         bowtie2_R1 = expand("results/02_SILVA/{samples}.DS.R1.bowtie2.log", samples = FIDs),
         bowtie2_R2 = expand("results/02_SILVA/{samples}.DS.R2.bowtie2.log", samples = FIDs),
-        kraken2_R1 = expand("results/00_kraken2/{samples}.DS.R1.nt.report.kraken2", samples = FIDs),
-        kraken2_R2 = expand("results/00_kraken2/{samples}.DS.R2.nt.report.kraken2", samples = FIDs),
+        kraken2_R1 = expand("results/03_kraken2/{samples}.DS.R1.nt.report.kraken2", samples = FIDs),
+        kraken2_R2 = expand("results/03_kraken2/{samples}.DS.R2.nt.report.kraken2", samples = FIDs),
         bowtie2_genome_R1 = expand("results/02_REF/{samples}.DS.genome_alignment.bowtie2.R1.log", samples = FIDs),
         bowtie2_genome_R2 = expand("results/02_REF/{samples}.DS.genome_alignment.bowtie2.R2.log", samples = FIDs),
         fastqc_filtered_read1 = expand("results/00_QC/fastqc/{samples}_R1_bbduk_silva_fastqc.zip", samples = FIDs), 
