@@ -79,7 +79,7 @@ rule bbduk_read_trim:
         "k=19 mink=9 hdist=1 "
         "rcomp=t " 
         "trimpolyg=1 "
-        "trimpolya=1 "
+        "trimpolya=5 "
         "qtrim=f "
         "minlen=10 "
         "out1={output.bbdukRead1} "
