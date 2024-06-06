@@ -23,16 +23,16 @@ module_order:
       path_filters:
         - "*001_fastqc*"
   - bbduk
-  - fastqc:
-      name: "FastQC of bbduk Trimmed Reads"
-      anchor: "fastqc_trimmed"
-      path_filters:
-        - "*bbduk_silva_fastqc*"
   - bowtie2:
       name: "Bowtie2 Alignment to SILVA138 Ribosomal rRNA Database"
       anchor: "SILVA138"
       path_filters: 
         - "*.DS.R*.bowtie2.log"
+  - fastqc:
+      name: "FastQC of bbduk Trimmed and SILVA Filtered Reads"
+      anchor: "fastqc_trimmed"
+      path_filters:
+        - "*bbduk_silva_fastqc*"
   - bowtie2:
       name: "Bowtie2 Alignment to GRCh38"
       anchor: "GRCh38"

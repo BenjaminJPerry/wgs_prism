@@ -80,7 +80,6 @@ rule bbduk_read_trim:
         "rcomp=t " 
         "trimpolyg=1 "
         "trimpolya=1 "
-        "entropytrim=rl "
         "qtrim=f "
         "minlen=11 "
         "out1={output.bbdukRead1} "
