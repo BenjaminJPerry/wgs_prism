@@ -38,7 +38,8 @@ module_order:
       anchor: "GRCh38"
       path_filters: 
         - "*.genome_alignment.bowtie2.R*.log"
-  - kraken
+  - kraken:
+      top_n: 100
 
 
 section_comments:
