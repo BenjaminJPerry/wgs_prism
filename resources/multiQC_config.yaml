@@ -13,7 +13,9 @@ report_header_info:
   - Sequencing Platform: "NovaSeq 6000"
   - Sequencing Setup: "2 Lanes @ 2x151 - L001 & L002"
 
+
 ignore_images: false
+
 
 module_order:
   - bclconvert
@@ -38,8 +40,11 @@ module_order:
       anchor: "GRCh38"
       path_filters: 
         - "*.genome_alignment.bowtie2.R*.log"
-  - kraken:
-      top_n: 100
+  - kraken
+
+
+kraken:
+  top_n: 50
 
 
 section_comments:
